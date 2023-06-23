@@ -18,7 +18,7 @@ class BackgroundPingu(asb):
         self.color = 0x9bc4af
 
         super().__init__(
-            intents=discord.Intents(message_content=True, messages=True, guild_messages=True, guilds=True),
+            intents=discord.Intents.all(),
             case_insensitive=True,
             allowed_mentions=discord.AllowedMentions(everyone=False),
             owner_ids=[810863994985250836, 695658634436411404]

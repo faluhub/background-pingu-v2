@@ -47,6 +47,7 @@
     "error.outdated_mod": "The mod `{}` is not listed as the most recent legal version! Download the latest legal version [**here**]({}).",
     "error.random_forge_crash_1": "Try launching your instance `online` if you haven't. Also, try using a different version of `Forge`.",
     "error.random_forge_crash_2": "Try restarting your launcher, creating an instance without `Forge` and then installing `Forge` on this instance.",
+    "error.ranked_illegal_mod": "The mod `{}` is not whitelisted for `MCSR Ranked`. Disable it or remove it from your mods folder.",
     "error.really_old_fabric": "You're using a really old version of `Fabric Loader`. You should update it.",
     "error.requires_fabric_api": "You're using a mod that requires `Fabric API`. It is a mod that is separate to `Fabric Loader`. You can download it [**here**](https://modrinth.com/mod/fabric-api).",
     "error.requires_mod": "A mod you're using is requiring a mod called `{}`, but it is not present. Download it and add it to your mods folder.",
@@ -71,6 +72,5 @@
     "warning.too_little_ram": "You likely have too little RAM allocated.",
     "warning.too_much_ram": "You have too much RAM allocated, which can cause lag spikes.",
     "warning.try_admin_launch": "Try opening your launcher with `administrator privileges`.",
-    "warning.using_fabric_api": "You're using `Fabric API`, which is not allowed for speedrunning. Delete it or remove it from your `.minecraft/mods` folder.",
-    "error.ranked_illegal_mod": "The mod `{}` is not whitelisted for `MCSR Ranked`. Disable it or remove it from your mods folder."
+    "warning.using_fabric_api": "You're using `Fabric API`, which is not allowed for speedrunning. Delete it or remove it from your `.minecraft/mods` folder."
 }

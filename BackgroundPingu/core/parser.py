@@ -31,7 +31,7 @@ class Log:
         mclogs_match = re.search(r"https://mclo\.gs/(\w+)", link)
         if paste_ee_match: link = f"https://paste.ee/d/{paste_ee_match.group(1)}/0"
         elif mclogs_match: link = f"https://api.mclo.gs/1/raw/{mclogs_match.group(1)}"
-        elif not link.endswith(".txt") or not link.endswith(".log"): return None
+        elif not link.endswith(".txt") and not link.endswith(".log"): return None
         res = requests.get(link, timeout=5)
         if res.status_code == 200:
             return Log(res.text.replace("\r", ""))
