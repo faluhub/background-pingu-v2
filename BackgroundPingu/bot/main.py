@@ -21,8 +21,7 @@ class BackgroundPingu(asb):
             intents=discord.Intents(message_content=True, messages=True, guild_messages=True, guilds=True),
             case_insensitive=True,
             allowed_mentions=discord.AllowedMentions(everyone=False),
-            owner_ids=[810863994985250836],
-            debug_guilds=[1018128160962904114]
+            owner_ids=[810863994985250836, 695658634436411404]
         )
 
     def load_cogs(self, folder=None):
