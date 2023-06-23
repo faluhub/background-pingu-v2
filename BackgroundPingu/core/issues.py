@@ -97,11 +97,13 @@ class IssueChecker:
             if not metadata is None:
                 mod_name = metadata["name"]
 
-                for incompatible_mod in metadata["incompatible"]:
-                    if all_incompatible_mods[mod_name] is None:
-                        all_incompatible_mods[mod_name] = [incompatible_mod]
-                    else:
-                        all_incompatible_mods[mod_name].append(incompatible_mod)
+                try:
+                    for incompatible_mod in metadata["incompatible"]:
+                        if all_incompatible_mods[mod_name] is None:
+                            all_incompatible_mods[mod_name] = [incompatible_mod]
+                        else:
+                            all_incompatible_mods[mod_name].append(incompatible_mod)
+                except KeyError: pass
 
                 if mod_name in checked_mods: builder.add("duplicate_mod", mod_name.lower())
                 else: checked_mods.append(mod_name.lower())
@@ -314,7 +316,7 @@ class IssueChecker:
         if self.log.has_content("Failed to find Minecraft main class"):
             builder.error("online_launch_required")
         
-        if self.log.launcher.lower() == "prism":
+        if not self.log.launcher is None and self.log.launcher.lower() == "prism":
             pattern = r"This instance is not compatible with Java version (\d+)\.\nPlease switch to one of the following Java versions for this instance:\nJava version (\d+)"
             match = re.search(pattern, self.log._content)
             if not match is None:
