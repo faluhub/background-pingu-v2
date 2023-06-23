@@ -1,0 +1,45 @@
+import json, requests
+
+def get_mods():
+    """I hate python semver. If it wasn't for that I wouldn't have to do all this..."""
+    print("Getting mods...")
+    path = "./BackgroundPingu/data/mods.json"
+    mods = []
+    res = requests.get("https://raw.githubusercontent.com/RedLime/MCSRMods/v4/meta/v4/files.json", timeout=10)
+    if res.status_code == 200:
+        content = json.loads(res.text)
+        for item in content:
+            if item["type"] != "fabric_mod":
+                continue
+            item.pop("type", "")
+            item.pop("description", "")
+            item.pop("recommended", "")
+            for fi in item["files"]:
+                fi.pop("url", "")
+                fi.pop("sha1", "")
+                fi.pop("size", "")
+                vi = 0
+                for vs in fi["game_versions"]:
+                    parts = vs.split(" ")
+                    final_parts = []
+                    for v in parts:
+                        if v.endswith("-"):
+                            for i in range(11):
+                                final_parts.append(f"{v[:-1]}.{i}")
+                        else: final_parts.append(v)
+                    pi = 0
+                    for v in final_parts:
+                        if v.count(".") == 1:
+                            v += ".0"
+                        if v.startswith("=1"):
+                            v = v.replace("=1", "==1")
+                        elif v.startswith("~1"):
+                            v = v.replace("~1", "<=1")
+                        final_parts[pi] = v
+                        pi += 1
+                    fi["game_versions"][vi] = " ".join(final_parts)
+                    vi += 1
+            mods.append(item)
+        with open(path, "w") as f:
+            json.dump(mods, f, indent=4)
+    print("  Finished getting mods.")

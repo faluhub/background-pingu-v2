@@ -1,0 +1,1 @@
+print([f"1.{18 + i}" for i in range(6)])
