@@ -132,11 +132,11 @@ class IssueChecker:
         if len(self.log.mods) > 0 and self.log.mod_loader == ModLoader.VANILLA:
             builder.error("no_loader")
         
-        if self.log.operating_system == OperatingSystem.MACOS:
+        if not self.log.operating_system is None and self.log.operating_system == OperatingSystem.MACOS:
             if self.log.has_mod("sodium-1.16.1-v1.jar") or self.log.has_mod("sodium-1.16.1-v2.jar"):
                 builder.error("not_using_mac_sodium")
 
-            if self.log.launcher.lower() == "multimc":
+            if not self.log.launcher is None and self.log.launcher.lower() == "multimc":
                 builder.note("use_prism").add("mac_setup_guide")
         
         has_java_error = False
@@ -184,7 +184,7 @@ class IssueChecker:
             builder.error("broken_java").add("java_upgrade_guide")
             has_java_error = True
         
-        if self.log.mod_loader == ModLoader.FABRIC:
+        if not self.log.mod_loader is None and self.log.mod_loader == ModLoader.FABRIC:
             if not self.log.fabric_version is None:
                 highest_srigt_ver = None
                 for mod in self.log.mods:
@@ -341,11 +341,11 @@ class IssueChecker:
                 else:
                     builder.error("java_comp_check")
         
-        if self.log.launcher.lower() == "multimc":
+        if not self.log.launcher is None and self.log.launcher.lower() == "multimc":
             if self.log.has_content("java.lang.ClassNotFoundException: org.apache.logging.log4j.spi.AbstractLogger"):
                 builder.error("no_abstract_logger")
         
-        if self.log.mod_loader == ModLoader.FORGE:
+        if not self.log.mod_loader is None and self.log.mod_loader == ModLoader.FORGE:
             if self.log.has_content("ClassLoaders$AppClassLoader cannot be cast to class java.net.URLClassLoader"):
                 builder.error("forge_too_new_java")
             if self.log.has_content("Unable to detect the forge installer!"):
