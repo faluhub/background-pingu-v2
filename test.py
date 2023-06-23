@@ -1,1 +1,5 @@
-print([f"1.{18 + i}" for i in range(6)])
+a = ["a", "b", "c"]
+b = []
+
+b.extend(a)
+print(b)

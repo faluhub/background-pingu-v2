@@ -43,7 +43,6 @@ class Log:
         mods = pattern.findall(self._content)
         pattern = re.compile(r"\[✔\]\s+([^\[\]]+\n)")
         mods += [mod.rstrip("\n").replace(" ", "+") + ".jar" for mod in pattern.findall(self._content)]
-        print(mods)
         return mods
     
     @cached_property

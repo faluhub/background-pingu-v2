@@ -11,42 +11,40 @@ class IssueBuilder:
             "warning": [],
             "note": []
         }
+        self.amount = 0
         self._last_added = None
+    
+    def _add_to(self, type: str, value: str, add: bool=False):
+        self._messages[type].append(value)
+        if not add:
+            self.amount += 1
+            self._last_added = type
+        return self
 
     def error(self, key: str, *args):
-        self._last_added = "error"
-        self._messages["error"].append("🔴 " + self.bot.strings.get(f"error.{key}", key).format(*args))
-        return self
+        return self._add_to("error", "🔴 " + self.bot.strings.get(f"error.{key}", key).format(*args))
     
     def warning(self, key: str, *args):
-        self._last_added = "warning"
-        self._messages["warning"].append("🟠 " + self.bot.strings.get(f"warning.{key}", key).format(*args))
-        return self
+        return self._add_to("warning", "🟠 " + self.bot.strings.get(f"warning.{key}", key).format(*args))
     
     def note(self, key: str, *args):
-        self._last_added = "note"
-        self._messages["note"].append("🟡 " + self.bot.strings.get(f"note.{key}", key).format(*args))
-        return self
+        return self._add_to("note", "🟡 " + self.bot.strings.get(f"note.{key}", key).format(*args))
 
     def add(self, key: str):
-        self._messages[self._last_added].append(self.bot.strings.get(f"add.{key}", key))
-        return self
-
-    @property
-    def amount(self) -> int:
-        return len(self._messages["error"]) + len(self._messages["warning"]) + len(self._messages["note"])
+        return self._add_to(self._last_added, "<:reply:1121924702756143234>*" + self.bot.strings.get(f"add.{key}", key) + "*", add=True)
 
     def has_values(self) -> bool:
         return self.amount > 0
 
     def build(self) -> list[str]:
         messages = []
+        index = 0
         for i in self._messages:
             for j in self._messages[i]:
                 add = j + "\n"
-                if len(messages) == 0 or len(messages[len(messages) - 1]) + len(add) > 1000:
-                    messages.append(add)
+                if len(messages) == 0 or index % 9 == 0: messages.append(add)
                 else: messages[len(messages) - 1] += add
+                index += 1
         return messages
 
 class IssueChecker:
@@ -62,8 +60,12 @@ class IssueChecker:
         ]
     
     def get_mod_metadata(self, mod_filename: str) -> dict:
+        mod_filename = mod_filename.lower()
+        filenames = [mod_filename.replace(" ", ""), mod_filename.replace("-", ""), mod_filename.replace("+", "")]
         for mod in self.bot.mods:
-            if mod["name"].lower() in mod_filename:
+            original_name = mod["name"].lower()
+            mod_names = [original_name.replace(" ", ""), original_name.replace("-", "")]
+            if any(mod_name in filename for filename in filenames for mod_name in mod_names):
                 return mod
         return None
     
@@ -79,7 +81,7 @@ class IssueChecker:
                             latest_match = file_data
                             if version.startswith("=="):
                                 return latest_match
-                        elif not latest_match is None: return latest_match
+                        # elif not latest_match is None: return latest_match
                     except ValueError: continue
         return latest_match
 
@@ -87,12 +89,19 @@ class IssueChecker:
         builder = IssueBuilder(self.bot)
 
         has_mcsr_mod = False
-        illegal_mods = 0
+        illegal_mods = []
         checked_mods = []
+        all_incompatible_mods = {}
         for mod in self.log.mods:
             metadata = self.get_mod_metadata(mod)
             if not metadata is None:
                 mod_name = metadata["name"]
+
+                for incompatible_mod in metadata["incompatible"]:
+                    if all_incompatible_mods[mod_name] is None:
+                        all_incompatible_mods[mod_name] = [incompatible_mod]
+                    else:
+                        all_incompatible_mods[mod_name].append(incompatible_mod)
 
                 if mod_name in checked_mods: builder.add("duplicate_mod", mod_name.lower())
                 else: checked_mods.append(mod_name.lower())
@@ -104,9 +113,13 @@ class IssueChecker:
                     builder.error("outdated_mod", mod_name, latest_version["page"])
                     continue
                 elif latest_version is None: continue
-                else: pass
-            illegal_mods += 1
-        if illegal_mods > 0: builder.note("amount_illegal_mods", illegal_mods)
+            else: illegal_mods.append(mod)
+        if len(illegal_mods) > 0: builder.note("amount_illegal_mods", len(illegal_mods))
+
+        for key, value in all_incompatible_mods.items():
+            for incompatible_mod in value:
+                if self.log.has_mod(incompatible_mod):
+                    builder.error("incompatible_mod", key, incompatible_mod)
         
         if not self.log.mod_loader in [None, ModLoader.FABRIC, ModLoader.VANILLA]:
             if has_mcsr_mod:
@@ -122,8 +135,9 @@ class IssueChecker:
                 builder.error("not_using_mac_sodium")
 
             if self.log.launcher.lower() == "multimc":
-                builder.note("use_prism")
+                builder.note("use_prism").add("mac_setup_guide")
         
+        has_java_error = False
         if not self.log.major_java_version is None and self.log.major_java_version < 17:
             wrong_mods = []
             for mod in self.java_17_mods:
@@ -131,30 +145,42 @@ class IssueChecker:
                     if mod in installed_mod.lower():
                         wrong_mods.append(mod)
             if len(wrong_mods) > 0:
-                builder.error("need_java_17_mods", "mods" if len(wrong_mods) > 1 else "a mod", "`, `".join(wrong_mods), "s" if len(wrong_mods) == 1 else "")
-                builder.add("java_upgrade_guide")
+                builder.error(
+                    "need_java_17_mods",
+                    "mods" if len(wrong_mods) > 1 else
+                    "a mod",
+                    "`, `".join(wrong_mods),
+                    "s" if len(wrong_mods) == 1 else
+                    ""
+                ).add("java_upgrade_guide")
+                has_java_error = True
         
-        if self.log.has_content("require the use of Java 17"):
+        if not has_java_error and self.log.has_content("require the use of Java 17"):
             builder.error("need_java_17_mc").add("java_upgrade_guide")
+            has_java_error = True
         
-        needed_java_version = None
-        if self.log.has_content("java.lang.UnsupportedClassVersionError"):
-            match = re.compile(r"class file version (\d+\.\d+)").search(self.log._content)
-            if not match is None:
-                needed_java_version = round(float(match.group(1))) - 44
-        compatibility_match = re.compile(r"The requested compatibility level (JAVA_\d+) could not be set.").search(self.log._content)
-        if not compatibility_match is None:
-            parsed_version = int(compatibility_match.group(1).split("_")[1])
-            if parsed_version > needed_java_version:
-                needed_java_version = parsed_version
-        if not needed_java_version is None:
-            builder.error("need_new_java", needed_java_version).add("java_upgrade_guide")
+        if not has_java_error:
+            needed_java_version = None
+            if self.log.has_content("java.lang.UnsupportedClassVersionError"):
+                match = re.compile(r"class file version (\d+\.\d+)").search(self.log._content)
+                if not match is None:
+                    needed_java_version = round(float(match.group(1))) - 44
+            compatibility_match = re.compile(r"The requested compatibility level (JAVA_\d+) could not be set.").search(self.log._content)
+            if not compatibility_match is None:
+                parsed_version = int(compatibility_match.group(1).split("_")[1])
+                if parsed_version > needed_java_version:
+                    needed_java_version = parsed_version
+            if not needed_java_version is None:
+                builder.error("need_new_java", needed_java_version).add("java_upgrade_guide")
+                has_java_error = True
         
-        if self.log.has_content("You might want to install a 64bit Java version"):
+        if not has_java_error and self.log.has_content("You might want to install a 64bit Java version"):
             builder.error("32_bit_java").add("java_upgrade_guide")
+            has_java_error = True
         
-        if self.log.has_content("Incompatible magic value 0 in class file sun/security/provider/SunEntries"):
+        if not has_java_error and self.log.has_content("Incompatible magic value 0 in class file sun/security/provider/SunEntries"):
             builder.error("broken_java").add("java_upgrade_guide")
+            has_java_error = True
         
         if self.log.mod_loader == ModLoader.FABRIC:
             if not self.log.fabric_version is None:
@@ -306,7 +332,8 @@ class IssueChecker:
                         compatible_version,
                         compatible_version,
                         " (download the .msi file)" if self.log.operating_system == OperatingSystem.WINDOWS else
-                        " (download the .pkg file)" if self.log.operating_system == OperatingSystem.MACOS else "",
+                        " (download the .pkg file)" if self.log.operating_system == OperatingSystem.MACOS else
+                        "",
                         compatible_version
                     )
                 else:
@@ -323,5 +350,9 @@ class IssueChecker:
                 builder.error("random_forge_crash_1")
             if self.log.has_content("java.lang.NoClassDefFoundError: cpw/mods/modlauncher/Launcher"):
                 builder.error("random_forge_crash_2")
+        
+        ranked_matches = re.findall(r"The Fabric Mod \"(.*?)\" is not whitelisted!", self.log._content)
+        if len(ranked_matches) > 0:
+            builder.error("ranked_illegal_mod", ranked_matches[0])
 
         return builder
