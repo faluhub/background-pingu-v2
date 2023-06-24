@@ -1,8 +1,8 @@
 import json, requests
 
-def get_mods():
+def get_mods(start: bool=True):
     """I hate python semver. If it wasn't for that I wouldn't have to do all this..."""
-    print("Getting mods...")
+    if start: print("Getting mods...")
     path = "./BackgroundPingu/data/mods.json"
     mods = []
     res = requests.get("https://raw.githubusercontent.com/RedLime/MCSRMods/v4/meta/v4/files.json", timeout=10)
@@ -42,4 +42,4 @@ def get_mods():
             mods.append(item)
         with open(path, "w") as f:
             json.dump(mods, f, indent=4)
-    print("  Finished getting mods.")
+    if start: print("  Finished getting mods.")
