@@ -15,7 +15,7 @@ class ModCheck(Cog):
 
     @tasks.loop(minutes=15)
     async def mod_updater(self):
-        mods_getter.get_mods()
+        mods_getter.get_mods(start=False)
 
 def setup(bot: BackgroundPingu):
     bot.add_cog(ModCheck(bot))
