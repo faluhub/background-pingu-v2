@@ -107,13 +107,13 @@ class Log:
         match = re.compile(r"Main Class:\n(.*)\n").search(self._content)
         if not match is None:
             line = match.group(1)
-            if "net.minecraft" in line: return ModLoader.VANILLA
-            elif "forge" in self._content.split("\nLibraries:\n", 1)[-1].split("\nNative libraries:\n", 1)[0]:
+            for loader in ModLoader:
+                if loader.value in line:
+                    return loader
+            if "forge" in self._content.split("\nLibraries:\n", 1)[-1].split("\nNative libraries:\n", 1)[0]:
                 return ModLoader.FORGE
-            else:
-                for loader in ModLoader:
-                    if loader.value in line:
-                        return loader
+            if "net.minecraft.client.main.Main" in line:
+                return ModLoader.VANILLA
         return None
     
     @cached_property
