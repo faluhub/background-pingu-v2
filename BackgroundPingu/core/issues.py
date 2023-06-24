@@ -79,7 +79,9 @@ class IssueChecker:
                     try:
                         if minecraft_version.match(version):
                             latest_match = file_data
-                            if version.startswith("=="):
+                            #if version.startswith("=="):
+                            #    return latest_match
+                            if str(minecraft_version) in version:
                                 return latest_match
                         # elif not latest_match is None: return latest_match
                     except ValueError: continue
