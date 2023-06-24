@@ -112,7 +112,8 @@ class Log:
                     return loader
             if "forge" in self._content.split("\nLibraries:\n", 1)[-1].split("\nNative libraries:\n", 1)[0]:
                 return ModLoader.FORGE
-            if "net.minecraft" in line: return ModLoader.VANILLA
+            if "net.minecraft.client.main.Main" in line:
+                return ModLoader.VANILLA
         return None
     
     @cached_property
