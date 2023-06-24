@@ -52,7 +52,6 @@ class IssueChecker:
         self.bot = bot
         self.log = log
         self.java_17_mods = [
-            "worldpreview",
             "antiresourcereload",
             "serversiderng",
             "setspawnmod",
