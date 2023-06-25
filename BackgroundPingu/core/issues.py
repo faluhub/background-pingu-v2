@@ -113,7 +113,7 @@ class IssueChecker:
 
                 latest_version = self.get_latest_version(metadata)
                 if not latest_version is None and not (latest_version["name"] == mod or latest_version["version"] in mod):
-                    if not ('sodiummac' in mod):
+                    if not "sodiummac" in mod:
                         builder.error("outdated_mod", mod_name, latest_version["page"])
                         continue
                 elif latest_version is None: continue
