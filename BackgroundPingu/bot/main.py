@@ -25,8 +25,11 @@ class BackgroundPingu(asb):
             debug_guilds=[1018128160962904114]
         )
 
+        print("\nLoading cogs..."),
+        self.load_cogs()
+
     def load_cogs(self, folder=None):
-        if folder != None: self.path = os.path.join(self.path, folder)
+        if not folder is None: self.path = os.path.join(self.path, folder)
         formatted_path = self.path.strip("./").replace("/", ".").replace("\\", ".")
 
         for file in os.listdir(self.path):
@@ -41,18 +44,13 @@ class BackgroundPingu(asb):
                     self.load_cogs(file)
     
     async def on_connect(self):
-        (
-            print("\nLoading cogs..."),
-            self.load_cogs()
-        )
-        (
-            print("Registering commands..."),
-            await self.register_commands()
-        )
+        print("Registering commands...")
+        await self.sync_commands()
+        await self.register_commands()
         print("\nConnected")
-        return await super().on_connect()
 
-    async def on_ready(self): return print(f"Ready, took {(datetime.utcnow() - self.start_time).seconds} seconds.")
+    async def on_ready(self):
+        return print(f"Ready, took {(datetime.utcnow() - self.start_time).seconds} seconds.")
 
 if __name__ == "__main__":
     exit("The bot cannot be run directly from the bot file.")
