@@ -271,9 +271,6 @@ class IssueChecker:
             if self.log.has_content("Failed to locate library:"): builder.error("builtin_lib_crash", system_arg)
             else: builder.note("builtin_lib_recommendation", system_arg)
         
-        if self.log.has_content("me.jellysquid.mods.sodium.client"):
-            builder.error("sodium_config_crash")
-        
         if self.log.has_mod("serversiderng"):
             builder.note("using_ssrng")
         
@@ -297,13 +294,25 @@ class IssueChecker:
         if self.log.has_content("WGL_ARB_create_context_profile is unavaible"):
             builder.error("intel_hd2000").add("intell_hd2000_info")
         
+        if self.log.has_content("me.jellysquid.mods.sodium.client"):
+            builder.error("sodium_config_crash")
+        
+        if self.log.has_content("java.lang.IllegalStateException: Adding Entity listener a second time") and self.log.has_content("me.jellysquid.mods.lithium.common.entity.tracker.nearby"):
+            builder.note("lithium_crash")
+        
+        if self.log.has_content("java.util.ConcurrentModificationException") and not self.log.minecraft_version is None and self.log.minecraft_version == "1.16.1" and not any("voyager" in mod.lower() for mod in self.log.mods):
+            builder.error("no_voyager_crash")
+        
+        if self.log.has_content("Failed to light chunk") and self.log.has_content("net.minecraft.class_148: Feature placement") and self.log.has_content("java.lang.ArrayIndexOutOfBoundsException"):
+            builder.note("starlight_crash")
+        
+        elif self.log.has_content("Process crashed with exitcode -805306369") or self.log.has_content("java.lang.ArithmeticException"):
+            builder.warning("exitcode_805306369")
+        
         if self.log.has_content("-1073741819 (0xffffffffc0000005)") or self.log.has_content("The instruction at 0x%p referenced memory at 0x%p. The memory could not be %s."):
             builder.error("exitcode_1073741819")
             for i in range(4):
                 builder.add(f"exitcode_1073741819_{i + 1}")
-        
-        if self.log.has_content("Process crashed with exitcode -805306369") or self.log.has_content("java.lang.ArithmeticException") or (self.log.has_content("########## GL ERROR ##########") and self.log.has_content("@ Render")):
-            builder.warning("exitcode_805306369")
         
         if self.log.has_mod("autoreset") or self.log.has_content("the mods atum and autoreset"):
             atum_link = "https://modrinth.com/mod/atum/versions"
