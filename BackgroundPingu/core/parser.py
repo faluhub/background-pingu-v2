@@ -142,6 +142,7 @@ class Log:
         match = re.compile(r"JVM Flags: \S+ total; (.*(?:\n|$))", re.DOTALL).search(self._content)
         if not match is None:
             return match.group(1)
+        return None
 
     @cached_property
     def max_allocated(self):
