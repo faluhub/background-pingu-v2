@@ -303,7 +303,7 @@ class IssueChecker:
                 latest_version = self.get_latest_version(metadata)
                 if not latest_version is None:
                     builder.add("mod_download", metadata["name"], latest_version["page"])
-        elif self.log.has_content("me.jellysquid.mods.sodium.client"):
+        elif self.log.has_content("me.jellysquid.mods.sodium.client.SodiumClientMod.options"):
             builder.error("sodium_config_crash")
         
         if self.log.has_content("java.lang.IllegalStateException: Adding Entity listener a second time") and self.log.has_content("me.jellysquid.mods.lithium.common.entity.tracker.nearby"):
