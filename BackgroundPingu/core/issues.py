@@ -325,13 +325,12 @@ class IssueChecker:
             for i in range(4): builder.add(f"exitcode_1073741819_{i + 1}")
         
         if self.log.has_mod("autoreset") or self.log.has_content("the mods atum and autoreset"):
-            atum_link = "https://modrinth.com/mod/atum/versions"
+            builder.error("autoreset_user")
             metadata = self.get_mod_metadata("atum")
             if not metadata is None:
                 latest_version = self.get_latest_version(metadata)
                 if not latest_version is None:
-                    atum_link = latest_version["page"]
-            builder.error("autoreset_user", atum_link)
+                    builder.add(metadata["name"], latest_version["page"])
 
         if self.log.has_content("Failed to find Minecraft main class"):
             builder.error("online_launch_required")
