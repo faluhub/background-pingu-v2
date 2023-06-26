@@ -53,6 +53,9 @@ class Log:
             version_match = re.compile(r"Java is version (\S+),").search(line)
             if not version_match is None:
                 return version_match.group(1)
+        version_match = re.compile(r"Java Version: (\S+),").search(line)
+        if not version_match is None:
+            return version_match.group(1)
         return None
     
     @cached_property
@@ -86,12 +89,17 @@ class Log:
             version_match = re.compile(r"--version (\S+)\s").search(line)
             if not version_match is None:
                 return version_match.group(1)
+        match = re.compile(r"Loading Minecraft (\S+) with Fabric Loader").search(self._content)
+        if not match is None:
+            return match.group(1)
         return None
     
     @cached_property
     def fabric_version(self) -> version.Version:
         match = re.compile(r"Loading Minecraft \S+ with Fabric Loader (\S+)").search(self._content)
-        return version.parse(match.group(1)) if not match is None else None
+        if not match is None:
+            return version.parse(match.group(1))
+        return None
     
     @cached_property
     def launcher(self) -> str:
@@ -108,18 +116,32 @@ class Log:
         if not match is None:
             line = match.group(1)
             for loader in ModLoader:
-                if loader.value in line:
+                if loader.value.lower() in line.lower():
                     return loader
-            if "forge" in self._content.split("\nLibraries:\n", 1)[-1].split("\nNative libraries:\n", 1)[0]:
+            if "net.minecraft.launchwrapper.Launch" in line:
                 return ModLoader.FORGE
             if "net.minecraft.client.main.Main" in line:
                 return ModLoader.VANILLA
+        match = re.search(r"Loading Minecraft \S+ with Fabric Loader",self._content)
+        if not match is None:
+            return ModLoader.FABRIC
+        match = re.search(r"Client brand changed to '(\S+)'",self._content)
+        if match:
+            for loader in ModLoader:
+                if loader.value.lower() in match.group(1).lower():
+                    return loader
+        if "client brand is untouched" in self._content:
+            return ModLoader.VANILLA
         return None
     
     @cached_property
     def java_arguments(self):
         match = re.compile(r"Java Arguments:\n(.*?)\n", re.DOTALL).search(self._content)
-        return match.group(1) if not match is None else None
+        if not match is None:
+            return match.group(1)
+        match = re.compile(r"JVM Flags: \S+ total; (.*(?:\n|$))", re.DOTALL).search(self._content)
+        if not match is None:
+            return match.group(1)
 
     @cached_property
     def max_allocated(self):
