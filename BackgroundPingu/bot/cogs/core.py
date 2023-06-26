@@ -1,4 +1,5 @@
 import discord, re, traceback
+from discord import commands
 from discord.ext.commands import Cog
 from BackgroundPingu.bot.main import BackgroundPingu
 from BackgroundPingu.core import parser, issues
@@ -8,11 +9,14 @@ class Core(Cog):
     def __init__(self, bot: BackgroundPingu) -> None:
         super().__init__()
         self.bot = bot
-
-    @Cog.listener()
-    async def on_message(self, msg: discord.Message):
-        if msg.author.id == self.bot.user.id: return
-
+    
+    async def check_log(self, msg: discord.Message, include_content=False):
+        found_result = False
+        result = {
+            "text": None,
+            "embed": None,
+            "view": None
+        }
         link_pattern = r"https:\/\/paste\.ee\/p\/\w+|https:\/\/mclo\.gs\/\w+|https?:\/\/[\w\/.]+\.(?:txt|log)"
         matches = re.findall(link_pattern, msg.content)
         if len(msg.attachments) > 0:
@@ -25,15 +29,41 @@ class Core(Cog):
                     results = issues.IssueChecker(self.bot, log).check()
                     if results.has_values():
                         messages = results.build()
-                        embed = discord.Embed(
-                            title=f"{results.amount} Issue{'s' if results.amount > 1 else ''} Found:",
-                            description=messages[0],
-                            color=self.bot.color
-                        )
-                        return await msg.reply(embed=embed, view=views.Paginator(messages))
+                        result["embed"] = await self.build_embed(results, messages)
+                        result["view"] = views.Paginator(messages)
+                        found_result = True
                 except Exception as e:
                     error = "".join(traceback.format_exception(e))
-                    return await msg.reply(f"```\n{error}\n```\n<@810863994985250836>, <@695658634436411404> :bug:")
+                    result["text"] = f"```\n{error}\n```\n<@810863994985250836>, <@695658634436411404> :bug:"
+                    found_result = True
+            if found_result: break
+        if not found_result and include_content:
+            results = issues.IssueChecker(self.bot, parser.Log(msg.content)).check()
+            if results.has_values():
+                messages = results.build()
+                result["embed"] = await self.build_embed(results, messages)
+                result["view"] = views.Paginator(messages)
+        return result
+
+    async def build_embed(self, results: issues.IssueBuilder, messages: list[str]):
+        return discord.Embed(
+            title=f"{results.amount} Issue{'s' if results.amount > 1 else ''} Found:",
+            description=messages[0],
+            color=self.bot.color
+        )
+
+    @Cog.listener()
+    async def on_message(self, msg: discord.Message):
+        result = await self.check_log(msg)
+        if not result["text"] is None or (not result["embed"] is None and not result["view"] is None):
+            return await msg.reply(content=result["text"], embed=result["embed"], view=result["view"])
+    
+    @commands.message_command(name="Check Log")
+    async def check_log_cmd(self, ctx: discord.ApplicationContext, msg: discord.Message):
+        result = await self.check_log(msg, include_content=True)
+        if not result["text"] is None or (not result["embed"] is None and not result["view"] is None):
+            return await ctx.response.send_message(content=result["text"], embed=result["embed"], view=result["view"])
+        return await ctx.response.send_message(":x: **No log or no issues found in this message.**", ephemeral=True)
 
 def setup(bot: BackgroundPingu):
     bot.add_cog(Core(bot))
