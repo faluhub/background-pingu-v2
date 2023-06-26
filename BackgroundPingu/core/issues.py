@@ -69,6 +69,7 @@ class IssueChecker:
         return None
     
     def get_latest_version(self, metadata: dict) -> bool:
+        if self.log.minecraft_version is None: return None
         minecraft_version = semver.Version.parse(self.log.minecraft_version)
         latest_match = None
         for file_data in metadata["files"]:
@@ -246,7 +247,7 @@ class IssueChecker:
         if self.log.has_mod("phosphor"):
             builder.note("starlight_better")
             metadata = self.get_mod_metadata("starlight")
-            if not metadata is None and not self.log.minecraft_version is None:
+            if not metadata is None:
                 latest_version = self.get_latest_version(metadata)
                 if not latest_version is None:
                     builder.add("mod_download", metadata["name"], latest_version["page"])
@@ -297,7 +298,7 @@ class IssueChecker:
         if self.log.has_content('java.lang.NullPointerException: Cannot invoke "net.minecraft.class_2680.method_26213()" because "state" is null'):
             builder.error("old_sodium_crash")
             metadata = self.get_mod_metadata("sodium")
-            if not metadata is None and not self.log.minecraft_version is None:
+            if not metadata is None:
                 latest_version = self.get_latest_version(metadata)
                 if not latest_version is None:
                     builder.add("mod_download", metadata["name"], latest_version["page"])
