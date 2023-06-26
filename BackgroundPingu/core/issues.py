@@ -271,9 +271,6 @@ class IssueChecker:
             if self.log.has_content("Failed to locate library:"): builder.error("builtin_lib_crash", system_arg)
             else: builder.note("builtin_lib_recommendation", system_arg)
         
-        if self.log.has_mod("serversiderng"):
-            builder.note("using_ssrng")
-        
         required_mod_match = re.findall(r"requires (.*?) of (\w+),", self.log._content)
         for required_mod in required_mod_match:
             mod_name = required_mod[1]
@@ -303,7 +300,13 @@ class IssueChecker:
         if self.log.has_content("java.util.ConcurrentModificationException") and not self.log.minecraft_version is None and self.log.minecraft_version == "1.16.1" and not any("voyager" in mod.lower() for mod in self.log.mods):
             builder.error("no_voyager_crash")
         
-        if self.log.has_content("Failed to light chunk") and self.log.has_content("net.minecraft.class_148: Feature placement") and self.log.has_content("java.lang.ArrayIndexOutOfBoundsException"):
+        if self.log.has_mod("serversiderng-9"):
+            builder.note("using_ssrng")
+        
+        if any(self.log.has_mod(f"serversiderng-{i}") for i in range(1,9)):
+            builder.error("using_old_ssrng")
+        
+        elif self.log.has_content("Failed to light chunk") and self.log.has_content("net.minecraft.class_148: Feature placement") and self.log.has_content("java.lang.ArrayIndexOutOfBoundsException"):
             builder.note("starlight_crash")
         
         elif self.log.has_content("Process crashed with exitcode -805306369") or self.log.has_content("java.lang.ArithmeticException"):

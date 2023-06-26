@@ -56,6 +56,7 @@
     "error.sodium_config_crash": "If this crash happened when you opened the video settings menu or loaded into a world, try deleting `.minecraft/config/sodium-options.json`.",
     "error.too_little_ram_crash": "You have too little RAM allocated.",
     "error.too_much_ram": "You have way too much RAM allocated, which can cause lag spikes.",
+    "error.using_old_ssrng": "You're using an old version of serverSideRNG, which is now illegal and can often cause problems. The server for it is currently down, so the mod is useless regardless and you should delete it.",
     "note.amount_illegal_mods": "You are using `{}` illegal mods!",
     "note.builtin_lib_recommendation": "You seem to be using your system's `{}`. This can cause the instance to crash if not properly setup. In case of a crash, make sure this isn't the cause of it.",
     "note.duplicate_mod": "You have several versions of `{}` installed. You should delete the older ones.",
