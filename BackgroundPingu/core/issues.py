@@ -234,6 +234,8 @@ class IssueChecker:
                 builder.note("onedrive")
             if "C:/Program Files" in self.log.minecraft_folder:
                 builder.note("program_files")
+            if "Rar$" in self.log.minecraft_folder:
+                builder.error("need_to_extract_from_zip",self.log.launcher if not self.log.launcher is None else "the launcher")
         
         if self.log.has_content("A fatal error has been detected by the Java Runtime Environment") or self.log.has_content("EXCEPTION_ACCESS_VIOLATION"):
             builder.error("eav_crash")
