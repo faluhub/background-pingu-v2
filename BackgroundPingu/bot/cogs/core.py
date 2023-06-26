@@ -1,4 +1,4 @@
-import discord, re
+import discord, re, traceback
 from discord.ext.commands import Cog
 from BackgroundPingu.bot.main import BackgroundPingu
 from BackgroundPingu.core import parser, issues
@@ -32,7 +32,8 @@ class Core(Cog):
                         )
                         return await msg.reply(embed=embed, view=views.Paginator(messages))
                 except Exception as e:
-                    return await msg.reply(f"```\n{e.__traceback__}\n```\n<@810863994985250836>, <@695658634436411404> :bug:")
+                    error = "".join(traceback.format_exception(e))
+                    return await msg.reply(f"```\n{error}\n```\n<@810863994985250836>, <@695658634436411404> :bug:")
 
 def setup(bot: BackgroundPingu):
     bot.add_cog(Core(bot))

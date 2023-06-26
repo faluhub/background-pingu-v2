@@ -18,7 +18,7 @@
     "add.mod_download": "You can download `{}` [**here**]({}).",
     "error.32_bit_java": "You're using a 32-bit installation of `Java`.",
     "error.assets_index_fail": "Try restarting your PC and then launching the instance again.",
-    "error.autoreset_user": "You're using `AutoReset`. It's a really old mod that is no longer allowed. `Atum` is a better version of it. You can download it [**here**]({}).",
+    "error.autoreset_user": "You're using `AutoReset`. It's a really old mod that is no longer allowed. `Atum` is a better version of it.",
     "error.broken_fabric": "You're using a completely broken version of `Fabric Loader`. You should update it.",
     "error.broken_java": "Your `Java` installation seems to be broken.",
     "error.builtin_lib_crash": "You're using your system's {}, which is causing the crash.",

@@ -197,10 +197,11 @@ class IssueChecker:
                             ver = version.parse(match.group(1))
                             if highest_srigt_ver is None or ver > highest_srigt_ver:
                                 highest_srigt_ver = ver
-                if highest_srigt_ver < version.parse("13.3") and self.log.fabric_version > version.parse("0.14.14"):
-                    builder.error("incompatible_srigt")
-                    if not self.log.minecraft_version == "1.16.1":
-                        builder.add("incompatible_srigt_alternative")
+                if not highest_srigt_ver is None:
+                    if highest_srigt_ver < version.parse("13.3") and self.log.fabric_version > version.parse("0.14.14"):
+                        builder.error("incompatible_srigt")
+                        if not self.log.minecraft_version == "1.16.1":
+                            builder.add("incompatible_srigt_alternative")
                 
                 if self.log.fabric_version < version.parse("0.12.2"):
                     builder.error("really_old_fabric").add("fabric_guide")
@@ -326,13 +327,12 @@ class IssueChecker:
             for i in range(4): builder.add(f"exitcode_1073741819_{i + 1}")
         
         if self.log.has_mod("autoreset") or self.log.has_content("the mods atum and autoreset"):
-            atum_link = "https://modrinth.com/mod/atum/versions"
+            builder.error("autoreset_user")
             metadata = self.get_mod_metadata("atum")
             if not metadata is None:
                 latest_version = self.get_latest_version(metadata)
                 if not latest_version is None:
-                    atum_link = latest_version["page"]
-            builder.error("autoreset_user", atum_link)
+                    builder.add(metadata["name"], latest_version["page"])
 
         if self.log.has_content("Failed to find Minecraft main class"):
             builder.error("online_launch_required")

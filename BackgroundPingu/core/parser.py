@@ -92,6 +92,9 @@ class Log:
         match = re.compile(r"Loading Minecraft (\S+) with Fabric Loader").search(self._content)
         if not match is None:
             return match.group(1)
+        match = re.compile(r"Minecraft Version ID: (\S+)").search(self._content)
+        if not match is None:
+            return match.group(1)
         return None
     
     @cached_property
