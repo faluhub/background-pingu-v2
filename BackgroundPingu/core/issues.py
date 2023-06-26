@@ -118,7 +118,7 @@ class IssueChecker:
                         continue
                 elif latest_version is None: continue
             else: illegal_mods.append(mod)
-        if len(illegal_mods) > 0: builder.note("amount_illegal_mods", len(illegal_mods))
+        if len(illegal_mods) > 0: builder.note("amount_illegal_mods", len(illegal_mods), 's' if len(illegal_mods)>1 else '')
 
         for key, value in all_incompatible_mods.items():
             for incompatible_mod in value:
@@ -273,7 +273,7 @@ class IssueChecker:
         if not system_arg is None:
             if self.log.has_content("Failed to locate library:"): builder.error("builtin_lib_crash", system_arg)
             else: builder.note("builtin_lib_recommendation", system_arg)
-        
+
         required_mod_match = re.findall(r"requires (.*?) of (\w+),", self.log._content)
         for required_mod in required_mod_match:
             mod_name = required_mod[1]
@@ -300,7 +300,7 @@ class IssueChecker:
         if self.log.has_content("java.lang.IllegalStateException: Adding Entity listener a second time") and self.log.has_content("me.jellysquid.mods.lithium.common.entity.tracker.nearby"):
             builder.note("lithium_crash")
         
-        if self.log.has_content("java.util.ConcurrentModificationException") and not self.log.minecraft_version is None and self.log.minecraft_version == "1.16.1" and not any("voyager" in mod.lower() for mod in self.log.mods):
+        if self.log.has_content("java.util.ConcurrentModificationException") and not self.log.minecraft_version is None and self.log.minecraft_version == "1.16.1" and not any(self.log.has_mod("voyager") for mod in self.log.mods):
             builder.error("no_voyager_crash")
         
         if self.log.has_mod("serversiderng-9"):
