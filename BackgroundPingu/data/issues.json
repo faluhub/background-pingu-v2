@@ -45,6 +45,7 @@
     "error.no_loader": "You seem to be using mods, but haven't installed a mod loader.",
     "error.no_voyager_crash": "This is a rare crash that can be prevented by using `Voyager`. You should install it.",
     "error.not_using_mac_sodium": "You seem to be using a version of `Sodium` that has a memory leak on `MacOS`. Delete the one you have and download [**this version**](https://github.com/Minecraft-Java-Edition-Speedrunning/mcsr-sodium-mac-1.16.1/releases/tag/latest) instead.",
+    "error.old_sodium_crash": "This crash is caused by using an old version of `Sodium`.",
     "error.online_launch_required": "You need to launch your instances in `online mode` at least once before you can launch them in `offline mode`, so that your launcher can download the assets files.",
     "error.outdated_mod": "The mod `{}` is not listed as the most recent legal version! Download the latest legal version [**here**]({}).",
     "error.random_forge_crash_1": "Try launching your instance `online` if you haven't. Also, try using a different version of `Forge`.",

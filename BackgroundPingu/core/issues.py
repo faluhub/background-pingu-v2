@@ -30,8 +30,8 @@ class IssueBuilder:
     def note(self, key: str, *args):
         return self._add_to("note", "🟡 " + self.bot.strings.get(f"note.{key}", key).format(*args))
 
-    def add(self, key: str):
-        return self._add_to(self._last_added, "<:reply:1121924702756143234>*" + self.bot.strings.get(f"add.{key}", key) + "*", add=True)
+    def add(self, key: str, *args):
+        return self._add_to(self._last_added, "<:reply:1121924702756143234>*" + self.bot.strings.get(f"add.{key}", key).format(*args) + "*", add=True)
 
     def has_values(self) -> bool:
         return self.amount > 0
@@ -246,7 +246,7 @@ class IssueChecker:
         if self.log.has_mod("phosphor"):
             builder.note("starlight_better")
             metadata = self.get_mod_metadata("starlight")
-            if not metadata is None:
+            if not metadata is None and not self.log.minecraft_version is None:
                 latest_version = self.get_latest_version(metadata)
                 if not latest_version is None:
                     builder.add("mod_download", metadata["name"], latest_version["page"])
@@ -294,7 +294,15 @@ class IssueChecker:
         if self.log.has_content("WGL_ARB_create_context_profile is unavaible"):
             builder.error("intel_hd2000").add("intell_hd2000_info")
         
-        if self.log.has_content("me.jellysquid.mods.sodium.client"):
+        if self.log.has_content('java.lang.NullPointerException: Cannot invoke "net.minecraft.class_2680.method_26213()" because "state" is null'):
+            builder.error("old_sodium_crash")
+            metadata = self.get_mod_metadata("sodium")
+            if not metadata is None and not self.log.minecraft_version is None:
+                latest_version = self.get_latest_version(metadata)
+                if not latest_version is None:
+                    builder.add("mod_download", metadata["name"], latest_version["page"])
+        
+        elif self.log.has_content("me.jellysquid.mods.sodium.client"):
             builder.error("sodium_config_crash")
         
         if self.log.has_content("java.lang.IllegalStateException: Adding Entity listener a second time") and self.log.has_content("me.jellysquid.mods.lithium.common.entity.tracker.nearby"):

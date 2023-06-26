@@ -53,7 +53,7 @@ class Log:
             version_match = re.compile(r"Java is version (\S+),").search(line)
             if not version_match is None:
                 return version_match.group(1)
-        version_match = re.compile(r"Java Version: (\S+),").search(line)
+        version_match = re.compile(r"Java Version: (\S+),").search(self._content)
         if not version_match is None:
             return version_match.group(1)
         return None
