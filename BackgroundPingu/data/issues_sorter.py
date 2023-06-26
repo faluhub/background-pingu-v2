@@ -14,3 +14,6 @@ def sort():
             json.dump(dict(sorted(strings.items())), w, indent=4)
     print(f"  Added {added_periods} period{'s' if not added_periods == 1 else ''}.")
     print("  Finished sorting issues.")
+
+if __name__ == "__main__":
+    sort()

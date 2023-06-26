@@ -119,7 +119,7 @@ class IssueChecker:
                         continue
                 elif latest_version is None: continue
             else: illegal_mods.append(mod)
-        if len(illegal_mods) > 0: builder.note("amount_illegal_mods", len(illegal_mods), 's' if len(illegal_mods)>1 else '')
+        if len(illegal_mods) > 0: builder.note("amount_illegal_mods", len(illegal_mods), "s" if len(illegal_mods) > 1 else "")
 
         for key, value in all_incompatible_mods.items():
             for incompatible_mod in value:
@@ -295,14 +295,13 @@ class IssueChecker:
         if self.log.has_content("WGL_ARB_create_context_profile is unavaible"):
             builder.error("intel_hd2000").add("intell_hd2000_info")
         
-        if self.log.has_content('java.lang.NullPointerException: Cannot invoke "net.minecraft.class_2680.method_26213()" because "state" is null'):
+        if self.log.has_content("java.lang.NullPointerException: Cannot invoke \"net.minecraft.class_2680.method_26213()\" because \"state\" is null"):
             builder.error("old_sodium_crash")
             metadata = self.get_mod_metadata("sodium")
             if not metadata is None:
                 latest_version = self.get_latest_version(metadata)
                 if not latest_version is None:
                     builder.add("mod_download", metadata["name"], latest_version["page"])
-        
         elif self.log.has_content("me.jellysquid.mods.sodium.client"):
             builder.error("sodium_config_crash")
         
@@ -315,19 +314,16 @@ class IssueChecker:
         if self.log.has_mod("serversiderng-9"):
             builder.note("using_ssrng")
         
-        if any(self.log.has_mod(f"serversiderng-{i}") for i in range(1,9)):
+        if any(self.log.has_mod(f"serversiderng-{i}") for i in range(1, 9)):
             builder.error("using_old_ssrng")
-        
         elif self.log.has_content("Failed to light chunk") and self.log.has_content("net.minecraft.class_148: Feature placement") and self.log.has_content("java.lang.ArrayIndexOutOfBoundsException"):
             builder.note("starlight_crash")
-        
         elif self.log.has_content("Process crashed with exitcode -805306369") or self.log.has_content("java.lang.ArithmeticException"):
             builder.warning("exitcode_805306369")
         
         if self.log.has_content("-1073741819 (0xffffffffc0000005)") or self.log.has_content("The instruction at 0x%p referenced memory at 0x%p. The memory could not be %s."):
             builder.error("exitcode_1073741819")
-            for i in range(4):
-                builder.add(f"exitcode_1073741819_{i + 1}")
+            for i in range(4): builder.add(f"exitcode_1073741819_{i + 1}")
         
         if self.log.has_mod("autoreset") or self.log.has_content("the mods atum and autoreset"):
             atum_link = "https://modrinth.com/mod/atum/versions"

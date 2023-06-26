@@ -21,15 +21,18 @@ class Core(Cog):
         for match in matches:
             log = parser.Log.from_link(match)
             if not log is None:
-                results = issues.IssueChecker(self.bot, log).check()
-                if results.has_values():
-                    messages = results.build()
-                    embed = discord.Embed(
-                        title=f"{results.amount} Issue{'s' if results.amount > 1 else ''} Found:",
-                        description=messages[0],
-                        color=self.bot.color
-                    )
-                    return await msg.reply(embed=embed, view=views.Paginator(messages))
+                try:
+                    results = issues.IssueChecker(self.bot, log).check()
+                    if results.has_values():
+                        messages = results.build()
+                        embed = discord.Embed(
+                            title=f"{results.amount} Issue{'s' if results.amount > 1 else ''} Found:",
+                            description=messages[0],
+                            color=self.bot.color
+                        )
+                        return await msg.reply(embed=embed, view=views.Paginator(messages))
+                except Exception as e:
+                    return await msg.reply(f"```\n{e.__traceback__}\n```\n<@810863994985250836>, <@695658634436411404> :bug:")
 
 def setup(bot: BackgroundPingu):
     bot.add_cog(Core(bot))
