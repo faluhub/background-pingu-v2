@@ -30,8 +30,8 @@ class IssueBuilder:
     def note(self, key: str, *args):
         return self._add_to("note", "🟡 " + self.bot.strings.get(f"note.{key}", key).format(*args))
 
-    def add(self, key: str):
-        return self._add_to(self._last_added, "<:reply:1121924702756143234>*" + self.bot.strings.get(f"add.{key}", key) + "*", add=True)
+    def add(self, key: str, *args):
+        return self._add_to(self._last_added, "<:reply:1121924702756143234>*" + self.bot.strings.get(f"add.{key}", key).format(*args) + "*", add=True)
 
     def has_values(self) -> bool:
         return self.amount > 0
@@ -113,12 +113,12 @@ class IssueChecker:
 
                 latest_version = self.get_latest_version(metadata)
                 if not latest_version is None and not (latest_version["name"] == mod or latest_version["version"] in mod):
-                    if not "sodiummac" in mod:
+                    if not "sodiummac" in mod and not "serversiderng" in mod.lower():
                         builder.error("outdated_mod", mod_name, latest_version["page"])
                         continue
                 elif latest_version is None: continue
             else: illegal_mods.append(mod)
-        if len(illegal_mods) > 0: builder.note("amount_illegal_mods", len(illegal_mods))
+        if len(illegal_mods) > 0: builder.note("amount_illegal_mods", len(illegal_mods), 's' if len(illegal_mods)>1 else '')
 
         for key, value in all_incompatible_mods.items():
             for incompatible_mod in value:
@@ -234,6 +234,8 @@ class IssueChecker:
                 builder.note("onedrive")
             if "C:/Program Files" in self.log.minecraft_folder:
                 builder.note("program_files")
+            if "Rar$" in self.log.minecraft_folder:
+                builder.error("need_to_extract_from_zip",self.log.launcher if not self.log.launcher is None else "the launcher")
         
         if self.log.has_content("A fatal error has been detected by the Java Runtime Environment") or self.log.has_content("EXCEPTION_ACCESS_VIOLATION"):
             builder.error("eav_crash")
@@ -244,7 +246,7 @@ class IssueChecker:
         if self.log.has_mod("phosphor"):
             builder.note("starlight_better")
             metadata = self.get_mod_metadata("starlight")
-            if not metadata is None:
+            if not metadata is None and not self.log.minecraft_version is None:
                 latest_version = self.get_latest_version(metadata)
                 if not latest_version is None:
                     builder.add("mod_download", metadata["name"], latest_version["page"])
@@ -271,13 +273,7 @@ class IssueChecker:
         if not system_arg is None:
             if self.log.has_content("Failed to locate library:"): builder.error("builtin_lib_crash", system_arg)
             else: builder.note("builtin_lib_recommendation", system_arg)
-        
-        if self.log.has_content("me.jellysquid.mods.sodium.client"):
-            builder.error("sodium_config_crash")
-        
-        if self.log.has_mod("serversiderng"):
-            builder.note("using_ssrng")
-        
+
         required_mod_match = re.findall(r"requires (.*?) of (\w+),", self.log._content)
         for required_mod in required_mod_match:
             mod_name = required_mod[1]
@@ -298,13 +294,39 @@ class IssueChecker:
         if self.log.has_content("WGL_ARB_create_context_profile is unavaible"):
             builder.error("intel_hd2000").add("intell_hd2000_info")
         
+        if self.log.has_content('java.lang.NullPointerException: Cannot invoke "net.minecraft.class_2680.method_26213()" because "state" is null'):
+            builder.error("old_sodium_crash")
+            metadata = self.get_mod_metadata("sodium")
+            if not metadata is None and not self.log.minecraft_version is None:
+                latest_version = self.get_latest_version(metadata)
+                if not latest_version is None:
+                    builder.add("mod_download", metadata["name"], latest_version["page"])
+        
+        elif self.log.has_content("me.jellysquid.mods.sodium.client"):
+            builder.error("sodium_config_crash")
+        
+        if self.log.has_content("java.lang.IllegalStateException: Adding Entity listener a second time") and self.log.has_content("me.jellysquid.mods.lithium.common.entity.tracker.nearby"):
+            builder.note("lithium_crash")
+        
+        if self.log.has_content("java.util.ConcurrentModificationException") and not self.log.minecraft_version is None and self.log.minecraft_version == "1.16.1" and not self.log.has_mod("voyager"):
+            builder.error("no_voyager_crash")
+        
+        if self.log.has_mod("serversiderng-9"):
+            builder.note("using_ssrng")
+        
+        if any(self.log.has_mod(f"serversiderng-{i}") for i in range(1,9)):
+            builder.error("using_old_ssrng")
+        
+        elif self.log.has_content("Failed to light chunk") and self.log.has_content("net.minecraft.class_148: Feature placement") and self.log.has_content("java.lang.ArrayIndexOutOfBoundsException"):
+            builder.note("starlight_crash")
+        
+        elif self.log.has_content("Process crashed with exitcode -805306369") or self.log.has_content("java.lang.ArithmeticException"):
+            builder.warning("exitcode_805306369")
+        
         if self.log.has_content("-1073741819 (0xffffffffc0000005)") or self.log.has_content("The instruction at 0x%p referenced memory at 0x%p. The memory could not be %s."):
             builder.error("exitcode_1073741819")
             for i in range(4):
                 builder.add(f"exitcode_1073741819_{i + 1}")
-        
-        if self.log.has_content("Process crashed with exitcode -805306369") or self.log.has_content("java.lang.ArithmeticException") or (self.log.has_content("########## GL ERROR ##########") and self.log.has_content("@ Render")):
-            builder.warning("exitcode_805306369")
         
         if self.log.has_mod("autoreset") or self.log.has_content("the mods atum and autoreset"):
             atum_link = "https://modrinth.com/mod/atum/versions"
