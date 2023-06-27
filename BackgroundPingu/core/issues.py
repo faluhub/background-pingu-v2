@@ -70,7 +70,9 @@ class IssueChecker:
     
     def get_latest_version(self, metadata: dict) -> bool:
         if self.log.minecraft_version is None: return None
-        minecraft_version = semver.Version.parse(self.log.minecraft_version)
+        formatted_mc_version = self.log.minecraft_version
+        if formatted_mc_version.count(".") == 1: formatted_mc_version += ".0"
+        minecraft_version = semver.Version.parse(formatted_mc_version)
         latest_match = None
         for file_data in metadata["files"]:
             for game_version in file_data["game_versions"]:
