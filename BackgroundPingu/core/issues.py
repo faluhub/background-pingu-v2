@@ -64,7 +64,7 @@ class IssueChecker:
         for mod in self.bot.mods:
             original_name = mod["name"].lower()
             mod_name = original_name.replace(" ", "").replace("-", "").replace("_", "")
-            mod_name = "zbufferfog" if mod_name is "legacyplanarfog" else mod_name
+            mod_name = "zbufferfog" if mod_name == "legacyplanarfog" else mod_name
             if mod_name in filename: return mod
         return None
     
