@@ -115,8 +115,10 @@ class IssueChecker:
                 has_mcsr_mod = True
 
                 latest_version = self.get_latest_version(metadata)
+
                 if not latest_version is None and not (latest_version["name"] == mod or latest_version["version"] in mod):
-                    if not "sodiummac" in mod and not "serversiderng" in mod.lower() and not "optifine" in mod.lower():
+                    assume_as_latest = ["sodiummac","serversiderng","optifine"]
+                    if all(not weird_mod in mod for weird_mod in assume_as_latest):
                         builder.error("outdated_mod", mod_name, latest_version["page"])
                         continue
                 elif latest_version is None: continue
