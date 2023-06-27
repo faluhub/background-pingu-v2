@@ -117,7 +117,15 @@ class IssueChecker:
                 latest_version = self.get_latest_version(metadata)
 
                 if not latest_version is None and not (latest_version["name"] == mod or latest_version["version"] in mod):
-                    assume_as_latest = ["sodiummac", "serversiderng", "optifine", "lazystronghold", "krypton", "sodium-extra"]
+                    assume_as_latest = [
+                        "sodiummac",
+                        "serversiderng",
+                        "lazystronghold",
+                        "krypton",
+                        "sodium-fabric-mc1.16.5-0.2.0+build.4",
+                        "optifine",
+                        "sodium-extra"
+                    ]
                     if all(not weird_mod in mod.lower() for weird_mod in assume_as_latest):
                         builder.warning("outdated_mod", mod_name, latest_version["page"])
                         continue
