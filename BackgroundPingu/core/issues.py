@@ -283,6 +283,15 @@ class IssueChecker:
         if self.log.has_content("Pixel format not accelerated"):
             builder.error("gl_pixel_format")
         
+        if self.log.has_content("WGL_ARB_create_context_profile is unavaible"):
+            builder.error("intel_hd2000").add("intell_hd2000_info")
+
+        if self.log.has_content("org.lwjgl.LWJGLException: Could not choose GLX13 config") or self.log.has_content("GLFW error 65545: GLX: Failed to find a suitable GLXFBConfig"):
+            builder.error("outdated_nvidia_flatpack_driver")
+        
+        if self.log.has_content("java.lang.NoSuchMethodError: sun.security.util.ManifestEntryVerifier.<init>(Ljava/util/jar/Manifest;)V"):
+            builder.error("forge_java_bug")
+        
         if self.log.has_content("Shaders Mod detected"):
             builder.error("shaders_mod_plus_of")
         
@@ -310,9 +319,6 @@ class IssueChecker:
         
         if not re.compile(r"java\.io\.IOException: Directory \'(.+?)\' could not be created").search(self.log._content) is None:
             builder.warning("try_admin_launch")
-        
-        if self.log.has_content("WGL_ARB_create_context_profile is unavaible"):
-            builder.error("intel_hd2000").add("intell_hd2000_info")
         
         if self.log.has_content("java.lang.NullPointerException: Cannot invoke \"net.minecraft.class_2680.method_26213()\" because \"state\" is null"):
             builder.error("old_sodium_crash")

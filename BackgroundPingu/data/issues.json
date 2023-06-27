@@ -42,6 +42,8 @@
     "error.need_new_java": "You need to use `Java {}+`.",
     "error.need_to_extract_from_zip": "You didn't extract `{}` when downloading it, which can cause it to be deleted by your operating system. Close the launcher and extract it.",
     "error.no_abstract_logger": "Try deleting the folder `.../MultiMC/libraries/org/apache/logging/log4j` and then launching the instance again.",
+    "error.outdated_nvidia_flatpack_driver": "Update the Nvidia driver for flatpak by running `flatpak update`. If the issue persists, wait for the driver to be added to Flathub and try again..",
+    "error.forge_java_bug": "Old versions of `Forge` crash with `Java 8u321+`. To fix this, update `Forge` to the latest version via the `Versions` tab (right click on `Forge`, click `Change Version`, and choose the latest one). Alternatively, you can download `Java 8u312 or lower`; see **[archive](https://github.com/adoptium/temurin8-binaries/releases/tag/jdk8u312-b07)**.",
     "error.no_fabric": "You don't have `Fabric` installed, while all MCSR mods require it.",
     "error.no_loader": "You seem to be using mods, but haven't installed a mod loader.",
     "error.no_voyager_crash": "This is a rare crash that can be prevented by using `Voyager`. You should install it.",
