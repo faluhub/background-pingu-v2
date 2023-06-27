@@ -59,16 +59,19 @@ class IssueChecker:
         ]
     
     def get_mod_metadata(self, mod_filename: str) -> dict:
-        mod_filename = mod_filename.lower()
-        filenames = [mod_filename.replace(" ", ""), mod_filename.replace("-", ""), mod_filename.replace("+", "")]
+        mod_filename = mod_filename.lower().replace("optifine","optifabric")
+        filename = mod_filename.replace(" ", "").replace("-", "").replace("+", "").replace("_", "")
         for mod in self.bot.mods:
             original_name = mod["name"].lower()
-            mod_names = [original_name.replace(" ", ""), original_name.replace("-", "")]
-            if any(mod_name in filename for filename in filenames for mod_name in mod_names):
+            mod_name = original_name.replace(" ", "").replace("-", "").replace("_", "")
+            if mod_name == "legacyplanarfog":
+                mod_name = "zbufferfog"
+            if mod_name in filename:
                 return mod
         return None
     
     def get_latest_version(self, metadata: dict) -> bool:
+        if self.log.minecraft_version is None: return None
         minecraft_version = semver.Version.parse(self.log.minecraft_version)
         latest_match = None
         for file_data in metadata["files"]:
@@ -112,8 +115,10 @@ class IssueChecker:
                 has_mcsr_mod = True
 
                 latest_version = self.get_latest_version(metadata)
+
                 if not latest_version is None and not (latest_version["name"] == mod or latest_version["version"] in mod):
-                    if not "sodiummac" in mod and not "serversiderng" in mod.lower():
+                    assume_as_latest = ["sodiummac","serversiderng","optifine","lazystronghold"]
+                    if all(not weird_mod in mod.lower() for weird_mod in assume_as_latest):
                         builder.error("outdated_mod", mod_name, latest_version["page"])
                         continue
                 elif latest_version is None: continue
@@ -247,7 +252,7 @@ class IssueChecker:
         if self.log.has_mod("phosphor"):
             builder.note("starlight_better")
             metadata = self.get_mod_metadata("starlight")
-            if not metadata is None and not self.log.minecraft_version is None:
+            if not metadata is None:
                 latest_version = self.get_latest_version(metadata)
                 if not latest_version is None:
                     builder.add("mod_download", metadata["name"], latest_version["page"])
@@ -298,11 +303,11 @@ class IssueChecker:
         if self.log.has_content("java.lang.NullPointerException: Cannot invoke \"net.minecraft.class_2680.method_26213()\" because \"state\" is null"):
             builder.error("old_sodium_crash")
             metadata = self.get_mod_metadata("sodium")
-            if not metadata is None and not self.log.minecraft_version is None:
+            if not metadata is None:
                 latest_version = self.get_latest_version(metadata)
                 if not latest_version is None:
                     builder.add("mod_download", metadata["name"], latest_version["page"])
-        elif self.log.has_content("me.jellysquid.mods.sodium.client"):
+        elif self.log.has_content("me.jellysquid.mods.sodium.client.SodiumClientMod.options"):
             builder.error("sodium_config_crash")
         
         if self.log.has_content("java.lang.IllegalStateException: Adding Entity listener a second time") and self.log.has_content("me.jellysquid.mods.lithium.common.entity.tracker.nearby"):
