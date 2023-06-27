@@ -255,8 +255,11 @@ class IssueChecker:
                 if not latest_version is None:
                     builder.add("mod_download", metadata["name"], latest_version["page"])
         
-        if self.log.has_mod("optifine") and self.log.has_mod("worldpreview"):
-            builder.error("incompatible_mod","Optifine","WorldPreview")
+        if self.log.has_mod("optifine"):
+            if self.log.has_mod("worldpreview"):
+                builder.error("incompatible_mod","Optifine","WorldPreview")
+            if self.log.has_mod("z-buffer-fog"):
+                builder.error("incompatible_mod","Optifine","z-buffer-fog")
         
         if self.log.has_content("Failed to download the assets index"):
             builder.error("assets_index_fail")
