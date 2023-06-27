@@ -386,4 +386,9 @@ class IssueChecker:
         if len(ranked_matches) > 0:
             builder.error("ranked_illegal_mod", ranked_matches[0])
 
+        pattern = r"Mixin apply for mod (\w+) failed"
+        match = re.search(pattern, self.log._content)
+        if match:
+            builder.error("mod_crash", match.group(1))
+
         return builder
