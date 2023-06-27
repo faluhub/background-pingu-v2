@@ -59,15 +59,13 @@ class IssueChecker:
         ]
     
     def get_mod_metadata(self, mod_filename: str) -> dict:
-        mod_filename = mod_filename.lower().replace("optifine","optifabric")
+        mod_filename = mod_filename.lower().replace("optifine", "optifabric")
         filename = mod_filename.replace(" ", "").replace("-", "").replace("+", "").replace("_", "")
         for mod in self.bot.mods:
             original_name = mod["name"].lower()
             mod_name = original_name.replace(" ", "").replace("-", "").replace("_", "")
-            if mod_name == "legacyplanarfog":
-                mod_name = "zbufferfog"
-            if mod_name in filename:
-                return mod
+            mod_name = "zbufferfog" if mod_name is "legacyplanarfog" else mod_name
+            if mod_name in filename: return mod
         return None
     
     def get_latest_version(self, metadata: dict) -> bool:
@@ -117,7 +115,7 @@ class IssueChecker:
                 latest_version = self.get_latest_version(metadata)
 
                 if not latest_version is None and not (latest_version["name"] == mod or latest_version["version"] in mod):
-                    assume_as_latest = ["sodiummac","serversiderng","optifine","lazystronghold"]
+                    assume_as_latest = ["sodiummac", "serversiderng", "optifine", "lazystronghold"]
                     if all(not weird_mod in mod.lower() for weird_mod in assume_as_latest):
                         builder.error("outdated_mod", mod_name, latest_version["page"])
                         continue
