@@ -60,11 +60,13 @@ class IssueChecker:
     
     def get_mod_metadata(self, mod_filename: str) -> dict:
         mod_filename = mod_filename.lower()
-        filenames = [mod_filename.replace(" ", ""), mod_filename.replace("-", ""), mod_filename.replace("+", "")]
+        filename = mod_filename.replace(" ", "").replace("-", "").replace("+", "").replace("_", "")
         for mod in self.bot.mods:
             original_name = mod["name"].lower()
-            mod_names = [original_name.replace(" ", ""), original_name.replace("-", "")]
-            if any(mod_name in filename for filename in filenames for mod_name in mod_names):
+            mod_name = original_name.replace(" ", "").replace("-", "").replace("_", "")
+            if mod_name == "legacyplanarfog":
+                mod_name = "zbufferfog"
+            if mod_name in filename:
                 return mod
         return None
     
