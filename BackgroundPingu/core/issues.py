@@ -393,4 +393,9 @@ class IssueChecker:
         if match:
             builder.error("mod_crash", match.group(1))
 
+        pattern = r"due to errors, provided by '(\w+)'"
+        match = re.search(pattern, self.log._content)
+        if match and match.group(1) != "speedrunigt":
+            builder.error("mod_crash", match.group(1))
+
         return builder
