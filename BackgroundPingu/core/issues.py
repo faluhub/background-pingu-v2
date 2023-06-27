@@ -64,7 +64,7 @@ class IssueChecker:
         for mod in self.bot.mods:
             original_name = mod["name"].lower()
             mod_name = original_name.replace(" ", "").replace("-", "").replace("_", "")
-            mod_name = "zbufferfog" if mod_name is "legacyplanarfog" else mod_name
+            mod_name = "zbufferfog" if mod_name == "legacyplanarfog" else mod_name
             if mod_name in filename: return mod
         return None
     
@@ -254,6 +254,12 @@ class IssueChecker:
                 latest_version = self.get_latest_version(metadata)
                 if not latest_version is None:
                     builder.add("mod_download", metadata["name"], latest_version["page"])
+        
+        if self.log.has_mod("optifine"):
+            if self.log.has_mod("worldpreview"):
+                builder.error("incompatible_mod","Optifine","WorldPreview")
+            if self.log.has_mod("z-buffer-fog"):
+                builder.error("incompatible_mod","Optifine","z-buffer-fog")
         
         if self.log.has_content("Failed to download the assets index"):
             builder.error("assets_index_fail")
