@@ -70,7 +70,9 @@ class IssueChecker:
     
     def get_latest_version(self, metadata: dict) -> bool:
         if self.log.minecraft_version is None: return None
-        minecraft_version = semver.Version.parse(self.log.minecraft_version)
+        formatted_mc_version = self.log.minecraft_version
+        if formatted_mc_version.count(".") == 1: formatted_mc_version += ".0"
+        minecraft_version = semver.Version.parse(formatted_mc_version)
         latest_match = None
         for file_data in metadata["files"]:
             for game_version in file_data["game_versions"]:
@@ -257,9 +259,9 @@ class IssueChecker:
         
         if self.log.has_mod("optifine"):
             if self.log.has_mod("worldpreview"):
-                builder.error("incompatible_mod","Optifine","WorldPreview")
+                builder.error("incompatible_mod", "Optifine", "WorldPreview")
             if self.log.has_mod("z-buffer-fog"):
-                builder.error("incompatible_mod","Optifine","z-buffer-fog")
+                builder.error("incompatible_mod", "Optifine", "z-buffer-fog")
         
         if self.log.has_content("Failed to download the assets index"):
             builder.error("assets_index_fail")
