@@ -358,7 +358,7 @@ class IssueChecker:
         elif self.log.has_content("Process crashed with exitcode -805306369") or self.log.has_content("java.lang.ArithmeticException"):
             builder.warning("exitcode_805306369")
         
-        if self.log.has_content("-1073741819 (0xffffffffc0000005)") or self.log.has_content("The instruction at 0x%p referenced memory at 0x%p. The memory could not be %s."):
+        if self.log.has_content("Process crashed with exitcode -1073741819") or self.log.has_content("The instruction at 0x%p referenced memory at 0x%p. The memory could not be %s."):
             builder.error("exitcode_1073741819")
             for i in range(4): builder.add(f"exitcode_1073741819_{i + 1}")
         
