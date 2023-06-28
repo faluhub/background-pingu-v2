@@ -9,7 +9,8 @@ class IssueBuilder:
         self._messages = {
             "error": [],
             "warning": [],
-            "note": []
+            "note": [],
+            "info": []
         }
         self.amount = 0
         self._last_added = None
@@ -22,13 +23,16 @@ class IssueBuilder:
         return self
 
     def error(self, key: str, *args):
-        return self._add_to("error", "🔴 " + self.bot.strings.get(f"error.{key}", key).format(*args))
+        return self._add_to("error", "<:dangerkekw:1123554236626636880> " + self.bot.strings.get(f"error.{key}", key).format(*args))
     
     def warning(self, key: str, *args):
-        return self._add_to("warning", "🟠 " + self.bot.strings.get(f"warning.{key}", key).format(*args))
+        return self._add_to("warning", "<:warningkekw:1123563914454634546> " + self.bot.strings.get(f"warning.{key}", key).format(*args))
     
     def note(self, key: str, *args):
-        return self._add_to("note", "🟡 " + self.bot.strings.get(f"note.{key}", key).format(*args))
+        return self._add_to("note", "<:kekw:1123554521738657842> " + self.bot.strings.get(f"note.{key}", key).format(*args))
+
+    def info(self, key: str, *args):
+        return self._add_to("info", "<:infokekw:1123567743355060344> " + self.bot.strings.get(f"info.{key}", key).format(*args))
 
     def add(self, key: str, *args):
         return self._add_to(self._last_added, "<:reply:1121924702756143234>*" + self.bot.strings.get(f"add.{key}", key).format(*args) + "*", add=True)
@@ -117,9 +121,17 @@ class IssueChecker:
                 latest_version = self.get_latest_version(metadata)
 
                 if not latest_version is None and not (latest_version["name"] == mod or latest_version["version"] in mod):
-                    assume_as_latest = ["sodiummac", "serversiderng", "optifine", "lazystronghold"]
+                    assume_as_latest = [
+                        "sodiummac",
+                        "serversiderng",
+                        "lazystronghold",
+                        "krypton",
+                        "sodium-fabric-mc1.16.5-0.2.0+build.4",
+                        "optifine",
+                        "sodium-extra"
+                    ]
                     if all(not weird_mod in mod.lower() for weird_mod in assume_as_latest):
-                        builder.error("outdated_mod", mod_name, latest_version["page"])
+                        builder.warning("outdated_mod", mod_name, latest_version["page"])
                         continue
                 elif latest_version is None: continue
             else: illegal_mods.append(mod)
@@ -275,6 +287,15 @@ class IssueChecker:
         if self.log.has_content("Pixel format not accelerated"):
             builder.error("gl_pixel_format")
         
+        if self.log.has_content("WGL_ARB_create_context_profile is unavaible"):
+            builder.error("intel_hd2000").add("intell_hd2000_info")
+
+        if self.log.has_content("org.lwjgl.LWJGLException: Could not choose GLX13 config") or self.log.has_content("GLFW error 65545: GLX: Failed to find a suitable GLXFBConfig"):
+            builder.error("outdated_nvidia_flatpack_driver")
+        
+        if self.log.has_content("java.lang.NoSuchMethodError: sun.security.util.ManifestEntryVerifier.<init>(Ljava/util/jar/Manifest;)V"):
+            builder.error("forge_java_bug")
+        
         if self.log.has_content("Shaders Mod detected"):
             builder.error("shaders_mod_plus_of")
         
@@ -303,9 +324,6 @@ class IssueChecker:
         if not re.compile(r"java\.io\.IOException: Directory \'(.+?)\' could not be created").search(self.log._content) is None:
             builder.warning("try_admin_launch")
         
-        if self.log.has_content("WGL_ARB_create_context_profile is unavaible"):
-            builder.error("intel_hd2000").add("intell_hd2000_info")
-        
         if self.log.has_content("java.lang.NullPointerException: Cannot invoke \"net.minecraft.class_2680.method_26213()\" because \"state\" is null"):
             builder.error("old_sodium_crash")
             metadata = self.get_mod_metadata("sodium")
@@ -316,11 +334,20 @@ class IssueChecker:
         elif self.log.has_content("me.jellysquid.mods.sodium.client.SodiumClientMod.options"):
             builder.error("sodium_config_crash")
         
-        if self.log.has_content("java.lang.IllegalStateException: Adding Entity listener a second time") and self.log.has_content("me.jellysquid.mods.lithium.common.entity.tracker.nearby"):
-            builder.note("lithium_crash")
-        
-        if self.log.has_content("java.util.ConcurrentModificationException") and not self.log.minecraft_version is None and self.log.minecraft_version == "1.16.1" and not self.log.has_mod("voyager"):
+        pattern = r'Uncaught exception in thread "Thread-\d+"\njava\.util\.ConcurrentModificationException: null'
+        if "java.util.ConcurrentModificationException" in re.sub(pattern, '', self.log._content) and not self.log.minecraft_version is None and self.log.minecraft_version == "1.16.1" and not self.log.has_mod("voyager"):
             builder.error("no_voyager_crash")
+        
+        if self.log.has_content("java.lang.IllegalStateException: Adding Entity listener a second time") and self.log.has_content("me.jellysquid.mods.lithium.common.entity.tracker.nearby"):
+            builder.info("lithium_crash")
+        
+        if any(self.log.has_content(log_spam) for log_spam in [
+            "Using missing texture, unable to load",
+            "Exception loading blockstate definition",
+            "Unable to load model",
+            'java.lang.NullPointerException: Cannot invoke "com.mojang.authlib.minecraft.MinecraftProfileTexture.getHash()" because "?" is null'
+        ]):
+            builder.info("log_spam")
         
         if self.log.has_mod("serversiderng-9"):
             builder.note("using_ssrng")
@@ -328,7 +355,7 @@ class IssueChecker:
         if any(self.log.has_mod(f"serversiderng-{i}") for i in range(1, 9)):
             builder.error("using_old_ssrng")
         elif self.log.has_content("Failed to light chunk") and self.log.has_content("net.minecraft.class_148: Feature placement") and self.log.has_content("java.lang.ArrayIndexOutOfBoundsException"):
-            builder.note("starlight_crash")
+            builder.info("starlight_crash")
         elif self.log.has_content("Process crashed with exitcode -805306369") or self.log.has_content("java.lang.ArithmeticException"):
             builder.warning("exitcode_805306369")
         
@@ -387,5 +414,15 @@ class IssueChecker:
         ranked_matches = re.findall(r"The Fabric Mod \"(.*?)\" is not whitelisted!", self.log._content)
         if len(ranked_matches) > 0:
             builder.error("ranked_illegal_mod", ranked_matches[0])
+
+        pattern = r"Mixin apply for mod (\w+) failed"
+        match = re.search(pattern, self.log._content)
+        if match:
+            builder.error("mod_crash", match.group(1))
+
+        pattern = r"due to errors, provided by '(\w+)'"
+        match = re.search(pattern, self.log._content)
+        if match and match.group(1) != "speedrunigt":
+            builder.error("mod_crash", match.group(1))
 
         return builder
