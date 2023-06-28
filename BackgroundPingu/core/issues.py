@@ -334,7 +334,8 @@ class IssueChecker:
         elif self.log.has_content("me.jellysquid.mods.sodium.client.SodiumClientMod.options"):
             builder.error("sodium_config_crash")
         
-        if self.log.has_content("java.util.ConcurrentModificationException") and not self.log.minecraft_version is None and self.log.minecraft_version == "1.16.1" and not self.log.has_mod("voyager"):
+        pattern = r'Uncaught exception in thread "Thread-\d+"\njava\.util\.ConcurrentModificationException: null'
+        if "java.util.ConcurrentModificationException" in re.sub(pattern, '', self.log._content) and not self.log.minecraft_version is None and self.log.minecraft_version == "1.16.1" and not self.log.has_mod("voyager"):
             builder.error("no_voyager_crash")
         
         if self.log.has_content("java.lang.IllegalStateException: Adding Entity listener a second time") and self.log.has_content("me.jellysquid.mods.lithium.common.entity.tracker.nearby"):
