@@ -9,7 +9,8 @@ class IssueBuilder:
         self._messages = {
             "error": [],
             "warning": [],
-            "note": []
+            "note": [],
+            "info": []
         }
         self.amount = 0
         self._last_added = None
@@ -22,13 +23,16 @@ class IssueBuilder:
         return self
 
     def error(self, key: str, *args):
-        return self._add_to("error", "🔴 " + self.bot.strings.get(f"error.{key}", key).format(*args))
+        return self._add_to("error", "<:dangerkekw:1123554236626636880> " + self.bot.strings.get(f"error.{key}", key).format(*args))
     
     def warning(self, key: str, *args):
-        return self._add_to("warning", "🟠 " + self.bot.strings.get(f"warning.{key}", key).format(*args))
+        return self._add_to("warning", "<:warningkekw:1123563914454634546> " + self.bot.strings.get(f"warning.{key}", key).format(*args))
     
     def note(self, key: str, *args):
-        return self._add_to("note", "🟡 " + self.bot.strings.get(f"note.{key}", key).format(*args))
+        return self._add_to("note", "<:kekw:1123554521738657842> " + self.bot.strings.get(f"note.{key}", key).format(*args))
+
+    def info(self, key: str, *args):
+        return self._add_to("info", "<:infokekw:1123567743355060344> " + self.bot.strings.get(f"info.{key}", key).format(*args))
 
     def add(self, key: str, *args):
         return self._add_to(self._last_added, "<:reply:1121924702756143234>*" + self.bot.strings.get(f"add.{key}", key).format(*args) + "*", add=True)
@@ -330,11 +334,19 @@ class IssueChecker:
         elif self.log.has_content("me.jellysquid.mods.sodium.client.SodiumClientMod.options"):
             builder.error("sodium_config_crash")
         
-        if self.log.has_content("java.lang.IllegalStateException: Adding Entity listener a second time") and self.log.has_content("me.jellysquid.mods.lithium.common.entity.tracker.nearby"):
-            builder.note("lithium_crash")
-        
         if self.log.has_content("java.util.ConcurrentModificationException") and not self.log.minecraft_version is None and self.log.minecraft_version == "1.16.1" and not self.log.has_mod("voyager"):
             builder.error("no_voyager_crash")
+        
+        if self.log.has_content("java.lang.IllegalStateException: Adding Entity listener a second time") and self.log.has_content("me.jellysquid.mods.lithium.common.entity.tracker.nearby"):
+            builder.info("lithium_crash")
+        
+        if any(self.log.has_content(log_spam) for log_spam in [
+            "Using missing texture, unable to load",
+            "Exception loading blockstate definition",
+            "Unable to load model",
+            'java.lang.NullPointerException: Cannot invoke "com.mojang.authlib.minecraft.MinecraftProfileTexture.getHash()" because "?" is null'
+        ]):
+            builder.info("log_spam")
         
         if self.log.has_mod("serversiderng-9"):
             builder.note("using_ssrng")
@@ -342,7 +354,7 @@ class IssueChecker:
         if any(self.log.has_mod(f"serversiderng-{i}") for i in range(1, 9)):
             builder.error("using_old_ssrng")
         elif self.log.has_content("Failed to light chunk") and self.log.has_content("net.minecraft.class_148: Feature placement") and self.log.has_content("java.lang.ArrayIndexOutOfBoundsException"):
-            builder.note("starlight_crash")
+            builder.info("starlight_crash")
         elif self.log.has_content("Process crashed with exitcode -805306369") or self.log.has_content("java.lang.ArithmeticException"):
             builder.warning("exitcode_805306369")
         
