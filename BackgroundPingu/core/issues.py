@@ -61,6 +61,15 @@ class IssueChecker:
             "setspawnmod",
             "peepopractice"
         ]
+        self.assume_as_latest = [
+            "sodiummac",
+            "serversiderng",
+            "lazystronghold",
+            "krypton",
+            "sodium-fabric-mc1.16.5-0.2.0+build.4",
+            "optifine",
+            "sodium-extra"
+        ]
     
     def get_mod_metadata(self, mod_filename: str) -> dict:
         mod_filename = mod_filename.lower().replace("optifine", "optifabric")
@@ -121,16 +130,7 @@ class IssueChecker:
                 latest_version = self.get_latest_version(metadata)
 
                 if not latest_version is None and not (latest_version["name"] == mod or latest_version["version"] in mod):
-                    assume_as_latest = [
-                        "sodiummac",
-                        "serversiderng",
-                        "lazystronghold",
-                        "krypton",
-                        "sodium-fabric-mc1.16.5-0.2.0+build.4",
-                        "optifine",
-                        "sodium-extra"
-                    ]
-                    if all(not weird_mod in mod.lower() for weird_mod in assume_as_latest):
+                    if all(not weird_mod in mod.lower() for weird_mod in self.assume_as_latest):
                         builder.warning("outdated_mod", mod_name, latest_version["page"])
                         continue
                 elif latest_version is None: continue
@@ -287,7 +287,7 @@ class IssueChecker:
         if self.log.has_content("Pixel format not accelerated"):
             builder.error("gl_pixel_format")
         
-        if self.log.has_content("WGL_ARB_create_context_profile is unavaible"):
+        if self.log.has_content("WGL_ARB_create_context_profile is unavailable"):
             builder.error("intel_hd2000").add("intell_hd2000_info")
 
         if self.log.has_content("org.lwjgl.LWJGLException: Could not choose GLX13 config") or self.log.has_content("GLFW error 65545: GLX: Failed to find a suitable GLXFBConfig"):
@@ -334,8 +334,8 @@ class IssueChecker:
         elif self.log.has_content("me.jellysquid.mods.sodium.client.SodiumClientMod.options"):
             builder.error("sodium_config_crash")
         
-        pattern = r'Uncaught exception in thread "Thread-\d+"\njava\.util\.ConcurrentModificationException: null'
-        if "java.util.ConcurrentModificationException" in re.sub(pattern, '', self.log._content) and not self.log.minecraft_version is None and self.log.minecraft_version == "1.16.1" and not self.log.has_mod("voyager"):
+        pattern = r"Uncaught exception in thread \"Thread-\d+\"\njava\.util\.ConcurrentModificationException: null"
+        if "java.util.ConcurrentModificationException" in re.sub(pattern, "", self.log._content) and not self.log.minecraft_version is None and self.log.minecraft_version == "1.16.1" and not self.log.has_mod("voyager"):
             builder.error("no_voyager_crash")
         
         if self.log.has_content("java.lang.IllegalStateException: Adding Entity listener a second time") and self.log.has_content("me.jellysquid.mods.lithium.common.entity.tracker.nearby"):
@@ -345,9 +345,8 @@ class IssueChecker:
             "Using missing texture, unable to load",
             "Exception loading blockstate definition",
             "Unable to load model",
-            'java.lang.NullPointerException: Cannot invoke "com.mojang.authlib.minecraft.MinecraftProfileTexture.getHash()" because "?" is null'
-        ]):
-            builder.info("log_spam")
+            "java.lang.NullPointerException: Cannot invoke \"com.mojang.authlib.minecraft.MinecraftProfileTexture.getHash()\" because \"?\" is null"
+        ]): builder.info("log_spam")
         
         if self.log.has_mod("serversiderng-9"):
             builder.note("using_ssrng")
@@ -396,8 +395,7 @@ class IssueChecker:
                         "",
                         compatible_version
                     )
-                else:
-                    builder.error("java_comp_check")
+                else: builder.error("java_comp_check")
         
         if not self.log.launcher is None and self.log.launcher.lower() == "multimc":
             if self.log.has_content("java.lang.ClassNotFoundException: org.apache.logging.log4j.spi.AbstractLogger"):
@@ -415,13 +413,10 @@ class IssueChecker:
         if len(ranked_matches) > 0:
             builder.error("ranked_illegal_mod", ranked_matches[0])
 
-        pattern = r"Mixin apply for mod (\w+) failed"
-        match = re.search(pattern, self.log._content)
-        if match:
-            builder.error("mod_crash", match.group(1))
+        match = re.search(r"Mixin apply for mod (\w+) failed", self.log._content)
+        if match: builder.error("mod_crash", match.group(1))
 
-        pattern = r"due to errors, provided by '(\w+)'"
-        match = re.search(pattern, self.log._content)
+        match = re.search(r"due to errors, provided by '(\w+)'", self.log._content)
         if match and match.group(1) != "speedrunigt":
             builder.error("mod_crash", match.group(1))
 
