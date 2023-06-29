@@ -232,7 +232,7 @@ class IssueChecker:
             has_shenandoah = self.log.has_java_argument("shenandoah")
             min_limit_1 = 1200 if has_shenandoah else 1900
             min_limit_2 = 850 if has_shenandoah else 1200
-            if self.log.max_allocated < min_limit_1 and (self.log.has_content("OutOfMemoryError") or self.log.has_content("Process crashed with exitcode -805306369")):
+            if (self.log.max_allocated < min_limit_1 and self.log.has_content("Process crashed with exitcode -805306369")) or self.log.has_content("OutOfMemoryError"):
                 builder.error("too_little_ram_crash").add("allocate_ram_guide")
             elif self.log.max_allocated < min_limit_2:
                 builder.warning("too_little_ram").add("allocate_ram_guide")
