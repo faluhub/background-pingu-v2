@@ -13,7 +13,7 @@
     "add.fabric_guide": "Click </fabric:1122902458801336331> for a guide on how to install `Fabric`.",
     "add.incompatible_srigt_alternative": "Alternatively, you can use `Fabric Loader 0.14.14`.",
     "add.intell_hd2000_info": "For more information about this issue and possible solutions, please refer to [**this page**](https://prismlauncher.org/wiki/getting-started/installing-java/#a-note-about-intel-hd-20003000-on-windows-10).",
-    "add.java_upgrade_guide": "Use [**this guide**](https://docs.google.com/document/d/1aPF1lyBAfPWyeHIH80F8JJw8rvvy6lRm0WJ2xxSrRh8/edit#heading=h.62ygxgaxcs5a) to upgrade your Java version.",
+    "add.java_update_guide": "Use [**this guide**](https://docs.google.com/document/d/1aPF1lyBAfPWyeHIH80F8JJw8rvvy6lRm0WJ2xxSrRh8/edit#heading=h.62ygxgaxcs5a) to update your Java version.",
     "add.mac_setup_guide": "You can check out [**this guide**](https://www.youtube.com/watch?v=GomIeW5xdBM) for how to set up speedrunning on a Mac.",
     "add.mod_download": "You can download `{}` [**here**]({}).",
     "error.32_bit_java": "You're using a 32-bit installation of `Java`.",

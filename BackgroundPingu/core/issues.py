@@ -174,11 +174,11 @@ class IssueChecker:
                     "`, `".join(wrong_mods),
                     "s" if len(wrong_mods) == 1 else
                     ""
-                ).add("java_upgrade_guide")
+                ).add("java_update_guide")
                 has_java_error = True
         
         if not has_java_error and self.log.has_content("require the use of Java 17"):
-            builder.error("need_java_17_mc").add("java_upgrade_guide")
+            builder.error("need_java_17_mc").add("java_update_guide")
             has_java_error = True
         
         if not has_java_error:
@@ -193,15 +193,15 @@ class IssueChecker:
                 if parsed_version > needed_java_version:
                     needed_java_version = parsed_version
             if not needed_java_version is None:
-                builder.error("need_new_java", needed_java_version).add("java_upgrade_guide")
+                builder.error("need_new_java", needed_java_version).add("java_update_guide")
                 has_java_error = True
         
         if not has_java_error and self.log.has_content("You might want to install a 64bit Java version"):
-            builder.error("32_bit_java").add("java_upgrade_guide")
+            builder.error("32_bit_java").add("java_update_guide")
             has_java_error = True
         
         if not has_java_error and self.log.has_content("Incompatible magic value 0 in class file sun/security/provider/SunEntries"):
-            builder.error("broken_java").add("java_upgrade_guide")
+            builder.error("broken_java").add("java_update_guide")
             has_java_error = True
         
         if not self.log.mod_loader is None and self.log.mod_loader == ModLoader.FABRIC:
