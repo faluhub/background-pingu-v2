@@ -68,7 +68,7 @@
     "note.builtin_lib_recommendation": "You seem to be using your system's `{}`. This can cause the instance to crash if not properly setup. In case of a crash, make sure this isn't the cause of it.",
     "note.duplicate_mod": "You have several versions of `{}` installed. You should delete the older ones.",
     "note.old_fabric": "You're using a somewhat old version of `Fabric Loader`, you might want to update it.",
-    "note.onedrive": "Your `.minecraft` folder is located in `OneDrive`. `OneDrive` can mess with your game files to save space, and this often leads to crashes. You should move it out to a different folder, and may need to recreate the instance.",
+    "note.onedrive": "Your `.minecraft` folder is located in `OneDrive`. `OneDrive` can mess with your game files to save space, and this can lead to crashes. You should move it to a different folder.",
     "note.program_files": "Your game files are in `Program Files`. It is generally not recommended, and could cause some issues. Consider moving it to a different location.",
     "note.starlight_better": "You're using `Phosphor`. `Starlight` is much better than `Phosphor`, you should use it instead.",
     "note.too_little_ram": "You may have too little RAM allocated.",
