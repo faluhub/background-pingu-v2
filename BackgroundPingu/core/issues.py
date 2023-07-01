@@ -146,7 +146,8 @@ class IssueChecker:
             if has_mcsr_mod:
                 builder.error("incompatible_loader", self.log.mod_loader.value)
                 builder.add("fabric_guide")
-            builder.note("using_other_loader", self.log.mod_loader.value).add("fabric_guide")
+            else:
+                builder.note("using_other_loader", self.log.mod_loader.value).add("fabric_guide")
 
         if len(self.log.mods) > 0 and self.log.mod_loader == ModLoader.VANILLA:
             builder.error("no_loader")
@@ -413,10 +414,10 @@ class IssueChecker:
         if len(ranked_matches) > 0:
             builder.error("ranked_illegal_mod", ranked_matches[0])
 
-        match = re.search(r"Mixin apply for mod (\w+) failed", self.log._content)
+        match = re.search(r"Mixin apply for mod ([\w\-+]+) failed", self.log._content)
         if match: builder.error("mod_crash", match.group(1))
 
-        match = re.search(r"due to errors, provided by '(\w+)'", self.log._content)
+        match = re.search(r"due to errors, provided by '([\w\-+]+)'", self.log._content)
         if match and match.group(1) != "speedrunigt":
             builder.error("mod_crash", match.group(1))
 
