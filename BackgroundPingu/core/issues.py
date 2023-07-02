@@ -350,7 +350,7 @@ class IssueChecker:
         ]): builder.info("log_spam")
         
         if self.log.has_mod("serversiderng-9"):
-            builder.note("using_ssrng")
+            builder.warning("using_ssrng")
         
         if any(self.log.has_mod(f"serversiderng-{i}") for i in range(1, 9)):
             builder.error("using_old_ssrng")
