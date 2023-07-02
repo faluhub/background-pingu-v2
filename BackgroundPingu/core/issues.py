@@ -416,9 +416,13 @@ class IssueChecker:
         ranked_matches = re.findall(r"The Fabric Mod \"(.*?)\" is not whitelisted!", self.log._content)
         if len(ranked_matches) > 0:
             builder.error("ranked_illegal_mod", ranked_matches[0])
-
+        
         match = re.search(r"Mixin apply for mod ([\w\-+]+) failed", self.log._content)
-        if match: builder.error("mod_crash", match.group(1))
+
+        if self.log.has_content("Mixin apply for mod areessgee failed areessgee.mixins.json:nether.StructureFeatureMixin from mod areessgee -> net.minecraft.class_3195"):
+            builder.error("incompatible_mod", "areessgee", "peepopractice")
+        
+        elif match: builder.error("mod_crash", match.group(1))
 
         match = re.search(r"due to errors, provided by '([\w\-+]+)'", self.log._content)
         if match and match.group(1) != "speedrunigt":
