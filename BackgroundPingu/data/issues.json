@@ -42,7 +42,7 @@
     "error.need_java_17_mods": "You are using {} (`{}`) that require{} using `Java 17+`.",
     "error.need_new_java": "You need to use `Java {}+`.",
     "error.need_to_extract_from_zip": "You didn't extract `{}` when downloading it, which can cause it to be deleted by your operating system. Close the launcher and extract it.",
-    "error.new_java_old_fabric_crash": "This crash seems to be caused by using an old version of Fabric Loader with a new version of Java. Update your Fabric loader.",
+    "error.new_java_old_fabric_crash": "This crash seems to be caused by using an old version of `Fabric Loader` with a new version of `Java`. Update your `Fabric loader`.",
     "error.no_abstract_logger": "Try deleting the folder `.../MultiMC/libraries/org/apache/logging/log4j` and then launching the instance again.",
     "error.no_fabric": "You don't have `Fabric` installed, while all MCSR mods require it.",
     "error.no_loader": "You seem to be using mods, but haven't installed a mod loader.",
