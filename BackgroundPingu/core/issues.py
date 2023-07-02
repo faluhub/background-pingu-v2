@@ -134,7 +134,7 @@ class IssueChecker:
                         builder.warning("outdated_mod", mod_name, latest_version["page"])
                         continue
                 elif latest_version is None: continue
-            else: illegal_mods.append(mod)
+            elif not "mcsrranked" in mod: illegal_mods.append(mod)
         if len(illegal_mods) > 0: builder.note("amount_illegal_mods", len(illegal_mods), "s" if len(illegal_mods) > 1 else "")
 
         for key, value in all_incompatible_mods.items():
