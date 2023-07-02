@@ -134,7 +134,7 @@ class IssueChecker:
                         builder.warning("outdated_mod", mod_name, latest_version["page"])
                         continue
                 elif latest_version is None: continue
-            else: illegal_mods.append(mod)
+            elif not "mcsrranked" in mod: illegal_mods.append(mod)
         if len(illegal_mods) > 0: builder.note("amount_illegal_mods", len(illegal_mods), "s" if len(illegal_mods) > 1 else "")
 
         for key, value in all_incompatible_mods.items():
@@ -146,7 +146,8 @@ class IssueChecker:
             if has_mcsr_mod:
                 builder.error("incompatible_loader", self.log.mod_loader.value)
                 builder.add("fabric_guide")
-            builder.note("using_other_loader", self.log.mod_loader.value).add("fabric_guide")
+            else:
+                builder.note("using_other_loader", self.log.mod_loader.value).add("fabric_guide")
 
         if len(self.log.mods) > 0 and self.log.mod_loader == ModLoader.VANILLA:
             builder.error("no_loader")
@@ -173,11 +174,11 @@ class IssueChecker:
                     "`, `".join(wrong_mods),
                     "s" if len(wrong_mods) == 1 else
                     ""
-                ).add("java_upgrade_guide")
+                ).add("java_update_guide")
                 has_java_error = True
         
         if not has_java_error and self.log.has_content("require the use of Java 17"):
-            builder.error("need_java_17_mc").add("java_upgrade_guide")
+            builder.error("need_java_17_mc").add("java_update_guide")
             has_java_error = True
         
         if not has_java_error:
@@ -192,41 +193,44 @@ class IssueChecker:
                 if parsed_version > needed_java_version:
                     needed_java_version = parsed_version
             if not needed_java_version is None:
-                builder.error("need_new_java", needed_java_version).add("java_upgrade_guide")
+                builder.error("need_new_java", needed_java_version).add("java_update_guide")
                 has_java_error = True
         
         if not has_java_error and self.log.has_content("You might want to install a 64bit Java version"):
-            builder.error("32_bit_java").add("java_upgrade_guide")
+            builder.error("32_bit_java").add("java_update_guide")
             has_java_error = True
         
         if not has_java_error and self.log.has_content("Incompatible magic value 0 in class file sun/security/provider/SunEntries"):
-            builder.error("broken_java").add("java_upgrade_guide")
+            builder.error("broken_java").add("java_update_guide")
             has_java_error = True
         
-        if not self.log.mod_loader is None and self.log.mod_loader == ModLoader.FABRIC:
-            if not self.log.fabric_version is None:
-                highest_srigt_ver = None
-                for mod in self.log.mods:
-                    if "speedrunigt" in mod.lower():
-                        match = re.compile(r"-(\d+(?:\.\d+)?)\+").search(mod)
-                        if not match is None:
-                            ver = version.parse(match.group(1))
-                            if highest_srigt_ver is None or ver > highest_srigt_ver:
-                                highest_srigt_ver = ver
-                if not highest_srigt_ver is None:
-                    if highest_srigt_ver < version.parse("13.3") and self.log.fabric_version > version.parse("0.14.14"):
-                        builder.error("incompatible_srigt")
-                        if not self.log.minecraft_version == "1.16.1":
-                            builder.add("incompatible_srigt_alternative")
-                
-                if self.log.fabric_version < version.parse("0.12.2"):
-                    builder.error("really_old_fabric").add("fabric_guide")
-                elif self.log.fabric_version < version.parse("0.14.0"):
-                    builder.warning("relatively_old_fabric").add("fabric_guide")
-                elif self.log.fabric_version < version.parse("0.14.14"):
-                    builder.note("old_fabric").add("fabric_guide")
-                elif self.log.fabric_version.__str__() in ["0.14.15", "0.14.16"]:
-                    builder.error("broken_fabric").add("fabric_guide")
+        
+        if self.log.has_content("java.lang.ClassNotFoundException: java.lang.invoke.LambdaMetafactory"):
+            builder.error("new_java_old_fabric_crash").add("fabric_guide")
+        
+        elif not self.log.mod_loader is None and self.log.mod_loader == ModLoader.FABRIC and not self.log.fabric_version is None:
+            highest_srigt_ver = None
+            for mod in self.log.mods:
+                if "speedrunigt" in mod.lower():
+                    match = re.compile(r"-(\d+(?:\.\d+)?)\+").search(mod)
+                    if not match is None:
+                        ver = version.parse(match.group(1))
+                        if highest_srigt_ver is None or ver > highest_srigt_ver:
+                            highest_srigt_ver = ver
+            if not highest_srigt_ver is None:
+                if highest_srigt_ver < version.parse("13.3") and self.log.fabric_version > version.parse("0.14.14"):
+                    builder.error("incompatible_srigt")
+                    if not self.log.minecraft_version == "1.16.1":
+                        builder.add("incompatible_srigt_alternative")
+            
+            if self.log.fabric_version < version.parse("0.12.2"):
+                builder.error("really_old_fabric").add("fabric_guide")
+            elif self.log.fabric_version < version.parse("0.14.12"):
+                builder.warning("relatively_old_fabric").add("fabric_guide")
+            elif self.log.fabric_version < version.parse("0.14.14"):
+                builder.note("old_fabric").add("fabric_guide")
+            elif self.log.fabric_version.__str__() in ["0.14.15", "0.14.16"]:
+                builder.error("broken_fabric").add("fabric_guide")
         
         if not self.log.max_allocated is None:
             has_shenandoah = self.log.has_java_argument("shenandoah")
@@ -349,7 +353,7 @@ class IssueChecker:
         ]): builder.info("log_spam")
         
         if self.log.has_mod("serversiderng-9"):
-            builder.note("using_ssrng")
+            builder.warning("using_ssrng")
         
         if any(self.log.has_mod(f"serversiderng-{i}") for i in range(1, 9)):
             builder.error("using_old_ssrng")
@@ -412,11 +416,15 @@ class IssueChecker:
         ranked_matches = re.findall(r"The Fabric Mod \"(.*?)\" is not whitelisted!", self.log._content)
         if len(ranked_matches) > 0:
             builder.error("ranked_illegal_mod", ranked_matches[0])
+        
+        match = re.search(r"Mixin apply for mod ([\w\-+]+) failed", self.log._content)
 
-        match = re.search(r"Mixin apply for mod (\w+) failed", self.log._content)
-        if match: builder.error("mod_crash", match.group(1))
+        if self.log.has_content("Mixin apply for mod areessgee failed areessgee.mixins.json:nether.StructureFeatureMixin from mod areessgee -> net.minecraft.class_3195"):
+            builder.error("incompatible_mod", "areessgee", "peepopractice")
+        
+        elif match: builder.error("mod_crash", match.group(1))
 
-        match = re.search(r"due to errors, provided by '(\w+)'", self.log._content)
+        match = re.search(r"due to errors, provided by '([\w\-+]+)'", self.log._content)
         if match and match.group(1) != "speedrunigt":
             builder.error("mod_crash", match.group(1))
 
