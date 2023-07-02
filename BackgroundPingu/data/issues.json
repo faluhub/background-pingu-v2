@@ -61,6 +61,7 @@
     "error.too_little_ram_crash": "You have too little RAM allocated.",
     "error.too_much_ram": "You have way too much RAM allocated, which can cause lag spikes.",
     "error.using_old_ssrng": "You're using an old version of `ServerSideRNG`, which is now illegal and can often cause problems. The server for it is currently down, so the mod is useless regardless and you should delete it.",
+    "error.new_java_old_fabric_crash": "This crash seems to be caused by using an old version of Fabric Loader with a new version of Java. Update your Fabric loader.",
     "info.lithium_crash": "This seems to be a rare crash caused by `Lithium` that you can't do anything about. It happens really rarely, so far we only know about 4 times of when it happened to someone, so it's not worth it to not use `Lithium` because of it.",
     "info.log_spam": "Your log seems to have lines with random spam. It shouldn't cause any issues within Minecraft, and there aren't any known fixes.",
     "info.starlight_crash": "This seems to be a rare crash caused by `Starlight` that you can't do anything about. It happens really rarely, so far we only know about 1 time of when it happened to someone, so it's not worth it to not use `Starlight` because of it.",

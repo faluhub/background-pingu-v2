@@ -204,30 +204,33 @@ class IssueChecker:
             builder.error("broken_java").add("java_update_guide")
             has_java_error = True
         
-        if not self.log.mod_loader is None and self.log.mod_loader == ModLoader.FABRIC:
-            if not self.log.fabric_version is None:
-                highest_srigt_ver = None
-                for mod in self.log.mods:
-                    if "speedrunigt" in mod.lower():
-                        match = re.compile(r"-(\d+(?:\.\d+)?)\+").search(mod)
-                        if not match is None:
-                            ver = version.parse(match.group(1))
-                            if highest_srigt_ver is None or ver > highest_srigt_ver:
-                                highest_srigt_ver = ver
-                if not highest_srigt_ver is None:
-                    if highest_srigt_ver < version.parse("13.3") and self.log.fabric_version > version.parse("0.14.14"):
-                        builder.error("incompatible_srigt")
-                        if not self.log.minecraft_version == "1.16.1":
-                            builder.add("incompatible_srigt_alternative")
-                
-                if self.log.fabric_version < version.parse("0.12.2"):
-                    builder.error("really_old_fabric").add("fabric_guide")
-                elif self.log.fabric_version < version.parse("0.14.0"):
-                    builder.warning("relatively_old_fabric").add("fabric_guide")
-                elif self.log.fabric_version < version.parse("0.14.14"):
-                    builder.note("old_fabric").add("fabric_guide")
-                elif self.log.fabric_version.__str__() in ["0.14.15", "0.14.16"]:
-                    builder.error("broken_fabric").add("fabric_guide")
+        
+        if self.log.has_content("java.lang.ClassNotFoundException: java.lang.invoke.LambdaMetafactory"):
+            builder.error("new_java_old_fabric_crash").add("fabric_guide")
+        
+        elif not self.log.mod_loader is None and self.log.mod_loader == ModLoader.FABRIC and not self.log.fabric_version is None:
+            highest_srigt_ver = None
+            for mod in self.log.mods:
+                if "speedrunigt" in mod.lower():
+                    match = re.compile(r"-(\d+(?:\.\d+)?)\+").search(mod)
+                    if not match is None:
+                        ver = version.parse(match.group(1))
+                        if highest_srigt_ver is None or ver > highest_srigt_ver:
+                            highest_srigt_ver = ver
+            if not highest_srigt_ver is None:
+                if highest_srigt_ver < version.parse("13.3") and self.log.fabric_version > version.parse("0.14.14"):
+                    builder.error("incompatible_srigt")
+                    if not self.log.minecraft_version == "1.16.1":
+                        builder.add("incompatible_srigt_alternative")
+            
+            if self.log.fabric_version < version.parse("0.12.2"):
+                builder.error("really_old_fabric").add("fabric_guide")
+            elif self.log.fabric_version < version.parse("0.14.12"):
+                builder.warning("relatively_old_fabric").add("fabric_guide")
+            elif self.log.fabric_version < version.parse("0.14.14"):
+                builder.note("old_fabric").add("fabric_guide")
+            elif self.log.fabric_version.__str__() in ["0.14.15", "0.14.16"]:
+                builder.error("broken_fabric").add("fabric_guide")
         
         if not self.log.max_allocated is None:
             has_shenandoah = self.log.has_java_argument("shenandoah")
