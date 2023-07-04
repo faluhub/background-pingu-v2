@@ -106,6 +106,7 @@ class IssueChecker:
         builder = IssueBuilder(self.bot)
 
         has_mcsr_mod = False
+        found_crash_cause = False
         illegal_mods = []
         checked_mods = []
         all_incompatible_mods = {}
@@ -432,6 +433,9 @@ class IssueChecker:
         
         
         match = re.search(r"Mixin apply for mod ([\w\-+]+) failed", self.log._content)
+        if match and not found_crash_cause: builder.error("mod_crash", match.group(1))
+        
+        match = re.search(r"from mod ([\w\-+]+) failed injection check", self.log._content)
         if match and not found_crash_cause: builder.error("mod_crash", match.group(1))
 
         match = re.search(r"due to errors, provided by '([\w\-+]+)'", self.log._content)
