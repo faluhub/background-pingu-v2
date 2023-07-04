@@ -100,8 +100,9 @@ class Log:
     @cached_property
     def fabric_version(self) -> version.Version:
         match = re.compile(r"Loading Minecraft \S+ with Fabric Loader (\S+)").search(self._content)
-        if not match is None:
-            return version.parse(match.group(1))
+        if not match is None: return version.parse(match.group(1))
+        match = re.compile(r"libraries/net/fabricmc/fabric-loader/\S+/fabric-loader-(\S+).jar").search(self._content)
+        if not match is None: return version.parse(match.group(1))
         return None
     
     @cached_property
