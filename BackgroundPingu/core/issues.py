@@ -220,6 +220,7 @@ class IssueChecker:
             if not highest_srigt_ver is None:
                 if highest_srigt_ver < version.parse("13.3") and self.log.fabric_version > version.parse("0.14.14"):
                     builder.error("incompatible_srigt")
+                    found_crash_cause = True
                     if not self.log.minecraft_version == "1.16.1":
                         builder.add("incompatible_srigt_alternative")
             
@@ -414,6 +415,7 @@ class IssueChecker:
                 builder.error("random_forge_crash_2")
         
         ranked_matches = re.findall(r"The Fabric Mod \"(.*?)\" is not whitelisted!", self.log._content)
+        if len(ranked_matches) > 0: found_crash_cause = True
         if len([ranked_match for ranked_match in ranked_matches if "fabric" in ranked_match])>30:
             builder.error("ranked_illegal_mods", "a mod `Fabric API` that is", "it")
             ranked_matches = [ranked_match for ranked_match in ranked_matches if not "fabric" in ranked_match]
@@ -423,16 +425,16 @@ class IssueChecker:
             builder.error("ranked_illegal_mods", f"~`{len(ranked_matches)}` mods (`{', '.join(ranked_matches)}`) that are", "them")
         elif len(ranked_matches) > 0:
             builder.error("ranked_illegal_mods", f"a mod `{ranked_matches[0]}` that is", "it")
-        
-        match = re.search(r"Mixin apply for mod ([\w\-+]+) failed", self.log._content)
 
         if self.log.has_content("Mixin apply for mod areessgee failed areessgee.mixins.json:nether.StructureFeatureMixin from mod areessgee -> net.minecraft.class_3195"):
             builder.error("incompatible_mod", "areessgee", "peepopractice")
+            found_crash_cause = True
         
-        elif match: builder.error("mod_crash", match.group(1))
+        
+        match = re.search(r"Mixin apply for mod ([\w\-+]+) failed", self.log._content)
+        if match and not found_crash_cause: builder.error("mod_crash", match.group(1))
 
         match = re.search(r"due to errors, provided by '([\w\-+]+)'", self.log._content)
-        if match and match.group(1) != "speedrunigt":
-            builder.error("mod_crash", match.group(1))
+        if match and not found_crash_cause: builder.error("mod_crash", match.group(1))
 
         return builder
