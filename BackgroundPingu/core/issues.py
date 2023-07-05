@@ -206,8 +206,9 @@ class IssueChecker:
             has_java_error = True
         
         
-        if self.log.has_content("java.lang.ClassNotFoundException: java.lang.invoke.LambdaMetafactory"):
-            builder.error("new_java_old_fabric_crash").add("fabric_guide")
+        if self.log.has_content("java.lang.IllegalArgumentException: Unsupported class file major version 64"):
+            mod_loader = self.log.mod_loader.value if self.log.mod_loader.value is not None else "mod"
+            builder.error("new_java_old_fabric_crash", mod_loader, mod_loader).add("fabric_guide")
         
         elif not self.log.mod_loader is None and self.log.mod_loader == ModLoader.FABRIC and not self.log.fabric_version is None:
             highest_srigt_ver = None
