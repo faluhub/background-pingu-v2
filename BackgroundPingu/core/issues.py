@@ -70,6 +70,27 @@ class IssueChecker:
             "optifine",
             "sodium-extra"
         ]
+        self.mcsr_mods = [
+            "worldpreview",
+            "anchiale",
+            "sleepbackground",
+            "StatsPerWorld",
+            "z-buffer-fog",
+            "tab-focus",
+            "setspawn",
+            "SpeedRunIGT",
+            "atum",
+            "standardsettings",
+            "forceport",
+            "lazystronghold",
+            "antiresourcereload",
+            "extra-options",
+            "chunkcacher",
+            "serverSideRNG",
+            "peepopractice",
+            "fast-reset",
+            "mcsrranked"
+        ]
     
     def get_mod_metadata(self, mod_filename: str) -> dict:
         mod_filename = mod_filename.lower().replace("optifine", "optifabric")
@@ -105,7 +126,7 @@ class IssueChecker:
     def check(self) -> IssueBuilder:
         builder = IssueBuilder(self.bot)
 
-        has_mcsr_mod = False
+        is_mcsr_log = any(self.log.has_mod(mcsr_mod) for mcsr_mod in self.mcsr_mods) or self.log.minecraft_version == "1.16.1"
         found_crash_cause = False
         illegal_mods = []
         checked_mods = []
@@ -113,28 +134,27 @@ class IssueChecker:
         for mod in self.log.mods:
             metadata = self.get_mod_metadata(mod)
             if not metadata is None:
-                mod_name = metadata["name"]
+                if is_mcsr_log:
+                    mod_name = metadata["name"]
 
-                try:
-                    for incompatible_mod in metadata["incompatible"]:
-                        if all_incompatible_mods[mod_name] is None:
-                            all_incompatible_mods[mod_name] = [incompatible_mod]
-                        else:
-                            all_incompatible_mods[mod_name].append(incompatible_mod)
-                except KeyError: pass
+                    try:
+                        for incompatible_mod in metadata["incompatible"]:
+                            if all_incompatible_mods[mod_name] is None:
+                                all_incompatible_mods[mod_name] = [incompatible_mod]
+                            else:
+                                all_incompatible_mods[mod_name].append(incompatible_mod)
+                    except KeyError: pass
 
-                if mod_name in checked_mods: builder.add("duplicate_mod", mod_name.lower())
-                else: checked_mods.append(mod_name.lower())
+                    if mod_name in checked_mods: builder.add("duplicate_mod", mod_name.lower())
+                    else: checked_mods.append(mod_name.lower())
 
-                has_mcsr_mod = True
+                    latest_version = self.get_latest_version(metadata)
 
-                latest_version = self.get_latest_version(metadata)
-
-                if not latest_version is None and not (latest_version["name"] == mod or latest_version["version"] in mod):
-                    if all(not weird_mod in mod.lower() for weird_mod in self.assume_as_latest):
-                        builder.warning("outdated_mod", mod_name, latest_version["page"])
-                        continue
-                elif latest_version is None: continue
+                    if not latest_version is None and not (latest_version["name"] == mod or latest_version["version"] in mod):
+                        if all(not weird_mod in mod.lower() for weird_mod in self.assume_as_latest):
+                            builder.warning("outdated_mod", mod_name, latest_version["page"])
+                            continue
+                    elif latest_version is None: continue
             elif not "mcsrranked" in mod: illegal_mods.append(mod)
         if len(illegal_mods) > 0: builder.note("amount_illegal_mods", len(illegal_mods), "s" if len(illegal_mods) > 1 else "")
 
@@ -144,14 +164,13 @@ class IssueChecker:
                     builder.error("incompatible_mod", key, incompatible_mod)
         
         if not self.log.mod_loader in [None, ModLoader.FABRIC, ModLoader.VANILLA]:
-            if has_mcsr_mod:
-                builder.error("incompatible_loader", self.log.mod_loader.value)
-                builder.add("fabric_guide")
+            if is_mcsr_log:
+                builder.error("using_other_loader_mcsr", self.log.mod_loader.value).add("fabric_guide")
             else:
                 builder.note("using_other_loader", self.log.mod_loader.value).add("fabric_guide")
 
         if len(self.log.mods) > 0 and self.log.mod_loader == ModLoader.VANILLA:
-            builder.error("no_loader")
+            builder.error("no_loader").add("fabric_guide")
         
         if not self.log.operating_system is None and self.log.operating_system == OperatingSystem.MACOS:
             if self.log.has_mod("sodium-1.16.1-v1.jar") or self.log.has_mod("sodium-1.16.1-v2.jar"):
@@ -160,7 +179,6 @@ class IssueChecker:
             if not self.log.launcher is None and self.log.launcher.lower() == "multimc":
                 builder.note("use_prism").add("mac_setup_guide")
         
-        has_java_error = False
         if not self.log.major_java_version is None and self.log.major_java_version < 17:
             wrong_mods = []
             for mod in self.java_17_mods:
@@ -176,13 +194,13 @@ class IssueChecker:
                     "s" if len(wrong_mods) == 1 else
                     ""
                 ).add("java_update_guide")
-                has_java_error = True
+                found_crash_cause = True
         
-        if not has_java_error and self.log.has_content("require the use of Java 17"):
+        if not found_crash_cause and self.log.has_content("require the use of Java 17"):
             builder.error("need_java_17_mc").add("java_update_guide")
-            has_java_error = True
+            found_crash_cause = True
         
-        if not has_java_error:
+        if not found_crash_cause:
             needed_java_version = None
             if self.log.has_content("java.lang.UnsupportedClassVersionError"):
                 match = re.compile(r"class file version (\d+\.\d+)").search(self.log._content)
@@ -195,15 +213,15 @@ class IssueChecker:
                     needed_java_version = parsed_version
             if not needed_java_version is None:
                 builder.error("need_new_java", needed_java_version).add("java_update_guide")
-                has_java_error = True
+                found_crash_cause = True
         
-        if not has_java_error and self.log.has_content("You might want to install a 64bit Java version"):
+        if not found_crash_cause and self.log.has_content("You might want to install a 64bit Java version"):
             builder.error("32_bit_java").add("java_update_guide")
-            has_java_error = True
+            found_crash_cause = True
         
-        if not has_java_error and self.log.has_content("Incompatible magic value 0 in class file sun/security/provider/SunEntries"):
+        if not found_crash_cause and self.log.has_content("Incompatible magic value 0 in class file sun/security/provider/SunEntries"):
             builder.error("broken_java").add("java_update_guide")
-            has_java_error = True
+            found_crash_cause = True
         
         
         if self.log.has_content("java.lang.IllegalArgumentException: Unsupported class file major version 64"):
