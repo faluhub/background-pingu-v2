@@ -22,7 +22,7 @@
     "error.broken_fabric": "You're using a completely broken version of `Fabric Loader`. You should update it.",
     "error.broken_java": "Your `Java` installation seems to be broken.",
     "error.builtin_lib_crash": "You're using your system's {}, which is causing the crash. Disable it either in {}'s global settings in `Settings > Minecraft{}` or in instance settings in `Settings > Workarounds`.",
-    "error.eav_crash": "This crash may be caused by one of the following:.",
+    "error.eav_crash": "This crash may be caused by one of the following:",
     "error.exceeded_id_limit": "You've exceeded the hardcoded ID limit. Remove some mods, or install [**JustEnoughIDs**](https://www.curseforge.com/minecraft/mc-mods/jeid).",
     "error.exitcode_1073741819": "Your game crashed with exitcode `-1073741819`. Here are some possible solutions:.",
     "error.forge_java_bug": "Old versions of `Forge` crash with `Java 8u321+`. To fix this, update `Forge` to the latest version via the `Versions` tab (right click on `Forge`, click `Change Version`, and choose the latest one). Alternatively, you can download `Java 8u312 or lower`; see [**archive**](https://github.com/adoptium/temurin8-binaries/releases/tag/jdk8u312-b07).",
