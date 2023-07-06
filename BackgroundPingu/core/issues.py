@@ -331,7 +331,7 @@ class IssueChecker:
         if len(system_libs) == 2: system_arg = f"{system_libs[0]} and {system_libs[1]} installations"
         elif len(system_libs) == 1: system_arg = f"{system_libs[0]} installation"
         if not system_arg is None:
-            if self.log.has_content("Failed to locate library:"): builder.error("builtin_lib_crash", system_arg)
+            if self.log.has_content("Failed to locate library:"): builder.error("builtin_lib_crash", system_arg, self.log.launcher if self.log.launcher is not None else 'your launcher', ' > Tweaks' if self.log.launcher.lower() == 'prism' else '')
             else: builder.note("builtin_lib_recommendation", system_arg)
 
         required_mod_match = re.findall(r"requires (.*?) of (\w+),", self.log._content)

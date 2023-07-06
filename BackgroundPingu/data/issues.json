@@ -21,7 +21,7 @@
     "error.autoreset_user": "You're using `AutoReset`. It's a really old mod that is no longer allowed. `Atum` is a better version of it.",
     "error.broken_fabric": "You're using a completely broken version of `Fabric Loader`. You should update it.",
     "error.broken_java": "Your `Java` installation seems to be broken.",
-    "error.builtin_lib_crash": "You're using your system's {}, which is causing the crash.",
+    "error.builtin_lib_crash": "You're using your system's {}, which is causing the crash. Disable it either in {}'s global settings in `Settings > Minecraft{}` or in instance settings in `Settings > Workarounds`.",
     "error.eav_crash": "This crash may be caused by one of the following:.",
     "error.exceeded_id_limit": "You've exceeded the hardcoded ID limit. Remove some mods, or install [**JustEnoughIDs**](https://www.curseforge.com/minecraft/mc-mods/jeid).",
     "error.exitcode_1073741819": "Your game crashed with exitcode `-1073741819`. Here are some possible solutions:.",
