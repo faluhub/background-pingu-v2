@@ -145,7 +145,7 @@ class IssueChecker:
                                 all_incompatible_mods[mod_name].append(incompatible_mod)
                     except KeyError: pass
 
-                    if mod_name in checked_mods: builder.add("duplicate_mod", mod_name.lower())
+                    if mod_name.lower() in checked_mods: builder.note("duplicate_mod", mod_name.lower())
                     else: checked_mods.append(mod_name.lower())
 
                     latest_version = self.get_latest_version(metadata)
