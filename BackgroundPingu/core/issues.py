@@ -331,7 +331,11 @@ class IssueChecker:
         if len(system_libs) == 2: system_arg = f"{system_libs[0]} and {system_libs[1]} installations"
         elif len(system_libs) == 1: system_arg = f"{system_libs[0]} installation"
         if not system_arg is None:
-            if self.log.has_content("Failed to locate library:"): builder.error("builtin_lib_crash", system_arg, self.log.launcher if self.log.launcher is not None else 'your launcher', ' > Tweaks' if self.log.launcher.lower() == 'prism' else '')
+            if self.log.has_content("Failed to locate library:"):
+                builder.error("builtin_lib_crash",
+                              system_arg,
+                              self.log.launcher if self.log.launcher is not None else 'your launcher',
+                              ' > Tweaks' if self.log.launcher.lower() == 'prism' else '')
             else: builder.note("builtin_lib_recommendation", system_arg)
 
         required_mod_match = re.findall(r"requires (.*?) of (\w+),", self.log._content)
@@ -397,8 +401,9 @@ class IssueChecker:
                 if not latest_version is None:
                     builder.add(metadata["name"], latest_version["page"])
 
-        if self.log.has_content("Failed to find Minecraft main class"):
+        if self.log.has_content("Launched instance in offline mode") and self.log.has_content("(missing)\n"):
             builder.error("online_launch_required")
+            found_crash_cause = True
         
         if not self.log.launcher is None and self.log.launcher.lower() == "prism":
             pattern = r"This instance is not compatible with Java version (\d+)\.\nPlease switch to one of the following Java versions for this instance:\nJava version (\d+)"
@@ -428,7 +433,7 @@ class IssueChecker:
             if self.log.has_content("java.lang.ClassNotFoundException: org.apache.logging.log4j.spi.AbstractLogger"):
                 builder.error("no_abstract_logger")
         
-        if not self.log.mod_loader is None and self.log.mod_loader == ModLoader.FORGE:
+        if not self.log.mod_loader is None and self.log.mod_loader == ModLoader.FORGE and not found_crash_cause:
             if self.log.has_content("ClassLoaders$AppClassLoader cannot be cast to class java.net.URLClassLoader"):
                 builder.error("forge_too_new_java")
             if self.log.has_content("Unable to detect the forge installer!"):
