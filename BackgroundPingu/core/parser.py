@@ -152,7 +152,16 @@ class Log:
     def max_allocated(self):
         if not self.java_arguments is None:
             match = re.compile(r"-Xmx(\d+)m").search(self.java_arguments)
-            try: return int(match.group(1)) if not match is None else None
+            try:
+                if not match is None: return int(match.group(1))
+            except ValueError: pass
+            match = re.compile(r"-Xmx(\d+)M").search(self.java_arguments)
+            try:
+                if not match is None: return int(match.group(1))
+            except ValueError: pass
+            match = re.compile(r"-Xmx(\d+)G").search(self.java_arguments)
+            try:
+                if not match is None: return int(match.group(1))*1024
             except ValueError: pass
         return None
     
