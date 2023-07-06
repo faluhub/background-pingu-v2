@@ -181,7 +181,7 @@ class IssueChecker:
             builder.error("no_loader").add("fabric_guide")
         
         if not self.log.operating_system is None and self.log.operating_system == OperatingSystem.MACOS:
-            if self.log.has_mod("sodium-1.16.1-v1.jar") or self.log.has_mod("sodium-1.16.1-v2.jar"):
+            if self.log.has_mod("sodium-1.16.1-v1") or self.log.has_mod("sodium-1.16.1-v2"):
                 builder.error("not_using_mac_sodium")
 
             if not self.log.launcher is None and self.log.launcher.lower() == "multimc":
