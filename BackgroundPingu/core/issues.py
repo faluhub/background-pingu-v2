@@ -263,12 +263,13 @@ class IssueChecker:
                 builder.warning("too_little_ram").add("allocate_ram_guide")
             elif self.log.max_allocated < min_limit_1:
                 builder.note("too_little_ram").add("allocate_ram_guide")
-            elif self.log.max_allocated > 10000:
-                builder.error("too_much_ram").add("allocate_ram_guide")
-            elif self.log.max_allocated > 4800:
-                builder.warning("too_much_ram").add("allocate_ram_guide")
-            elif self.log.max_allocated > 3500:
-                builder.note("too_much_ram").add("allocate_ram_guide")
+            if is_mcsr_log:
+                if self.log.max_allocated > 10000:
+                    builder.error("too_much_ram").add("allocate_ram_guide")
+                elif self.log.max_allocated > 4800:
+                    builder.warning("too_much_ram").add("allocate_ram_guide")
+                elif self.log.max_allocated > 3500:
+                    builder.note("too_much_ram").add("allocate_ram_guide")
         elif self.log.has_content("OutOfMemoryError"):
             builder.error("too_little_ram_crash").add("allocate_ram_guide")
         
