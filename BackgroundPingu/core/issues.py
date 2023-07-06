@@ -466,6 +466,9 @@ class IssueChecker:
             builder.error("incompatible_mod", "areessgee", "peepopractice")
             found_crash_cause = True
         
+        if self.log.has_content("com.mcsr.projectelo.anticheat.file.verifiers.ResourcePackVerifier"):
+            builder.error("ranked_resourcepack_crash")
+
         for pattern in [
             r"Mixin apply for mod ([\w\-+]+) failed",
             r"from mod ([\w\-+]+) failed injection check",
