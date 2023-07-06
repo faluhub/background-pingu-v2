@@ -130,6 +130,7 @@ class IssueChecker:
         found_crash_cause = False
         illegal_mods = []
         checked_mods = []
+        outdated_mods = []
         all_incompatible_mods = {}
         for mod in self.log.mods:
             metadata = self.get_mod_metadata(mod)
@@ -149,14 +150,21 @@ class IssueChecker:
                     else: checked_mods.append(mod_name.lower())
 
                     latest_version = self.get_latest_version(metadata)
-
+                    
                     if not latest_version is None and not (latest_version["name"] == mod or latest_version["version"] in mod):
                         if all(not weird_mod in mod.lower() for weird_mod in self.assume_as_latest):
-                            builder.warning("outdated_mod", mod_name, latest_version["page"])
+                            outdated_mods.append(["outdated_mod", mod_name, latest_version["page"]])
                             continue
                     elif latest_version is None: continue
             elif not "mcsrranked" in mod: illegal_mods.append(mod)
-        if len(illegal_mods) > 0: builder.note("amount_illegal_mods", len(illegal_mods), "s" if len(illegal_mods) > 1 else "")
+        
+        if len(illegal_mods) > 0: builder.note("amount_illegal_mods", len(illegal_mods), "s" if len(illegal_mods) > 1 else f" (`{illegal_mods[0]}`)")
+        
+        if len(outdated_mods) > 5:
+            builder.error("amount_outdated_mods", len(outdated_mods)).add("update_mods")
+        else:
+            for outdated_mod in outdated_mods:
+                builder.warning(outdated_mod[0], outdated_mod[1], outdated_mod[2])
 
         for key, value in all_incompatible_mods.items():
             for incompatible_mod in value:
@@ -458,13 +466,12 @@ class IssueChecker:
             builder.error("incompatible_mod", "areessgee", "peepopractice")
             found_crash_cause = True
         
-        match = re.search(r"Mixin apply for mod ([\w\-+]+) failed", self.log._content)
-        if match and not found_crash_cause: builder.error("mod_crash", match.group(1))
-        
-        match = re.search(r"from mod ([\w\-+]+) failed injection check", self.log._content)
-        if match and not found_crash_cause: builder.error("mod_crash", match.group(1))
-
-        match = re.search(r"due to errors, provided by '([\w\-+]+)'", self.log._content)
-        if match and not found_crash_cause: builder.error("mod_crash", match.group(1))
+        for pattern in [
+            r"Mixin apply for mod ([\w\-+]+) failed",
+            r"from mod ([\w\-+]+) failed injection check",
+            r"due to errors, provided by '([\w\-+]+)'"
+        ]:
+            match = re.search(pattern, self.log._content)
+            if match and not found_crash_cause: builder.error("mod_crash", match.group(1))
 
         return builder
