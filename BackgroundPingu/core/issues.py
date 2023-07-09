@@ -70,6 +70,27 @@ class IssueChecker:
             "optifine",
             "sodium-extra"
         ]
+        self.mcsr_mods = [
+            "worldpreview",
+            "anchiale",
+            "sleepbackground",
+            "StatsPerWorld",
+            "z-buffer-fog",
+            "tab-focus",
+            "setspawn",
+            "SpeedRunIGT",
+            "atum",
+            "standardsettings",
+            "forceport",
+            "lazystronghold",
+            "antiresourcereload",
+            "extra-options",
+            "chunkcacher",
+            "serverSideRNG",
+            "peepopractice",
+            "fast-reset",
+            "mcsrranked"
+        ]
     
     def get_mod_metadata(self, mod_filename: str) -> dict:
         mod_filename = mod_filename.lower().replace("optifine", "optifabric")
@@ -105,38 +126,45 @@ class IssueChecker:
     def check(self) -> IssueBuilder:
         builder = IssueBuilder(self.bot)
 
-        has_mcsr_mod = False
+        is_mcsr_log = any(self.log.has_mod(mcsr_mod) for mcsr_mod in self.mcsr_mods) or self.log.minecraft_version == "1.16.1"
         found_crash_cause = False
         illegal_mods = []
         checked_mods = []
+        outdated_mods = []
         all_incompatible_mods = {}
         for mod in self.log.mods:
             metadata = self.get_mod_metadata(mod)
             if not metadata is None:
-                mod_name = metadata["name"]
+                if is_mcsr_log:
+                    mod_name = metadata["name"]
 
-                try:
-                    for incompatible_mod in metadata["incompatible"]:
-                        if all_incompatible_mods[mod_name] is None:
-                            all_incompatible_mods[mod_name] = [incompatible_mod]
-                        else:
-                            all_incompatible_mods[mod_name].append(incompatible_mod)
-                except KeyError: pass
+                    try:
+                        for incompatible_mod in metadata["incompatible"]:
+                            if all_incompatible_mods[mod_name] is None:
+                                all_incompatible_mods[mod_name] = [incompatible_mod]
+                            else:
+                                all_incompatible_mods[mod_name].append(incompatible_mod)
+                    except KeyError: pass
 
-                if mod_name in checked_mods: builder.add("duplicate_mod", mod_name.lower())
-                else: checked_mods.append(mod_name.lower())
+                    if mod_name.lower() in checked_mods: builder.note("duplicate_mod", mod_name.lower())
+                    else: checked_mods.append(mod_name.lower())
 
-                has_mcsr_mod = True
-
-                latest_version = self.get_latest_version(metadata)
-
-                if not latest_version is None and not (latest_version["name"] == mod or latest_version["version"] in mod):
-                    if all(not weird_mod in mod.lower() for weird_mod in self.assume_as_latest):
-                        builder.warning("outdated_mod", mod_name, latest_version["page"])
-                        continue
-                elif latest_version is None: continue
+                    latest_version = self.get_latest_version(metadata)
+                    
+                    if not latest_version is None and not (latest_version["name"] == mod or latest_version["version"] in mod):
+                        if all(not weird_mod in mod.lower() for weird_mod in self.assume_as_latest):
+                            outdated_mods.append(["outdated_mod", mod_name, latest_version["page"]])
+                            continue
+                    elif latest_version is None: continue
             elif not "mcsrranked" in mod: illegal_mods.append(mod)
-        if len(illegal_mods) > 0: builder.note("amount_illegal_mods", len(illegal_mods), "s" if len(illegal_mods) > 1 else "")
+        
+        if len(illegal_mods) > 0: builder.note("amount_illegal_mods", len(illegal_mods), "s" if len(illegal_mods) > 1 else f" (`{illegal_mods[0]}`)")
+        
+        if len(outdated_mods) > 5:
+            builder.error("amount_outdated_mods", len(outdated_mods)).add("update_mods")
+        else:
+            for outdated_mod in outdated_mods:
+                builder.warning(outdated_mod[0], outdated_mod[1], outdated_mod[2])
 
         for key, value in all_incompatible_mods.items():
             for incompatible_mod in value:
@@ -144,23 +172,21 @@ class IssueChecker:
                     builder.error("incompatible_mod", key, incompatible_mod)
         
         if not self.log.mod_loader in [None, ModLoader.FABRIC, ModLoader.VANILLA]:
-            if has_mcsr_mod:
-                builder.error("incompatible_loader", self.log.mod_loader.value)
-                builder.add("fabric_guide")
+            if is_mcsr_log:
+                builder.error("using_other_loader_mcsr", self.log.mod_loader.value).add("fabric_guide")
             else:
                 builder.note("using_other_loader", self.log.mod_loader.value).add("fabric_guide")
 
         if len(self.log.mods) > 0 and self.log.mod_loader == ModLoader.VANILLA:
-            builder.error("no_loader")
+            builder.error("no_loader").add("fabric_guide")
         
         if not self.log.operating_system is None and self.log.operating_system == OperatingSystem.MACOS:
-            if self.log.has_mod("sodium-1.16.1-v1.jar") or self.log.has_mod("sodium-1.16.1-v2.jar"):
+            if self.log.has_mod("sodium-1.16.1-v1") or self.log.has_mod("sodium-1.16.1-v2"):
                 builder.error("not_using_mac_sodium")
 
             if not self.log.launcher is None and self.log.launcher.lower() == "multimc":
                 builder.note("use_prism").add("mac_setup_guide")
         
-        has_java_error = False
         if not self.log.major_java_version is None and self.log.major_java_version < 17:
             wrong_mods = []
             for mod in self.java_17_mods:
@@ -176,13 +202,13 @@ class IssueChecker:
                     "s" if len(wrong_mods) == 1 else
                     ""
                 ).add("java_update_guide")
-                has_java_error = True
+                found_crash_cause = True
         
-        if not has_java_error and self.log.has_content("require the use of Java 17"):
+        if not found_crash_cause and self.log.has_content("require the use of Java 17"):
             builder.error("need_java_17_mc").add("java_update_guide")
-            has_java_error = True
+            found_crash_cause = True
         
-        if not has_java_error:
+        if not found_crash_cause:
             needed_java_version = None
             if self.log.has_content("java.lang.UnsupportedClassVersionError"):
                 match = re.compile(r"class file version (\d+\.\d+)").search(self.log._content)
@@ -195,19 +221,20 @@ class IssueChecker:
                     needed_java_version = parsed_version
             if not needed_java_version is None:
                 builder.error("need_new_java", needed_java_version).add("java_update_guide")
-                has_java_error = True
+                found_crash_cause = True
         
-        if not has_java_error and self.log.has_content("You might want to install a 64bit Java version"):
+        if not found_crash_cause and self.log.has_content("You might want to install a 64bit Java version"):
             builder.error("32_bit_java").add("java_update_guide")
-            has_java_error = True
+            found_crash_cause = True
         
-        if not has_java_error and self.log.has_content("Incompatible magic value 0 in class file sun/security/provider/SunEntries"):
+        if not found_crash_cause and self.log.has_content("Incompatible magic value 0 in class file sun/security/provider/SunEntries"):
             builder.error("broken_java").add("java_update_guide")
-            has_java_error = True
+            found_crash_cause = True
         
         
-        if self.log.has_content("java.lang.ClassNotFoundException: java.lang.invoke.LambdaMetafactory"):
-            builder.error("new_java_old_fabric_crash").add("fabric_guide")
+        if self.log.has_content("java.lang.IllegalArgumentException: Unsupported class file major version 64"):
+            mod_loader = self.log.mod_loader.value if self.log.mod_loader.value is not None else "mod"
+            builder.error("new_java_old_fabric_crash", mod_loader, mod_loader).add("fabric_guide")
         
         elif not self.log.mod_loader is None and self.log.mod_loader == ModLoader.FABRIC and not self.log.fabric_version is None:
             highest_srigt_ver = None
@@ -244,12 +271,13 @@ class IssueChecker:
                 builder.warning("too_little_ram").add("allocate_ram_guide")
             elif self.log.max_allocated < min_limit_1:
                 builder.note("too_little_ram").add("allocate_ram_guide")
-            elif self.log.max_allocated > 10000:
-                builder.error("too_much_ram").add("allocate_ram_guide")
-            elif self.log.max_allocated > 4800:
-                builder.warning("too_much_ram").add("allocate_ram_guide")
-            elif self.log.max_allocated > 3500:
-                builder.note("too_much_ram").add("allocate_ram_guide")
+            if is_mcsr_log:
+                if self.log.max_allocated > 10000:
+                    builder.error("too_much_ram").add("allocate_ram_guide")
+                elif self.log.max_allocated > 4800:
+                    builder.warning("too_much_ram").add("allocate_ram_guide")
+                elif self.log.max_allocated > 3500:
+                    builder.note("too_much_ram").add("allocate_ram_guide")
         elif self.log.has_content("OutOfMemoryError"):
             builder.error("too_little_ram_crash").add("allocate_ram_guide")
         
@@ -278,8 +306,10 @@ class IssueChecker:
         if self.log.has_mod("optifine"):
             if self.log.has_mod("worldpreview"):
                 builder.error("incompatible_mod", "Optifine", "WorldPreview")
+                found_crash_cause = True
             if self.log.has_mod("z-buffer-fog"):
                 builder.error("incompatible_mod", "Optifine", "z-buffer-fog")
+                found_crash_cause = True
         
         if self.log.has_content("Failed to download the assets index"):
             builder.error("assets_index_fail")
@@ -310,7 +340,11 @@ class IssueChecker:
         if len(system_libs) == 2: system_arg = f"{system_libs[0]} and {system_libs[1]} installations"
         elif len(system_libs) == 1: system_arg = f"{system_libs[0]} installation"
         if not system_arg is None:
-            if self.log.has_content("Failed to locate library:"): builder.error("builtin_lib_crash", system_arg)
+            if self.log.has_content("Failed to locate library:"):
+                builder.error("builtin_lib_crash",
+                              system_arg,
+                              self.log.launcher if self.log.launcher is not None else 'your launcher',
+                              ' > Tweaks' if self.log.launcher.lower() == 'prism' else '')
             else: builder.note("builtin_lib_recommendation", system_arg)
 
         required_mod_match = re.findall(r"requires (.*?) of (\w+),", self.log._content)
@@ -321,7 +355,7 @@ class IssueChecker:
                 continue
             builder.error("requires_mod", mod_name)
         
-        if self.log.has_mod("fabric-api"):
+        if self.log.has_mod("fabric-api") and is_mcsr_log:
             builder.warning("using_fabric_api")
         
         if self.log.has_content("Couldn't extract native jar"):
@@ -376,8 +410,9 @@ class IssueChecker:
                 if not latest_version is None:
                     builder.add(metadata["name"], latest_version["page"])
 
-        if self.log.has_content("Failed to find Minecraft main class"):
+        if self.log.has_content("Launched instance in offline mode") and self.log.has_content("(missing)\n"):
             builder.error("online_launch_required")
+            found_crash_cause = True
         
         if not self.log.launcher is None and self.log.launcher.lower() == "prism":
             pattern = r"This instance is not compatible with Java version (\d+)\.\nPlease switch to one of the following Java versions for this instance:\nJava version (\d+)"
@@ -407,7 +442,7 @@ class IssueChecker:
             if self.log.has_content("java.lang.ClassNotFoundException: org.apache.logging.log4j.spi.AbstractLogger"):
                 builder.error("no_abstract_logger")
         
-        if not self.log.mod_loader is None and self.log.mod_loader == ModLoader.FORGE:
+        if not self.log.mod_loader is None and self.log.mod_loader == ModLoader.FORGE and not found_crash_cause:
             if self.log.has_content("ClassLoaders$AppClassLoader cannot be cast to class java.net.URLClassLoader"):
                 builder.error("forge_too_new_java")
             if self.log.has_content("Unable to detect the forge installer!"):
@@ -431,13 +466,15 @@ class IssueChecker:
             builder.error("incompatible_mod", "areessgee", "peepopractice")
             found_crash_cause = True
         
-        match = re.search(r"Mixin apply for mod ([\w\-+]+) failed", self.log._content)
-        if match and not found_crash_cause: builder.error("mod_crash", match.group(1))
-        
-        match = re.search(r"from mod ([\w\-+]+) failed injection check", self.log._content)
-        if match and not found_crash_cause: builder.error("mod_crash", match.group(1))
+        if self.log.has_content("com.mcsr.projectelo.anticheat.file.verifiers.ResourcePackVerifier"):
+            builder.error("ranked_resourcepack_crash")
 
-        match = re.search(r"due to errors, provided by '([\w\-+]+)'", self.log._content)
-        if match and not found_crash_cause: builder.error("mod_crash", match.group(1))
+        for pattern in [
+            r"Mixin apply for mod ([\w\-+]+) failed",
+            r"from mod ([\w\-+]+) failed injection check",
+            r"due to errors, provided by '([\w\-+]+)'"
+        ]:
+            match = re.search(pattern, self.log._content)
+            if match and not found_crash_cause: builder.error("mod_crash", match.group(1))
 
         return builder
