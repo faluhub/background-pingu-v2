@@ -51,17 +51,20 @@ class Core(Cog):
             description=messages[0],
             color=self.bot.color
         )
+    
+    def should_reply(self, result: dict):
+        return not result["text"] is None or (not result["embed"] is None and not result["view"] is None)
 
     @Cog.listener()
     async def on_message(self, msg: discord.Message):
         result = await self.check_log(msg)
-        if not result["text"] is None or (not result["embed"] is None and not result["view"] is None):
+        if self.should_reply(result):
             return await msg.reply(content=result["text"], embed=result["embed"], view=result["view"])
     
     @commands.message_command(name="Check Log")
     async def check_log_cmd(self, ctx: discord.ApplicationContext, msg: discord.Message):
         result = await self.check_log(msg, include_content=True)
-        if not result["text"] is None or (not result["embed"] is None and not result["view"] is None):
+        if self.should_reply(result):
             return await ctx.response.send_message(content=result["text"], embed=result["embed"], view=result["view"])
         return await ctx.response.send_message(":x: **No log or no issues found in this message.**", ephemeral=True)
 
