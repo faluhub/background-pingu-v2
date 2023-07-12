@@ -466,6 +466,10 @@ class IssueChecker:
             builder.error("incompatible_mod", "areessgee", "peepopractice")
             found_crash_cause = True
         
+        if self.log.has_mod("speedrunigt") and self.log.has_mod("stronghold-trainer"):
+            builder.error("incompatible_mod", "SpeedRunIGT", "Stronghold Trainer")
+            found_crash_cause = True
+
         if self.log.has_content("com.mcsr.projectelo.anticheat.file.verifiers.ResourcePackVerifier"):
             builder.error("ranked_resourcepack_crash")
 
