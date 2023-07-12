@@ -265,7 +265,7 @@ class IssueChecker:
             has_shenandoah = self.log.has_java_argument("shenandoah")
             min_limit_1 = 1200 if has_shenandoah else 1900
             min_limit_2 = 850 if has_shenandoah else 1200
-            if (self.log.max_allocated < min_limit_1 and self.log.has_content("Process crashed with exitcode -805306369")) or self.log.has_content("OutOfMemoryError"):
+            if (self.log.max_allocated < min_limit_1 and self.log.has_content("code -805306369")) or self.log.has_content("OutOfMemoryError"):
                 builder.error("too_little_ram_crash").add("allocate_ram_guide")
             elif self.log.max_allocated < min_limit_2:
                 builder.warning("too_little_ram").add("allocate_ram_guide")
@@ -395,10 +395,10 @@ class IssueChecker:
             builder.error("using_old_ssrng")
         elif self.log.has_content("Failed to light chunk") and self.log.has_content("net.minecraft.class_148: Feature placement") and self.log.has_content("java.lang.ArrayIndexOutOfBoundsException"):
             builder.info("starlight_crash")
-        elif self.log.has_content("Process crashed with exitcode -805306369") or self.log.has_content("java.lang.ArithmeticException"):
+        elif self.log.has_content("code -805306369") or self.log.has_content("java.lang.ArithmeticException"):
             builder.warning("exitcode_805306369")
-        
-        if self.log.has_content("Process crashed with exitcode -1073741819") or self.log.has_content("The instruction at 0x%p referenced memory at 0x%p. The memory could not be %s."):
+
+        if self.log.has_content("code -1073741819") or self.log.has_content("The instruction at 0x%p referenced memory at 0x%p. The memory could not be %s."):
             builder.error("exitcode_1073741819")
             for i in range(4): builder.add(f"exitcode_1073741819_{i + 1}")
         
