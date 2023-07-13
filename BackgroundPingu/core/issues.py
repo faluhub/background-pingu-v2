@@ -472,6 +472,9 @@ class IssueChecker:
 
         if self.log.has_content("com.mcsr.projectelo.anticheat.file.verifiers.ResourcePackVerifier"):
             builder.error("ranked_resourcepack_crash")
+        
+        if self.log.has_mod("continuity") and self.log.has_mod("sodium") and not self.log.has_mod("indium"):
+            builder.error("missing_dependency","continuity","indium")
 
         for pattern in [
             r"Mixin apply for mod ([\w\-+]+) failed",
