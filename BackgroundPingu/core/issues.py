@@ -135,6 +135,9 @@ class IssueChecker:
         outdated_mods = []
         all_incompatible_mods = {}
 
+        if self.log.has_content("(Session ID is "):
+            builder.error("leaked_session_id_token")
+
         match = re.search(r"C:/Users/([^/]+)/", self.log._content)
         if match and match.group(1) not in ["User", "Admin", "********"]:
             builder.error("leaked_username")
