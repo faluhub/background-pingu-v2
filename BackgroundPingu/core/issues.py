@@ -480,6 +480,9 @@ class IssueChecker:
         if self.log.has_mod("continuity") and self.log.has_mod("sodium") and not self.log.has_mod("indium"):
             builder.error("missing_dependency","continuity","indium")
 
+        if self.log.has_content("Failed to store chunk") or self.log.has_content("sun.nio.ch.FileDispatcherImpl.pwrite0"):
+            builder.error("out_of_disk_space")
+
         for pattern in [
             r"Mixin apply for mod ([\w\-+]+) failed",
             r"from mod ([\w\-+]+) failed injection check",
