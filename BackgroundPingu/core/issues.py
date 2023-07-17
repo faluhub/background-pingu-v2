@@ -248,7 +248,7 @@ class IssueChecker:
             builder.error("broken_java").add("java_update_guide")
             found_crash_cause = True
         
-        if self.log.has_content("java.lang.IllegalArgumentException: Unsupported class file major version 64"):
+        if self.log.has_content("java.lang.IllegalArgumentException: Unsupported class file major version "):
             mod_loader = self.log.mod_loader.value if self.log.mod_loader.value is not None else "mod"
             builder.error("new_java_old_fabric_crash", mod_loader, mod_loader).add("fabric_guide")
         
