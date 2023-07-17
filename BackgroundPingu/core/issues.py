@@ -99,6 +99,7 @@ class IssueChecker:
             original_name = mod["name"].lower()
             mod_name = original_name.replace(" ", "").replace("-", "").replace("_", "")
             mod_name = "zbufferfog" if mod_name == "legacyplanarfog" else mod_name
+            mod_name = "dynamicmenufps" if mod_name == "dynamicfps" else mod_name
             if mod_name in filename: return mod
         return None
     
