@@ -1,5 +1,5 @@
 {
-    "add.allocate_ram_guide": "Check out [**this document**](https://docs.google.com/document/d/1aPF1lyBAfPWyeHIH80F8JJw8rvvy6lRm0WJ2xxSrRh8/edit#heading=h.y78pfyby3w9b) for a guide on how to fix it.",
+    "add.allocate_ram_guide": "Check out [**this document**](https://docs.google.com/document/d/1aPF1lyBAfPWyeHIH80F8JJw8rvvy6lRm0WJ2xxSrRh8/edit#heading=h.owelqvpsehpw) for a guide on how to fix it.",
     "add.eav_crash_1": "- Concurrently running programs, such as `OBS` and `Discord`, that use the same graphics card as the game.",
     "add.eav_crash_2": "- Using game capture instead of window capture in `OBS`.",
     "add.eav_crash_3": "- Having `Hardware Acceleration` enabled in `Discord`.",
