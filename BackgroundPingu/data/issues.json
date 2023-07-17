@@ -60,7 +60,6 @@
     "error.really_old_fabric": "You're using a really old version of `Fabric Loader`. You should update it.",
     "error.requires_fabric_api": "You're using a mod that requires `Fabric API`. It is a mod that is separate to `Fabric Loader`. You can download it [**here**](https://modrinth.com/mod/fabric-api).",
     "error.requires_mod": "A mod you're using is requiring a mod called `{}`, but it is not present. Download it and add it to your mods folder.",
-    "error.shaders_mod_plus_of": "You've installed `Shaders Mod` alongside `OptiFine`. `OptiFine` has built-in shader support, so you should remove `Shaders Mod`.",
     "error.sodium_config_crash": "If this crash happened when you opened the video settings menu or loaded into a world, delete `.minecraft/config/sodium-options.json`.",
     "error.too_little_ram_crash": "You have too little RAM allocated, which caused this crash.",
     "error.too_much_ram": "You have way too much RAM allocated, which can cause lag spikes.",

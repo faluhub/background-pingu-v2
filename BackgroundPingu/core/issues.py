@@ -332,9 +332,6 @@ class IssueChecker:
         if self.log.has_content("java.lang.NoSuchMethodError: sun.security.util.ManifestEntryVerifier.<init>(Ljava/util/jar/Manifest;)V"):
             builder.error("forge_java_bug")
         
-        if self.log.has_content("Shaders Mod detected"):
-            builder.error("shaders_mod_plus_of")
-        
         system_libs = [lib for lib in ["GLFW", "OpenAL"] if self.log.has_content("Using system " + lib)]
         system_arg = None
         if len(system_libs) == 2: system_arg = f"{system_libs[0]} and {system_libs[1]} installations"
@@ -451,16 +448,17 @@ class IssueChecker:
                 builder.error("random_forge_crash_2")
         
         ranked_matches = re.findall(r"The Fabric Mod \"(.*?)\" is not whitelisted!", self.log._content)
-        if len(ranked_matches) > 0: found_crash_cause = True
-        if len([ranked_match for ranked_match in ranked_matches if "fabric" in ranked_match]) > 30:
-            builder.error("ranked_illegal_mods", "a mod `Fabric API` that is", "it")
-            ranked_matches = [ranked_match for ranked_match in ranked_matches if not "fabric" in ranked_match]
-        if len(ranked_matches) > 5:
-            builder.error("ranked_illegal_mods", f"~`{len(ranked_matches)}` mods (`{ranked_matches[0]}, {ranked_matches[1]}, ...`) that are", "them")
-        elif len(ranked_matches) > 1:
-            builder.error("ranked_illegal_mods", f"~`{len(ranked_matches)}` mods (`{', '.join(ranked_matches)}`) that are", "them")
-        elif len(ranked_matches) > 0:
-            builder.error("ranked_illegal_mods", f"a mod `{ranked_matches[0]}` that is", "it")
+        if len(ranked_matches) > 0:
+            found_crash_cause = True
+            if len([ranked_match for ranked_match in ranked_matches if "fabric" in ranked_match]) > 30:
+                builder.error("ranked_illegal_mods", "a mod `Fabric API` that is", "it")
+                ranked_matches = [ranked_match for ranked_match in ranked_matches if not "fabric" in ranked_match]
+            if len(ranked_matches) > 5:
+                builder.error("ranked_illegal_mods", f"~`{len(ranked_matches)}` mods (`{ranked_matches[0]}, {ranked_matches[1]}, ...`) that are", "them")
+            elif len(ranked_matches) > 1:
+                builder.error("ranked_illegal_mods", f"~`{len(ranked_matches)}` mods (`{', '.join(ranked_matches)}`) that are", "them")
+            elif len(ranked_matches) > 0:
+                builder.error("ranked_illegal_mods", f"a mod `{ranked_matches[0]}` that is", "it")
 
         if self.log.has_content("Mixin apply for mod areessgee failed areessgee.mixins.json:nether.StructureFeatureMixin from mod areessgee -> net.minecraft.class_3195"):
             builder.error("incompatible_mod", "areessgee", "peepopractice")
