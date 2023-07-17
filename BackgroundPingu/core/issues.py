@@ -233,6 +233,10 @@ class IssueChecker:
                 builder.error("need_new_java", needed_java_version).add("java_update_guide")
                 found_crash_cause = True
         
+        if self.log.has_content("Could not reserve enough space for "):
+            builder.error("32_bit_java_crash").add("java_update_guide")
+            found_crash_cause = True
+        
         if not found_crash_cause and self.log.has_content("You might want to install a 64bit Java version"):
             builder.error("32_bit_java").add("java_update_guide")
             found_crash_cause = True
