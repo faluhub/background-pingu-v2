@@ -99,6 +99,7 @@ class IssueChecker:
             original_name = mod["name"].lower()
             mod_name = original_name.replace(" ", "").replace("-", "").replace("_", "")
             mod_name = "zbufferfog" if mod_name == "legacyplanarfog" else mod_name
+            mod_name = "dynamicmenufps" if mod_name == "dynamicfps" else mod_name
             if mod_name in filename: return mod
         return None
     
@@ -106,7 +107,8 @@ class IssueChecker:
         if self.log.minecraft_version is None: return None
         formatted_mc_version = self.log.minecraft_version
         if formatted_mc_version.count(".") == 1: formatted_mc_version += ".0"
-        minecraft_version = semver.Version.parse(formatted_mc_version)
+        try: minecraft_version = semver.Version.parse(formatted_mc_version)
+        except: return None
         latest_match = None
         for file_data in metadata["files"]:
             for game_version in file_data["game_versions"]:
@@ -132,6 +134,15 @@ class IssueChecker:
         checked_mods = []
         outdated_mods = []
         all_incompatible_mods = {}
+
+        if self.log.has_content("(Session ID is "):
+            builder.error("leaked_session_id_token")
+
+        match = re.search(r"C:/Users/([^/]+)/", self.log._content)
+        if match and match.group(1) not in ["User", "Admin", "********"]:
+            builder.error("leaked_username")
+        match = ""
+
         for mod in self.log.mods:
             metadata = self.get_mod_metadata(mod)
             if not metadata is None:
@@ -216,12 +227,18 @@ class IssueChecker:
                     needed_java_version = round(float(match.group(1))) - 44
             compatibility_match = re.compile(r"The requested compatibility level (JAVA_\d+) could not be set.").search(self.log._content)
             if not compatibility_match is None:
-                parsed_version = int(compatibility_match.group(1).split("_")[1])
-                if parsed_version > needed_java_version:
-                    needed_java_version = parsed_version
+                try:
+                    parsed_version = int(compatibility_match.group(1).split("_")[1])
+                    if parsed_version > needed_java_version:
+                        needed_java_version = parsed_version
+                except: pass
             if not needed_java_version is None:
                 builder.error("need_new_java", needed_java_version).add("java_update_guide")
                 found_crash_cause = True
+        
+        if self.log.has_content("Could not reserve enough space for "):
+            builder.error("32_bit_java_crash").add("java_update_guide")
+            found_crash_cause = True
         
         if not found_crash_cause and self.log.has_content("You might want to install a 64bit Java version"):
             builder.error("32_bit_java").add("java_update_guide")
@@ -231,8 +248,7 @@ class IssueChecker:
             builder.error("broken_java").add("java_update_guide")
             found_crash_cause = True
         
-        
-        if self.log.has_content("java.lang.IllegalArgumentException: Unsupported class file major version 64"):
+        if self.log.has_content("java.lang.IllegalArgumentException: Unsupported class file major version "):
             mod_loader = self.log.mod_loader.value if self.log.mod_loader.value is not None else "mod"
             builder.error("new_java_old_fabric_crash", mod_loader, mod_loader).add("fabric_guide")
         
@@ -242,30 +258,35 @@ class IssueChecker:
                 if "speedrunigt" in mod.lower():
                     match = re.compile(r"-(\d+(?:\.\d+)?)\+").search(mod)
                     if not match is None:
-                        ver = version.parse(match.group(1))
+                        try: ver = version.parse(match.group(1))
+                        except: pass
                         if highest_srigt_ver is None or ver > highest_srigt_ver:
                             highest_srigt_ver = ver
             if not highest_srigt_ver is None:
-                if highest_srigt_ver < version.parse("13.3") and self.log.fabric_version > version.parse("0.14.14"):
-                    builder.error("incompatible_srigt")
-                    found_crash_cause = True
-                    if not self.log.minecraft_version == "1.16.1":
-                        builder.add("incompatible_srigt_alternative")
+                try:
+                    if highest_srigt_ver < version.parse("13.3") and self.log.fabric_version > version.parse("0.14.14"):
+                        builder.error("incompatible_srigt")
+                        found_crash_cause = True
+                        if not self.log.minecraft_version == "1.16.1":
+                            builder.add("incompatible_srigt_alternative")
+                except: pass
             
-            if self.log.fabric_version < version.parse("0.12.2"):
-                builder.error("really_old_fabric").add("fabric_guide")
-            elif self.log.fabric_version < version.parse("0.14.12"):
-                builder.warning("relatively_old_fabric").add("fabric_guide")
-            elif self.log.fabric_version < version.parse("0.14.14"):
-                builder.note("old_fabric").add("fabric_guide")
-            elif self.log.fabric_version.__str__() in ["0.14.15", "0.14.16"]:
-                builder.error("broken_fabric").add("fabric_guide")
+            try:
+                if self.log.fabric_version < version.parse("0.13.3"):
+                    builder.error("really_old_fabric").add("fabric_guide")
+                elif self.log.fabric_version < version.parse("0.14.12"):
+                    builder.warning("relatively_old_fabric").add("fabric_guide")
+                elif self.log.fabric_version < version.parse("0.14.14"):
+                    builder.note("old_fabric").add("fabric_guide")
+                elif self.log.fabric_version.__str__() in ["0.14.15", "0.14.16"]:
+                    builder.error("broken_fabric").add("fabric_guide")
+            except: pass
         
         if not self.log.max_allocated is None:
             has_shenandoah = self.log.has_java_argument("shenandoah")
             min_limit_1 = 1200 if has_shenandoah else 1900
             min_limit_2 = 850 if has_shenandoah else 1200
-            if (self.log.max_allocated < min_limit_1 and self.log.has_content("Process crashed with exitcode -805306369")) or self.log.has_content("OutOfMemoryError"):
+            if (self.log.max_allocated < min_limit_1 and self.log.has_content(" -805306369")) or self.log.has_content("OutOfMemoryError"):
                 builder.error("too_little_ram_crash").add("allocate_ram_guide")
             elif self.log.max_allocated < min_limit_2:
                 builder.warning("too_little_ram").add("allocate_ram_guide")
@@ -291,7 +312,7 @@ class IssueChecker:
         
         if self.log.has_content("A fatal error has been detected by the Java Runtime Environment") or self.log.has_content("EXCEPTION_ACCESS_VIOLATION"):
             builder.error("eav_crash")
-            for i in range(4): builder.add(f"eav_crash_{i + 1}")
+            for i in range(5): builder.add(f"eav_crash_{i + 1}")
             if self.log.has_mod("speedrunigt"): builder.add("eav_crash_srigt")
             builder.add("eav_crash_disclaimer")
         
@@ -331,9 +352,6 @@ class IssueChecker:
         
         if self.log.has_content("java.lang.NoSuchMethodError: sun.security.util.ManifestEntryVerifier.<init>(Ljava/util/jar/Manifest;)V"):
             builder.error("forge_java_bug")
-        
-        if self.log.has_content("Shaders Mod detected"):
-            builder.error("shaders_mod_plus_of")
         
         system_libs = [lib for lib in ["GLFW", "OpenAL"] if self.log.has_content("Using system " + lib)]
         system_arg = None
@@ -395,10 +413,10 @@ class IssueChecker:
             builder.error("using_old_ssrng")
         elif self.log.has_content("Failed to light chunk") and self.log.has_content("net.minecraft.class_148: Feature placement") and self.log.has_content("java.lang.ArrayIndexOutOfBoundsException"):
             builder.info("starlight_crash")
-        elif self.log.has_content("Process crashed with exitcode -805306369") or self.log.has_content("java.lang.ArithmeticException"):
+        elif self.log.has_content(" -805306369") or self.log.has_content("java.lang.ArithmeticException"):
             builder.warning("exitcode_805306369")
-        
-        if self.log.has_content("Process crashed with exitcode -1073741819") or self.log.has_content("The instruction at 0x%p referenced memory at 0x%p. The memory could not be %s."):
+
+        if self.log.has_content(" -1073741819") or self.log.has_content("The instruction at 0x%p referenced memory at 0x%p. The memory could not be %s."):
             builder.error("exitcode_1073741819")
             for i in range(4): builder.add(f"exitcode_1073741819_{i + 1}")
         
@@ -424,18 +442,20 @@ class IssueChecker:
                     short_version = self.log.minecraft_version[:4]
                     if short_version in [f"1.{18 + i}" for i in range(6)]: switch_java = True
                 if switch_java:
-                    current_version = int(match.group(1))
-                    compatible_version = int(match.group(2))
-                    builder.error(
-                        "incorrect_java_prism",
-                        current_version,
-                        compatible_version,
-                        compatible_version,
-                        " (download the .msi file)" if self.log.operating_system == OperatingSystem.WINDOWS else
-                        " (download the .pkg file)" if self.log.operating_system == OperatingSystem.MACOS else
-                        "",
-                        compatible_version
-                    )
+                    try:
+                        current_version = int(match.group(1))
+                        compatible_version = int(match.group(2))
+                        builder.error(
+                            "incorrect_java_prism",
+                            current_version,
+                            compatible_version,
+                            compatible_version,
+                            " (download the .msi file)" if self.log.operating_system == OperatingSystem.WINDOWS else
+                            " (download the .pkg file)" if self.log.operating_system == OperatingSystem.MACOS else
+                            "",
+                            compatible_version
+                        )
+                    except: pass
                 else: builder.error("java_comp_check")
         
         if not self.log.launcher is None and self.log.launcher.lower() == "multimc":
@@ -451,23 +471,34 @@ class IssueChecker:
                 builder.error("random_forge_crash_2")
         
         ranked_matches = re.findall(r"The Fabric Mod \"(.*?)\" is not whitelisted!", self.log._content)
-        if len(ranked_matches) > 0: found_crash_cause = True
-        if len([ranked_match for ranked_match in ranked_matches if "fabric" in ranked_match]) > 30:
-            builder.error("ranked_illegal_mods", "a mod `Fabric API` that is", "it")
-            ranked_matches = [ranked_match for ranked_match in ranked_matches if not "fabric" in ranked_match]
-        if len(ranked_matches) > 5:
-            builder.error("ranked_illegal_mods", f"~`{len(ranked_matches)}` mods (`{ranked_matches[0]}, {ranked_matches[1]}, ...`) that are", "them")
-        elif len(ranked_matches) > 1:
-            builder.error("ranked_illegal_mods", f"~`{len(ranked_matches)}` mods (`{', '.join(ranked_matches)}`) that are", "them")
-        elif len(ranked_matches) > 0:
-            builder.error("ranked_illegal_mods", f"a mod `{ranked_matches[0]}` that is", "it")
+        if len(ranked_matches) > 0:
+            found_crash_cause = True
+            if len([ranked_match for ranked_match in ranked_matches if "fabric" in ranked_match]) > 30:
+                builder.error("ranked_illegal_mods", "a mod `Fabric API` that is", "it")
+                ranked_matches = [ranked_match for ranked_match in ranked_matches if not "fabric" in ranked_match]
+            if len(ranked_matches) > 5:
+                builder.error("ranked_illegal_mods", f"~`{len(ranked_matches)}` mods (`{ranked_matches[0]}, {ranked_matches[1]}, ...`) that are", "them")
+            elif len(ranked_matches) > 1:
+                builder.error("ranked_illegal_mods", f"~`{len(ranked_matches)}` mods (`{', '.join(ranked_matches)}`) that are", "them")
+            elif len(ranked_matches) > 0:
+                builder.error("ranked_illegal_mods", f"a mod `{ranked_matches[0]}` that is", "it")
 
         if self.log.has_content("Mixin apply for mod areessgee failed areessgee.mixins.json:nether.StructureFeatureMixin from mod areessgee -> net.minecraft.class_3195"):
             builder.error("incompatible_mod", "areessgee", "peepopractice")
             found_crash_cause = True
         
+        if self.log.has_mod("speedrunigt") and self.log.has_mod("stronghold-trainer"):
+            builder.error("incompatible_mod", "SpeedRunIGT", "Stronghold Trainer")
+            found_crash_cause = True
+
         if self.log.has_content("com.mcsr.projectelo.anticheat.file.verifiers.ResourcePackVerifier"):
             builder.error("ranked_resourcepack_crash")
+        
+        if self.log.has_mod("continuity") and self.log.has_mod("sodium") and not self.log.has_mod("indium"):
+            builder.error("missing_dependency","continuity","indium")
+
+        if self.log.has_content("Failed to store chunk") or self.log.has_content("sun.nio.ch.FileDispatcherImpl.pwrite0"):
+            builder.error("out_of_disk_space")
 
         for pattern in [
             r"Mixin apply for mod ([\w\-+]+) failed",

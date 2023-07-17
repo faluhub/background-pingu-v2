@@ -62,8 +62,10 @@ class Log:
     def major_java_version(self) -> int:
         if not self.java_version is None:
             parts = self.java_version.split(".")
-            if not parts[0] == "1": return int(parts[0])
-            return int(parts[1])
+            try:
+                if not parts[0] == "1": return int(parts[0])
+                return int(parts[1])
+            except: pass
         return None
     
     @cached_property
@@ -100,9 +102,13 @@ class Log:
     @cached_property
     def fabric_version(self) -> version.Version:
         match = re.compile(r"Loading Minecraft \S+ with Fabric Loader (\S+)").search(self._content)
-        if not match is None: return version.parse(match.group(1))
+        try:
+            if not match is None: return version.parse(match.group(1))
+        except: pass
         match = re.compile(r"libraries/net/fabricmc/fabric-loader/\S+/fabric-loader-(\S+).jar").search(self._content)
-        if not match is None: return version.parse(match.group(1))
+        try:
+            if not match is None: return version.parse(match.group(1))
+        except: pass
         return None
     
     @cached_property
