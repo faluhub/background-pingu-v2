@@ -106,7 +106,8 @@ class IssueChecker:
         if self.log.minecraft_version is None: return None
         formatted_mc_version = self.log.minecraft_version
         if formatted_mc_version.count(".") == 1: formatted_mc_version += ".0"
-        minecraft_version = semver.Version.parse(formatted_mc_version)
+        try: minecraft_version = semver.Version.parse(formatted_mc_version)
+        except: return None
         latest_match = None
         for file_data in metadata["files"]:
             for game_version in file_data["game_versions"]:
@@ -222,9 +223,11 @@ class IssueChecker:
                     needed_java_version = round(float(match.group(1))) - 44
             compatibility_match = re.compile(r"The requested compatibility level (JAVA_\d+) could not be set.").search(self.log._content)
             if not compatibility_match is None:
-                parsed_version = int(compatibility_match.group(1).split("_")[1])
-                if parsed_version > needed_java_version:
-                    needed_java_version = parsed_version
+                try:
+                    parsed_version = int(compatibility_match.group(1).split("_")[1])
+                    if parsed_version > needed_java_version:
+                        needed_java_version = parsed_version
+                except: pass
             if not needed_java_version is None:
                 builder.error("need_new_java", needed_java_version).add("java_update_guide")
                 found_crash_cause = True
@@ -248,24 +251,29 @@ class IssueChecker:
                 if "speedrunigt" in mod.lower():
                     match = re.compile(r"-(\d+(?:\.\d+)?)\+").search(mod)
                     if not match is None:
-                        ver = version.parse(match.group(1))
+                        try: ver = version.parse(match.group(1))
+                        except: pass
                         if highest_srigt_ver is None or ver > highest_srigt_ver:
                             highest_srigt_ver = ver
             if not highest_srigt_ver is None:
-                if highest_srigt_ver < version.parse("13.3") and self.log.fabric_version > version.parse("0.14.14"):
-                    builder.error("incompatible_srigt")
-                    found_crash_cause = True
-                    if not self.log.minecraft_version == "1.16.1":
-                        builder.add("incompatible_srigt_alternative")
+                try:
+                    if highest_srigt_ver < version.parse("13.3") and self.log.fabric_version > version.parse("0.14.14"):
+                        builder.error("incompatible_srigt")
+                        found_crash_cause = True
+                        if not self.log.minecraft_version == "1.16.1":
+                            builder.add("incompatible_srigt_alternative")
+                except: pass
             
-            if self.log.fabric_version < version.parse("0.12.2"):
-                builder.error("really_old_fabric").add("fabric_guide")
-            elif self.log.fabric_version < version.parse("0.14.12"):
-                builder.warning("relatively_old_fabric").add("fabric_guide")
-            elif self.log.fabric_version < version.parse("0.14.14"):
-                builder.note("old_fabric").add("fabric_guide")
-            elif self.log.fabric_version.__str__() in ["0.14.15", "0.14.16"]:
-                builder.error("broken_fabric").add("fabric_guide")
+            try:
+                if self.log.fabric_version < version.parse("0.12.2"):
+                    builder.error("really_old_fabric").add("fabric_guide")
+                elif self.log.fabric_version < version.parse("0.14.12"):
+                    builder.warning("relatively_old_fabric").add("fabric_guide")
+                elif self.log.fabric_version < version.parse("0.14.14"):
+                    builder.note("old_fabric").add("fabric_guide")
+                elif self.log.fabric_version.__str__() in ["0.14.15", "0.14.16"]:
+                    builder.error("broken_fabric").add("fabric_guide")
+            except: pass
         
         if not self.log.max_allocated is None:
             has_shenandoah = self.log.has_java_argument("shenandoah")
@@ -427,18 +435,20 @@ class IssueChecker:
                     short_version = self.log.minecraft_version[:4]
                     if short_version in [f"1.{18 + i}" for i in range(6)]: switch_java = True
                 if switch_java:
-                    current_version = int(match.group(1))
-                    compatible_version = int(match.group(2))
-                    builder.error(
-                        "incorrect_java_prism",
-                        current_version,
-                        compatible_version,
-                        compatible_version,
-                        " (download the .msi file)" if self.log.operating_system == OperatingSystem.WINDOWS else
-                        " (download the .pkg file)" if self.log.operating_system == OperatingSystem.MACOS else
-                        "",
-                        compatible_version
-                    )
+                    try:
+                        current_version = int(match.group(1))
+                        compatible_version = int(match.group(2))
+                        builder.error(
+                            "incorrect_java_prism",
+                            current_version,
+                            compatible_version,
+                            compatible_version,
+                            " (download the .msi file)" if self.log.operating_system == OperatingSystem.WINDOWS else
+                            " (download the .pkg file)" if self.log.operating_system == OperatingSystem.MACOS else
+                            "",
+                            compatible_version
+                        )
+                    except: pass
                 else: builder.error("java_comp_check")
         
         if not self.log.launcher is None and self.log.launcher.lower() == "multimc":
