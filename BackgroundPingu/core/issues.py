@@ -132,6 +132,12 @@ class IssueChecker:
         checked_mods = []
         outdated_mods = []
         all_incompatible_mods = {}
+
+        match = re.search(r"C:/Users/([^/]+)/", self.log._content)
+        if match and match.group(1) not in ["User", "Admin", "********"]:
+            builder.error("leaked_username")
+        match = ""
+
         for mod in self.log.mods:
             metadata = self.get_mod_metadata(mod)
             if not metadata is None:

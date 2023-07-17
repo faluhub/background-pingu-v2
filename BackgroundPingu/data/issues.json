@@ -36,6 +36,7 @@
     "error.incorrect_java_prism": "You're using `Java {}`, while you need to use `Java {}`. You can download `Java {}` from [**this page**](https://adoptium.net/temurin/releases/) ({}). Then make sure to select `Java {}` either globally or in your instance's settings.",
     "error.intel_hd2000": "Your issue stems from using `Intel HD2000 integrated graphics`, which only supports up to `OpenGL 3.1`. Unfortunately, there are no dedicated `Windows 10` drivers available for this graphics card. As a result, you will not be easily able to run `Minecraft 1.17+`, as `21w10a and later` require improved graphics capabilities beyond `OpenGL 3.1`. You should still be able to play Minecraft versions `1.16 and earlier`.",
     "error.java_comp_check": "Disable the `Java compatibility check` in `Settings > Java` either in your instance's settings or in global settings.",
+    "error.leaked_username": "Your log has your PC username in it. You might want to delete it.",
     "error.locked_libs": "Another process appears to be locking your native library JARs. To solve this, restart your PC.",
     "error.mac_too_new_java": "You are using too new of a `Java` version. Please follow the steps on [**this wiki page**](https://github.com/MultiMC/MultiMC5/wiki/Java-on-macOS) to install 8u241. You don't need to uninstall the other Java version.",
     "error.missing_dependency": "The mod `{}` requires having the mod `{}` installed. Please install it.",
