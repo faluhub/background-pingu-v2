@@ -484,7 +484,7 @@ class IssueChecker:
                 builder.error("ranked_illegal_mods", f"a mod `{ranked_matches[0]}` that is", "it")
 
         if self.log.has_content("Mixin apply for mod areessgee failed areessgee.mixins.json:nether.StructureFeatureMixin from mod areessgee -> net.minecraft.class_3195"):
-            builder.error("incompatible_mod", "areessgee", "peepopractice")
+            builder.error("incompatible_mod", "AreEssGee", "peepoPractice")
             found_crash_cause = True
         
         if self.log.has_mod("speedrunigt") and self.log.has_mod("stronghold-trainer"):
@@ -495,7 +495,7 @@ class IssueChecker:
             builder.error("ranked_resourcepack_crash")
         
         if self.log.has_mod("continuity") and self.log.has_mod("sodium") and not self.log.has_mod("indium"):
-            builder.error("missing_dependency","continuity","indium")
+            builder.error("missing_dependency", "continuity", "indium")
 
         if self.log.has_content("Failed to store chunk") or self.log.has_content("sun.nio.ch.FileDispatcherImpl.pwrite0"):
             builder.error("out_of_disk_space")

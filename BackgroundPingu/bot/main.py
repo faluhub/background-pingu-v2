@@ -15,7 +15,7 @@ class BackgroundPingu(asb):
         self.cog_folder_blacklist = ["__pycache__"]
         self.path = "./BackgroundPingu/bot/cogs"
 
-        self.color = 0x9bc4af
+        self.color = 0xFFC113
 
         super().__init__(
             intents=discord.Intents.all(),
