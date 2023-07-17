@@ -297,7 +297,7 @@ class IssueChecker:
         
         if self.log.has_content("A fatal error has been detected by the Java Runtime Environment") or self.log.has_content("EXCEPTION_ACCESS_VIOLATION"):
             builder.error("eav_crash")
-            for i in range(4): builder.add(f"eav_crash_{i + 1}")
+            for i in range(5): builder.add(f"eav_crash_{i + 1}")
             if self.log.has_mod("speedrunigt"): builder.add("eav_crash_srigt")
             builder.add("eav_crash_disclaimer")
         
