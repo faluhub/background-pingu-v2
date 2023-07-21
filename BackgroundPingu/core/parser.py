@@ -100,6 +100,12 @@ class Log:
         return None
     
     @cached_property
+    def short_version(self) -> str:
+        if not self.minecraft_version is None:
+            return self.minecraft_version[:4]
+        return None
+    
+    @cached_property
     def fabric_version(self) -> version.Version:
         match = re.compile(r"Loading Minecraft \S+ with Fabric Loader (\S+)").search(self._content)
         try:

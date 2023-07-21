@@ -140,7 +140,7 @@ class IssueChecker:
 
         match = re.search(r"C:/Users/([^/]+)/", self.log._content)
         if match and match.group(1) not in ["User", "Admin", "********"]:
-            builder.error("leaked_username")
+            builder.info("leaked_username")
         match = ""
 
         for mod in self.log.mods:
@@ -292,7 +292,7 @@ class IssueChecker:
                 builder.warning("too_little_ram").add("allocate_ram_guide")
             elif self.log.max_allocated < min_limit_1:
                 builder.note("too_little_ram").add("allocate_ram_guide")
-            if is_mcsr_log:
+            if is_mcsr_log and not self.log.short_version in [f"1.{18 + i}" for i in range(10)]:
                 if self.log.max_allocated > 10000:
                     builder.error("too_much_ram").add("allocate_ram_guide")
                 elif self.log.max_allocated > 4800:
@@ -316,7 +316,7 @@ class IssueChecker:
             if self.log.has_mod("speedrunigt"): builder.add("eav_crash_srigt")
             builder.add("eav_crash_disclaimer")
         
-        if self.log.has_mod("phosphor"):
+        if self.log.has_mod("phosphor") and not self.log.minecraft_version == "1.12.2":
             builder.note("starlight_better")
             metadata = self.get_mod_metadata("starlight")
             if not metadata is None:
@@ -393,7 +393,7 @@ class IssueChecker:
             builder.error("sodium_config_crash")
         
         pattern = r"Uncaught exception in thread \"Thread-\d+\"\njava\.util\.ConcurrentModificationException: null"
-        if "java.util.ConcurrentModificationException" in re.sub(pattern, "", self.log._content) and not self.log.minecraft_version is None and self.log.minecraft_version == "1.16.1" and not self.log.has_mod("voyager"):
+        if "java.util.ConcurrentModificationException" in re.sub(pattern, "", self.log._content) and not self.log.minecraft_version is None and self.log.short_version == "1.16" and not self.log.has_mod("voyager"):
             builder.error("no_voyager_crash")
         
         if self.log.has_content("java.lang.IllegalStateException: Adding Entity listener a second time") and self.log.has_content("me.jellysquid.mods.lithium.common.entity.tracker.nearby"):
@@ -439,8 +439,7 @@ class IssueChecker:
                 switch_java = False
                 if self.log.mod_loader == ModLoader.FORGE: switch_java = True
                 elif not self.log.minecraft_version is None:
-                    short_version = self.log.minecraft_version[:4]
-                    if short_version in [f"1.{18 + i}" for i in range(6)]: switch_java = True
+                    if self.log.short_version in [f"1.{18 + i}" for i in range(10)]: switch_java = True
                 if switch_java:
                     try:
                         current_version = int(match.group(1))
@@ -470,18 +469,57 @@ class IssueChecker:
             if self.log.has_content("java.lang.NoClassDefFoundError: cpw/mods/modlauncher/Launcher"):
                 builder.error("random_forge_crash_2")
         
-        ranked_matches = re.findall(r"The Fabric Mod \"(.*?)\" is not whitelisted!", self.log._content)
-        if len(ranked_matches) > 0:
+        match = re.search(r"Incompatible mod set found! READ THE BELOW LINES!(.*?)(?=at com\.mcsr\.projectelo\.anticheat)", self.log._content, re.DOTALL)
+        if match:
             found_crash_cause = True
-            if len([ranked_match for ranked_match in ranked_matches if "fabric" in ranked_match]) > 30:
-                builder.error("ranked_illegal_mods", "a mod `Fabric API` that is", "it")
-                ranked_matches = [ranked_match for ranked_match in ranked_matches if not "fabric" in ranked_match]
-            if len(ranked_matches) > 5:
-                builder.error("ranked_illegal_mods", f"~`{len(ranked_matches)}` mods (`{ranked_matches[0]}, {ranked_matches[1]}, ...`) that are", "them")
-            elif len(ranked_matches) > 1:
-                builder.error("ranked_illegal_mods", f"~`{len(ranked_matches)}` mods (`{', '.join(ranked_matches)}`) that are", "them")
-            elif len(ranked_matches) > 0:
-                builder.error("ranked_illegal_mods", f"a mod `{ranked_matches[0]}` that is", "it")
+            ranked_rong_files = []
+            ranked_rong_mods = []
+            ranked_rong_versions = []
+            ranked_anticheat = match.group(1)
+            ranked_anticheat = ranked_anticheat.strip().replace("\t","")
+            ranked_anticheat_split = ranked_anticheat.split("These Fabric Mods are whitelisted but different version! Make sure to update these!")
+            if len(ranked_anticheat_split) > 1:
+                ranked_anticheat, ranked_anticheat_split = ranked_anticheat_split[0], ranked_anticheat_split[1].split("\n")
+                for mod in ranked_anticheat_split:
+                    match = re.search(r"\[(.*?)\]", mod)
+                    if match:
+                        ranked_rong_versions.append(match.group(1))
+            ranked_anticheat_split = ranked_anticheat.split("These Fabric Mods are whitelisted and you seem to be using the correct version but the files do not match. Try downloading these files again!")
+            if len(ranked_anticheat_split) > 1:
+                ranked_anticheat, ranked_anticheat_split = ranked_anticheat_split[0], ranked_anticheat_split[1].split("\n")
+                for mod in ranked_anticheat_split:
+                    match = re.search(r"\[(.*?)\]", mod)
+                    if match:
+                        ranked_rong_files.append(match.group(1))
+            ranked_anticheat_split = ranked_anticheat.split("These Fabric Mods are not whitelisted! You should delete these from Minecraft.")
+            if len(ranked_anticheat_split) > 1:
+                ranked_anticheat, ranked_anticheat_split = ranked_anticheat_split[0], ranked_anticheat_split[1].split("\n")
+                for mod in ranked_anticheat_split:
+                    match = re.search(r"\[(.*?)\]", mod)
+                    if match:
+                        match = match.group(1)
+                        ranked_rong_mods.append("Fabric API" if match == "fabric" else match)
+
+            if len(ranked_rong_versions) > 5:
+                builder.error("ranked_rong_versions", f"`{len(ranked_rong_versions)}` mods (`{ranked_rong_versions[0]}, {ranked_rong_versions[1]}, ...`) that are", "them").add("update_mods_ranked")
+            elif len(ranked_rong_versions) > 1:
+                builder.error("ranked_rong_versions", f"`{len(ranked_rong_versions)}` mods (`{', '.join(ranked_rong_versions)}`) that are", "them").add("update_mods_ranked")
+            elif len(ranked_rong_versions) > 0:
+                builder.error("ranked_rong_versions", f"a mod `{ranked_rong_versions[0]}` that is", "it").add("update_mods_ranked")
+
+            if len(ranked_rong_files) > 5:
+                builder.error("ranked_rong_files", f"`{len(ranked_rong_files)}` mods (`{ranked_rong_files[0]}, {ranked_rong_files[1]}, ...`) that seem", "them").add("update_mods_ranked")
+            elif len(ranked_rong_files) > 1:
+                builder.error("ranked_rong_files", f"`{len(ranked_rong_files)}` mods (`{', '.join(ranked_rong_files)}`) that seem", "them").add("update_mods_ranked")
+            elif len(ranked_rong_files) > 0:
+                builder.error("ranked_rong_files", f"a mod `{ranked_rong_files[0]}` that seems", "it").add("update_mods_ranked")
+
+            if len(ranked_rong_mods) > 5:
+                builder.error("ranked_rong_mods", f"`{len(ranked_rong_mods)}` mods (`{ranked_rong_mods[0]}, {ranked_rong_mods[1]}, ...`) that are", "them")
+            elif len(ranked_rong_mods) > 1:
+                builder.error("ranked_rong_mods", f"`{len(ranked_rong_mods)}` mods (`{', '.join(ranked_rong_mods)}`) that are", "them")
+            elif len(ranked_rong_mods) > 0:
+                builder.error("ranked_rong_mods", f"a mod `{ranked_rong_mods[0]}` that is", "it")
 
         if self.log.has_content("Mixin apply for mod areessgee failed areessgee.mixins.json:nether.StructureFeatureMixin from mod areessgee -> net.minecraft.class_3195"):
             builder.error("incompatible_mod", "AreEssGee", "peepoPractice")
