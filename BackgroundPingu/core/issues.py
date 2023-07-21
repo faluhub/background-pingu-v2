@@ -292,7 +292,7 @@ class IssueChecker:
                 builder.warning("too_little_ram").add("allocate_ram_guide")
             elif self.log.max_allocated < min_limit_1:
                 builder.note("too_little_ram").add("allocate_ram_guide")
-            if is_mcsr_log:
+            if is_mcsr_log and not self.log.short_version in [f"1.{18 + i}" for i in range(10)]:
                 if self.log.max_allocated > 10000:
                     builder.error("too_much_ram").add("allocate_ram_guide")
                 elif self.log.max_allocated > 4800:
@@ -393,7 +393,7 @@ class IssueChecker:
             builder.error("sodium_config_crash")
         
         pattern = r"Uncaught exception in thread \"Thread-\d+\"\njava\.util\.ConcurrentModificationException: null"
-        if "java.util.ConcurrentModificationException" in re.sub(pattern, "", self.log._content) and not self.log.minecraft_version is None and self.log.minecraft_version == "1.16.1" and not self.log.has_mod("voyager"):
+        if "java.util.ConcurrentModificationException" in re.sub(pattern, "", self.log._content) and not self.log.minecraft_version is None and self.log.short_version == "1.16" and not self.log.has_mod("voyager"):
             builder.error("no_voyager_crash")
         
         if self.log.has_content("java.lang.IllegalStateException: Adding Entity listener a second time") and self.log.has_content("me.jellysquid.mods.lithium.common.entity.tracker.nearby"):
@@ -439,8 +439,7 @@ class IssueChecker:
                 switch_java = False
                 if self.log.mod_loader == ModLoader.FORGE: switch_java = True
                 elif not self.log.minecraft_version is None:
-                    short_version = self.log.minecraft_version[:4]
-                    if short_version in [f"1.{18 + i}" for i in range(6)]: switch_java = True
+                    if self.log.short_version in [f"1.{18 + i}" for i in range(10)]: switch_java = True
                 if switch_java:
                     try:
                         current_version = int(match.group(1))
