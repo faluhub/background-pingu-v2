@@ -135,7 +135,7 @@ class IssueChecker:
         outdated_mods = []
         all_incompatible_mods = {}
 
-        if self.log.has_content("(Session ID is "):
+        if self.log.has_content("(Session ID is token:") and not self.log.has_content("(Session ID is token:<"):
             builder.error("leaked_session_id_token")
 
         match = re.search(r"C:/Users/([^/]+)/", self.log._content)
@@ -310,12 +310,6 @@ class IssueChecker:
             if "Rar$" in self.log.minecraft_folder:
                 builder.error("need_to_extract_from_zip",self.log.launcher if not self.log.launcher is None else "the launcher")
         
-        if self.log.has_content("A fatal error has been detected by the Java Runtime Environment") or self.log.has_content("EXCEPTION_ACCESS_VIOLATION"):
-            builder.error("eav_crash")
-            for i in range(5): builder.add(f"eav_crash_{i + 1}")
-            if self.log.has_mod("speedrunigt"): builder.add("eav_crash_srigt")
-            builder.add("eav_crash_disclaimer")
-        
         if self.log.has_mod("phosphor") and not self.log.minecraft_version == "1.12.2":
             builder.note("starlight_better")
             metadata = self.get_mod_metadata("starlight")
@@ -341,8 +335,17 @@ class IssueChecker:
         if self.log.has_content("NSWindow drag regions should only be invalidated on the Main Thread"):
             builder.error("mac_too_new_java")
         
-        if self.log.has_content("Pixel format not accelerated"):
-            builder.error("gl_pixel_format")
+        if self.log.has_content("Pixel format not accelerated") or not re.compile(r"C  \[(ig[0-9]+icd[0-9]+\.dll)\+(0x[0-9a-f]+)\]").search(self.log._content) is None:
+            if self.log.has_mod("speedrunigt"):
+                builder.error("eav_crash").add("eav_crash_srigt")
+            else:
+                builder.error("gl_pixel_format")
+        
+        elif self.log.has_content("A fatal error has been detected by the Java Runtime Environment") or self.log.has_content("EXCEPTION_ACCESS_VIOLATION"):
+            builder.error("eav_crash")
+            for i in range(5): builder.add(f"eav_crash_{i + 1}")
+            if self.log.has_mod("speedrunigt"): builder.add("eav_crash_srigt")
+            builder.add("eav_crash_disclaimer")
         
         if self.log.has_content("WGL_ARB_create_context_profile is unavailable"):
             builder.error("intel_hd2000").add("intell_hd2000_info")
