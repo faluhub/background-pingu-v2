@@ -57,7 +57,7 @@
     "error.old_sodium_crash": "This crash is caused by using an old version of `Sodium`.",
     "error.online_launch_required": "Either launch your instance **not** in `offline mode` or do `Edit Instance > Version > Download All` so that your launcher can download assets.",
     "error.out_of_disk_space": "You seem to have run out of disk space. If that's the case, you should free up some space on it.",
-    "error.outdated_nvidia_flatpack_driver": "Update the Nvidia driver for flatpak by running `flatpak update`. If the issue persists, wait for the driver to be added to Flathub and try again..",
+    "error.outdated_nvidia_flatpack_driver": "Update the Nvidia driver for flatpak by running `flatpak update`. If the issue persists, wait for the driver to be added to Flathub and try again.",
     "error.random_forge_crash_1": "Try using a different version of `Forge`.",
     "error.random_forge_crash_2": "Try restarting your launcher, creating an instance without `Forge` and then installing `Forge` on this instance.",
     "error.ranked_resourcepack_crash": "You seem to be using resource packs which isn't allowed for `MCSR Ranked`. Remove all resource packs from the `.minecraft/resourcepacks` folder.",
