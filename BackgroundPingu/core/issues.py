@@ -541,12 +541,23 @@ class IssueChecker:
         if self.log.has_content("Failed to store chunk") or self.log.has_content("sun.nio.ch.FileDispatcherImpl.pwrite0"):
             builder.error("out_of_disk_space")
 
-        for pattern in [
-            r"Mixin apply for mod ([\w\-+]+) failed",
-            r"from mod ([\w\-+]+) failed injection check",
-            r"due to errors, provided by '([\w\-+]+)'"
-        ]:
-            match = re.search(pattern, self.log._content)
-            if match and not found_crash_cause: builder.error("mod_crash", match.group(1))
-
+        if not found_crash_cause:
+            for pattern in [
+                r"Mixin apply for mod ([\w\-+]+) failed",
+                r"from mod ([\w\-+]+) failed injection check",
+                r"due to errors, provided by '([\w\-+]+)'"
+            ]:
+                match = re.search(pattern, self.log._content)
+                if match:
+                    builder.error("mod_crash", match.group(1))
+                    found_crash_cause = True
+        
+        if not found_crash_cause:
+            match = re.search(r"Minecraft has crashed!.*|---- Minecraft Crash Report ----.*A detailed walkthrough of the error", self.log._content, re.DOTALL)
+            if not match is None:
+                stacktrace = match.group().lower()
+                for mod in self.log.mods:
+                    if mod.lower().split("-")[0] in stacktrace:
+                        builder.error("mod_crash", mod)
+        
         return builder
