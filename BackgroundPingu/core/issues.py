@@ -556,8 +556,12 @@ class IssueChecker:
             match = re.search(r"Minecraft has crashed!.*|---- Minecraft Crash Report ----.*A detailed walkthrough of the error", self.log._content, re.DOTALL)
             if not match is None:
                 stacktrace = match.group().lower()
+                wrong_mods = []
                 for mod in self.log.mods:
                     if mod.lower().split("-")[0] in stacktrace:
+                        wrong_mods.append(mod)
+                if len(wrong_mods) < 5:
+                    for mod in wrong_mods:
                         builder.error("mod_crash", mod)
         
         return builder
