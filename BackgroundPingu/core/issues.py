@@ -559,7 +559,6 @@ class IssueChecker:
             match = re.search(r"Minecraft has crashed!.*|---- Minecraft Crash Report ----.*A detailed walkthrough of the error", self.log._content, re.DOTALL)
             if not match is None:
                 stacktrace = match.group().lower()
-                print(stacktrace)
                 if not "this is not a error" in stacktrace:
                     wrong_mods = []
                     if len(self.log.mods) == 0:
