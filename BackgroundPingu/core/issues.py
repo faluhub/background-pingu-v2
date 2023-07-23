@@ -194,9 +194,6 @@ class IssueChecker:
         if not self.log.operating_system is None and self.log.operating_system == OperatingSystem.MACOS:
             if self.log.has_mod("sodium-1.16.1-v1") or self.log.has_mod("sodium-1.16.1-v2"):
                 builder.error("not_using_mac_sodium")
-
-            if not self.log.launcher is None and self.log.launcher.lower() == "multimc":
-                builder.note("use_prism").add("mac_setup_guide")
         
         if not self.log.major_java_version is None and self.log.major_java_version < 17:
             wrong_mods = []
@@ -241,9 +238,15 @@ class IssueChecker:
             found_crash_cause = True
         
         if not found_crash_cause and self.log.has_content("You might want to install a 64bit Java version"):
-            builder.error("32_bit_java").add("java_update_guide")
             found_crash_cause = True
+            if not self.log.operating_system is None and self.log.operating_system == OperatingSystem.MACOS:
+                builder.error("arm_java_multimc").add("mac_setup_guide").add("arm_java_mmc_workaround") # add
+            else:
+                builder.error("32_bit_java").add("java_update_guide")
         
+        elif not self.log.launcher is None and self.log.launcher.lower() == "multimc":
+            builder.note("use_prism").add("mac_setup_guide")
+
         if not found_crash_cause and self.log.has_content("Incompatible magic value 0 in class file sun/security/provider/SunEntries"):
             builder.error("broken_java").add("java_update_guide")
             found_crash_cause = True
