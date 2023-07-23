@@ -135,7 +135,7 @@ class IssueChecker:
         outdated_mods = []
         all_incompatible_mods = {}
 
-        if self.log.has_content("(Session ID is "):
+        if self.log.has_content("(Session ID is token:") and not self.log.has_content("(Session ID is token:<"):
             builder.error("leaked_session_id_token")
 
         match = re.search(r"C:/Users/([^/]+)/", self.log._content)
@@ -194,9 +194,6 @@ class IssueChecker:
         if not self.log.operating_system is None and self.log.operating_system == OperatingSystem.MACOS:
             if self.log.has_mod("sodium-1.16.1-v1") or self.log.has_mod("sodium-1.16.1-v2"):
                 builder.error("not_using_mac_sodium")
-
-            if not self.log.launcher is None and self.log.launcher.lower() == "multimc":
-                builder.note("use_prism").add("mac_setup_guide")
         
         if not self.log.major_java_version is None and self.log.major_java_version < 17:
             wrong_mods = []
@@ -229,21 +226,27 @@ class IssueChecker:
             if not compatibility_match is None:
                 try:
                     parsed_version = int(compatibility_match.group(1).split("_")[1])
-                    if parsed_version > needed_java_version:
+                    if needed_java_version is None or parsed_version > needed_java_version:
                         needed_java_version = parsed_version
                 except: pass
             if not needed_java_version is None:
                 builder.error("need_new_java", needed_java_version).add("java_update_guide")
                 found_crash_cause = True
         
-        if self.log.has_content("Could not reserve enough space for "):
+        if not found_crash_cause and self.log.has_content("Could not reserve enough space for "):
             builder.error("32_bit_java_crash").add("java_update_guide")
             found_crash_cause = True
         
         if not found_crash_cause and self.log.has_content("You might want to install a 64bit Java version"):
-            builder.error("32_bit_java").add("java_update_guide")
             found_crash_cause = True
+            if not self.log.operating_system is None and self.log.operating_system == OperatingSystem.MACOS:
+                builder.error("arm_java_multimc").add("mac_setup_guide").add("arm_java_mmc_workaround") # add
+            else:
+                builder.error("32_bit_java").add("java_update_guide")
         
+        elif not self.log.launcher is None and self.log.launcher.lower() == "multimc" and not self.log.operating_system is None and self.log.operating_system == OperatingSystem.MACOS:
+            builder.note("use_prism").add("mac_setup_guide")
+
         if not found_crash_cause and self.log.has_content("Incompatible magic value 0 in class file sun/security/provider/SunEntries"):
             builder.error("broken_java").add("java_update_guide")
             found_crash_cause = True
@@ -251,7 +254,6 @@ class IssueChecker:
         if self.log.has_content("java.lang.IllegalArgumentException: Unsupported class file major version "):
             mod_loader = self.log.mod_loader.value if self.log.mod_loader.value is not None else "mod"
             builder.error("new_java_old_fabric_crash", mod_loader, mod_loader).add("fabric_guide")
-        
         elif not self.log.mod_loader is None and self.log.mod_loader == ModLoader.FABRIC and not self.log.fabric_version is None:
             highest_srigt_ver = None
             for mod in self.log.mods:
@@ -310,12 +312,6 @@ class IssueChecker:
             if "Rar$" in self.log.minecraft_folder:
                 builder.error("need_to_extract_from_zip",self.log.launcher if not self.log.launcher is None else "the launcher")
         
-        if self.log.has_content("A fatal error has been detected by the Java Runtime Environment") or self.log.has_content("EXCEPTION_ACCESS_VIOLATION"):
-            builder.error("eav_crash")
-            for i in range(5): builder.add(f"eav_crash_{i + 1}")
-            if self.log.has_mod("speedrunigt"): builder.add("eav_crash_srigt")
-            builder.add("eav_crash_disclaimer")
-        
         if self.log.has_mod("phosphor") and not self.log.minecraft_version == "1.12.2":
             builder.note("starlight_better")
             metadata = self.get_mod_metadata("starlight")
@@ -341,8 +337,17 @@ class IssueChecker:
         if self.log.has_content("NSWindow drag regions should only be invalidated on the Main Thread"):
             builder.error("mac_too_new_java")
         
-        if self.log.has_content("Pixel format not accelerated"):
-            builder.error("gl_pixel_format")
+        if self.log.has_content("Pixel format not accelerated") or not re.compile(r"C  \[(ig[0-9]+icd[0-9]+\.dll)\+(0x[0-9a-f]+)\]").search(self.log._content) is None:
+            if self.log.has_mod("speedrunigt"):
+                builder.error("eav_crash").add("eav_crash_srigt")
+            else:
+                builder.error("gl_pixel_format")
+        
+        elif self.log.has_content("A fatal error has been detected by the Java Runtime Environment") or self.log.has_content("EXCEPTION_ACCESS_VIOLATION"):
+            builder.error("eav_crash")
+            for i in range(5): builder.add(f"eav_crash_{i + 1}")
+            if self.log.has_mod("speedrunigt"): builder.add("eav_crash_srigt")
+            builder.add("eav_crash_disclaimer")
         
         if self.log.has_content("WGL_ARB_create_context_profile is unavailable"):
             builder.error("intel_hd2000").add("intell_hd2000_info")
@@ -538,12 +543,34 @@ class IssueChecker:
         if self.log.has_content("Failed to store chunk") or self.log.has_content("sun.nio.ch.FileDispatcherImpl.pwrite0"):
             builder.error("out_of_disk_space")
 
-        for pattern in [
-            r"Mixin apply for mod ([\w\-+]+) failed",
-            r"from mod ([\w\-+]+) failed injection check",
-            r"due to errors, provided by '([\w\-+]+)'"
-        ]:
-            match = re.search(pattern, self.log._content)
-            if match and not found_crash_cause: builder.error("mod_crash", match.group(1))
-
+        if not found_crash_cause:
+            for pattern in [
+                r"Mixin apply for mod ([\w\-+]+) failed",
+                r"from mod ([\w\-+]+) failed injection check",
+                r"due to errors, provided by '([\w\-+]+)'"
+            ]:
+                match = re.search(pattern, self.log._content)
+                if match:
+                    builder.error("mod_crash", match.group(1))
+                    found_crash_cause = True
+        
+        if not found_crash_cause:
+            match = re.search(r"Minecraft has crashed!.*|Failed to start Minecraft:.*|---- Minecraft Crash Report ----.*A detailed walkthrough of the error", self.log._content, re.DOTALL)
+            if not match is None:
+                stacktrace = match.group().lower()
+                if not "this is not a error" in stacktrace:
+                    wrong_mods = []
+                    if len(self.log.mods) == 0:
+                        for mod in [mcsr_mod.replace("-", "") for mcsr_mod in self.mcsr_mods]:
+                            if mod.lower().split("-")[0] in stacktrace:
+                                wrong_mods.append(mod)
+                    else:
+                        for mod in self.log.mods:
+                            if mod.lower().split("-")[0] in stacktrace:
+                                wrong_mods.append(mod)
+                    if len(wrong_mods) == 1:
+                        builder.error("mod_crash", wrong_mods[0])
+                    elif len(wrong_mods) > 0 and len(wrong_mods) < 5:
+                        builder.error("mods_crash", "; ".join(wrong_mods))
+        
         return builder
