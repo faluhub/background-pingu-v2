@@ -560,11 +560,12 @@ class IssueChecker:
             if not match is None:
                 stacktrace = match.group().lower()
                 wrong_mods = []
-                for mod in self.log.mods:
-                    if mod.lower().split("-")[0] in stacktrace:
-                        wrong_mods.append(mod)
-                if len(wrong_mods) == 0:
+                if len(self.log.mods) == 0:
                     for mod in [mcsr_mod.replace("-", "") for mcsr_mod in self.mcsr_mods]:
+                        if mod.lower().split("-")[0] in stacktrace:
+                            wrong_mods.append(mod)
+                else:
+                    for mod in self.log.mods:
                         if mod.lower().split("-")[0] in stacktrace:
                             wrong_mods.append(mod)
                 if len(wrong_mods) == 1:
