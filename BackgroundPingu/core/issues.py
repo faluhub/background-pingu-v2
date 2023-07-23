@@ -226,7 +226,7 @@ class IssueChecker:
             if not compatibility_match is None:
                 try:
                     parsed_version = int(compatibility_match.group(1).split("_")[1])
-                    if parsed_version > needed_java_version:
+                    if needed_java_version is None or parsed_version > needed_java_version:
                         needed_java_version = parsed_version
                 except: pass
             if not needed_java_version is None:
@@ -556,7 +556,7 @@ class IssueChecker:
                     found_crash_cause = True
         
         if not found_crash_cause:
-            match = re.search(r"Minecraft has crashed!.*|---- Minecraft Crash Report ----.*A detailed walkthrough of the error", self.log._content, re.DOTALL)
+            match = re.search(r"Minecraft has crashed!.*|Failed to start Minecraft:.*|---- Minecraft Crash Report ----.*A detailed walkthrough of the error", self.log._content, re.DOTALL)
             if not match is None:
                 stacktrace = match.group().lower()
                 if not "this is not a error" in stacktrace:
