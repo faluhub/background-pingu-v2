@@ -233,7 +233,7 @@ class IssueChecker:
                 builder.error("need_new_java", needed_java_version).add("java_update_guide")
                 found_crash_cause = True
         
-        if self.log.has_content("Could not reserve enough space for "):
+        if not found_crash_cause and self.log.has_content("Could not reserve enough space for "):
             builder.error("32_bit_java_crash").add("java_update_guide")
             found_crash_cause = True
         
@@ -244,7 +244,7 @@ class IssueChecker:
             else:
                 builder.error("32_bit_java").add("java_update_guide")
         
-        elif not self.log.launcher is None and self.log.launcher.lower() == "multimc":
+        elif not self.log.launcher is None and self.log.launcher.lower() == "multimc" and not self.log.operating_system is None and self.log.operating_system == OperatingSystem.MACOS:
             builder.note("use_prism").add("mac_setup_guide")
 
         if not found_crash_cause and self.log.has_content("Incompatible magic value 0 in class file sun/security/provider/SunEntries"):
@@ -559,18 +559,20 @@ class IssueChecker:
             match = re.search(r"Minecraft has crashed!.*|---- Minecraft Crash Report ----.*A detailed walkthrough of the error", self.log._content, re.DOTALL)
             if not match is None:
                 stacktrace = match.group().lower()
-                wrong_mods = []
-                if len(self.log.mods) == 0:
-                    for mod in [mcsr_mod.replace("-", "") for mcsr_mod in self.mcsr_mods]:
-                        if mod.lower().split("-")[0] in stacktrace:
-                            wrong_mods.append(mod)
-                else:
-                    for mod in self.log.mods:
-                        if mod.lower().split("-")[0] in stacktrace:
-                            wrong_mods.append(mod)
-                if len(wrong_mods) == 1:
-                    builder.error("mod_crash", wrong_mods[0])
-                elif len(wrong_mods) > 0 and len(wrong_mods) < 5:
-                    builder.error("mods_crash", "; ".join(wrong_mods))
+                print(stacktrace)
+                if not "this is not a error" in stacktrace:
+                    wrong_mods = []
+                    if len(self.log.mods) == 0:
+                        for mod in [mcsr_mod.replace("-", "") for mcsr_mod in self.mcsr_mods]:
+                            if mod.lower().split("-")[0] in stacktrace:
+                                wrong_mods.append(mod)
+                    else:
+                        for mod in self.log.mods:
+                            if mod.lower().split("-")[0] in stacktrace:
+                                wrong_mods.append(mod)
+                    if len(wrong_mods) == 1:
+                        builder.error("mod_crash", wrong_mods[0])
+                    elif len(wrong_mods) > 0 and len(wrong_mods) < 5:
+                        builder.error("mods_crash", "; ".join(wrong_mods))
         
         return builder
