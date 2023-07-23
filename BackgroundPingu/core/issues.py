@@ -563,8 +563,13 @@ class IssueChecker:
                 for mod in self.log.mods:
                     if mod.lower().split("-")[0] in stacktrace:
                         wrong_mods.append(mod)
-                if len(wrong_mods) < 5:
-                    for mod in wrong_mods:
-                        builder.error("mod_crash", mod)
+                if len(wrong_mods) == 0:
+                    for mod in [mcsr_mod.replace("-", "") for mcsr_mod in self.mcsr_mods]:
+                        if mod.lower().split("-")[0] in stacktrace:
+                            wrong_mods.append(mod)
+                if len(wrong_mods) == 1:
+                    builder.error("mod_crash", wrong_mods[0])
+                elif len(wrong_mods) < 5:
+                    builder.error("mods_crash", "; ".join(wrong_mods))
         
         return builder
