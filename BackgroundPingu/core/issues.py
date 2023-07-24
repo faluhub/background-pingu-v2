@@ -560,18 +560,26 @@ class IssueChecker:
             if not match is None:
                 stacktrace = match.group().lower()
                 if not "this is not a error" in stacktrace:
-                    wrong_mods = []
                     if len(self.log.mods) == 0:
-                        for mod in [mcsr_mod.replace("-", "") for mcsr_mod in self.mcsr_mods]:
-                            if mod.lower().split("-")[0] in stacktrace:
-                                wrong_mods.append(mod)
+                        wrong_mods = [mcsr_mod for mcsr_mod in self.mcsr_mods if mcsr_mod.replace("-", "").lower() in stacktrace]
                     else:
+                        wrong_mods = []
                         for mod in self.log.mods:
-                            if mod.lower().split("-")[0] in stacktrace:
+                            mod_name = mod.lower().replace(".jar", "")
+                            for c in ["+", "-", "_", "=", ",", " "]: mod_name = mod_name.replace(str(c), "-")
+                            mod_name_parts = mod_name.split("-")
+                            mod_name = ""
+                            for part in mod_name_parts:
+                                part0 = part
+                                for c in [".", "fabric", "forge", "quilt", "v", "mc", "backport", "snapshot", "build"]: part = part.replace(str(c), "")
+                                for c in range(10): part = part.replace(str(c), "")
+                                if part == "": break
+                                else: mod_name += part0
+                            if not mod_name == "" and mod_name in stacktrace:
                                 wrong_mods.append(mod)
                     if len(wrong_mods) == 1:
                         builder.error("mod_crash", wrong_mods[0])
-                    elif len(wrong_mods) > 0 and len(wrong_mods) < 5:
+                    elif len(wrong_mods) > 0 and len(wrong_mods) < 6:
                         builder.error("mods_crash", "; ".join(wrong_mods))
         
         return builder
