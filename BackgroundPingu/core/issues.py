@@ -247,7 +247,10 @@ class IssueChecker:
         elif not self.log.launcher is None and self.log.launcher.lower() == "multimc" and not self.log.operating_system is None and self.log.operating_system == OperatingSystem.MACOS:
             builder.note("use_prism").add("mac_setup_guide")
 
-        if not found_crash_cause and self.log.has_content("Incompatible magic value 0 in class file sun/security/provider/SunEntries"):
+        if not found_crash_cause and any(self.log.has_content(broken_java) for broken_java in [
+            "Incompatible magic value 0 in class file sun/security/provider/SunEntries",
+            "Assertion `version->filename == NULL || ! _dl_name_match_p (version->filename, map)' failed"
+        ]):
             builder.error("broken_java").add("java_update_guide")
             found_crash_cause = True
         
