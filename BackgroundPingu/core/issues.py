@@ -439,7 +439,7 @@ class IssueChecker:
                     builder.add(metadata["name"], latest_version["page"])
 
         if self.log.has_content("Launched instance in offline mode") and self.log.has_content("(missing)\n"):
-            builder.error("online_launch_required")
+            builder.error("online_launch_required", "" if self.log.launcher.lower() == "prism" else " Instance")
             found_crash_cause = True
         
         if not self.log.launcher is None and self.log.launcher.lower() == "prism":
@@ -575,7 +575,7 @@ class IssueChecker:
                             mod_name = ""
                             for part in mod_name_parts:
                                 part0 = part
-                                for c in [".", "fabric", "forge", "quilt", "v", "mc", "backport", "snapshot", "build"]: part = part.replace(str(c), "")
+                                for c in [".", "fabric", "forge", "quilt", "v", "mc", "mod", "backport", "snapshot", "build"]: part = part.replace(str(c), "")
                                 for c in range(10): part = part.replace(str(c), "")
                                 if part == "": break
                                 else: mod_name += part0
