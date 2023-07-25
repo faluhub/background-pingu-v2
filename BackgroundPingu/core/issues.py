@@ -68,7 +68,8 @@ class IssueChecker:
             "krypton",
             "sodium-fabric-mc1.16.5-0.2.0+build.4",
             "optifine",
-            "sodium-extra"
+            "sodium-extra",
+            "biomethreadlocalfix"
         ]
         self.mcsr_mods = [
             "worldpreview",
