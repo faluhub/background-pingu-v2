@@ -140,8 +140,8 @@ class IssueChecker:
         if self.log.has_content("(Session ID is token:") and not self.log.has_content("(Session ID is token:<"):
             builder.error("leaked_session_id_token")
 
-        match = re.search(r"C:/Users/([^/]+)/", self.log._content)
-        if match and match.group(1).lower() not in ["user", "admin", "********"]:
+        match = re.search(r"/(Users|home)/([^/]+)/", self.log._content)
+        if match and match.group(2).lower() not in ["user", "admin", "********"]:
             builder.info("leaked_username")
         match = ""
 
