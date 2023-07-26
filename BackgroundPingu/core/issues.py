@@ -59,7 +59,8 @@ class IssueChecker:
             "antiresourcereload",
             "serversiderng",
             "setspawnmod",
-            "peepopractice"
+            "peepopractice",
+            "areessgee"
         ]
         self.assume_as_latest = [
             "sodiummac",
@@ -140,7 +141,7 @@ class IssueChecker:
             builder.error("leaked_session_id_token")
 
         match = re.search(r"C:/Users/([^/]+)/", self.log._content)
-        if match and match.group(1) not in ["User", "Admin", "********"]:
+        if match and match.group(1).lower() not in ["user", "admin", "********"]:
             builder.info("leaked_username")
         match = ""
 
@@ -239,11 +240,11 @@ class IssueChecker:
             found_crash_cause = True
         
         if not found_crash_cause and self.log.has_content("You might want to install a 64bit Java version"):
-            found_crash_cause = True
             if not self.log.operating_system is None and self.log.operating_system == OperatingSystem.MACOS:
                 builder.error("arm_java_multimc").add("mac_setup_guide").add("arm_java_mmc_workaround") # add
             else:
                 builder.error("32_bit_java").add("java_update_guide")
+            found_crash_cause = True
         
         elif not self.log.launcher is None and self.log.launcher.lower() == "multimc" and not self.log.operating_system is None and self.log.operating_system == OperatingSystem.MACOS:
             builder.note("use_prism").add("mac_setup_guide")
@@ -256,9 +257,9 @@ class IssueChecker:
             found_crash_cause = True
         
         if self.log.has_content("java.lang.IllegalArgumentException: Unsupported class file major version "):
-            found_crash_cause = True
             mod_loader = self.log.mod_loader.value if self.log.mod_loader.value is not None else "mod"
             builder.error("new_java_old_fabric_crash", mod_loader, mod_loader).add("fabric_guide")
+            found_crash_cause = True
         elif not self.log.mod_loader is None and self.log.mod_loader == ModLoader.FABRIC and not self.log.fabric_version is None:
             highest_srigt_ver = None
             for mod in self.log.mods:
@@ -273,9 +274,9 @@ class IssueChecker:
                 try:
                     if highest_srigt_ver < version.parse("13.3") and self.log.fabric_version > version.parse("0.14.14"):
                         builder.error("incompatible_srigt")
-                        found_crash_cause = True
                         if not self.log.minecraft_version == "1.16.1":
                             builder.add("incompatible_srigt_alternative")
+                        found_crash_cause = True
                 except: pass
             
             try:
@@ -390,7 +391,7 @@ class IssueChecker:
             builder.error("locked_libs")
         
         if not re.compile(r"java\.io\.IOException: Directory \'(.+?)\' could not be created").search(self.log._content) is None:
-            builder.warning("try_admin_launch")
+            builder.error("try_admin_launch")
         
         if self.log.has_content("java.lang.NullPointerException: Cannot invoke \"net.minecraft.class_2680.method_26213()\" because \"state\" is null"):
             builder.error("old_sodium_crash")
@@ -399,8 +400,10 @@ class IssueChecker:
                 latest_version = self.get_latest_version(metadata)
                 if not latest_version is None:
                     builder.add("mod_download", metadata["name"], latest_version["page"])
+            found_crash_cause = True
         elif self.log.has_content("me.jellysquid.mods.sodium.client.SodiumClientMod.options"):
             builder.error("sodium_config_crash")
+            found_crash_cause = True
         
         pattern = r"Uncaught exception in thread \"Thread-\d+\"\njava\.util\.ConcurrentModificationException: null"
         if "java.util.ConcurrentModificationException" in re.sub(pattern, "", self.log._content) and not self.log.minecraft_version is None and self.log.short_version == "1.16" and not self.log.has_mod("voyager"):
@@ -408,6 +411,7 @@ class IssueChecker:
         
         if self.log.has_content("java.lang.IllegalStateException: Adding Entity listener a second time") and self.log.has_content("me.jellysquid.mods.lithium.common.entity.tracker.nearby"):
             builder.info("lithium_crash")
+            found_crash_cause = True
         
         if any(self.log.has_content(log_spam) for log_spam in [
             "Using missing texture, unable to load",
@@ -437,43 +441,43 @@ class IssueChecker:
                 latest_version = self.get_latest_version(metadata)
                 if not latest_version is None:
                     builder.add(metadata["name"], latest_version["page"])
+            found_crash_cause = True
 
         if self.log.has_content("Launched instance in offline mode") and self.log.has_content("(missing)\n"):
             builder.error("online_launch_required", "" if self.log.launcher.lower() == "prism" else " Instance")
             found_crash_cause = True
         
-        if not self.log.launcher is None and self.log.launcher.lower() == "prism":
-            pattern = r"This instance is not compatible with Java version (\d+)\.\nPlease switch to one of the following Java versions for this instance:\nJava version (\d+)"
-            match = re.search(pattern, self.log._content)
-            if not match is None:
-                switch_java = False
-                if self.log.mod_loader == ModLoader.FORGE: switch_java = True
-                elif not self.log.minecraft_version is None:
-                    if self.log.short_version in [f"1.{18 + i}" for i in range(10)]: switch_java = True
-                if switch_java:
-                    try:
-                        current_version = int(match.group(1))
-                        compatible_version = int(match.group(2))
-                        builder.error(
-                            "incorrect_java_prism",
-                            current_version,
-                            compatible_version,
-                            compatible_version,
-                            " (download the .msi file)" if self.log.operating_system == OperatingSystem.WINDOWS else
-                            " (download the .pkg file)" if self.log.operating_system == OperatingSystem.MACOS else
-                            "",
-                            compatible_version
-                        )
-                    except: pass
-                else: builder.error("java_comp_check")
+        pattern = r"This instance is not compatible with Java version (\d+)\.\nPlease switch to one of the following Java versions for this instance:\nJava version (\d+)"
+        match = re.search(pattern, self.log._content)
+        if not match is None:
+            switch_java = False
+            if self.log.mod_loader == ModLoader.FORGE: switch_java = True
+            elif not self.log.minecraft_version is None:
+                if self.log.short_version in [f"1.{18 + i}" for i in range(10)]: switch_java = True
+            if switch_java:
+                try:
+                    current_version = int(match.group(1))
+                    compatible_version = int(match.group(2))
+                    builder.error(
+                        "incorrect_java_prism",
+                        current_version,
+                        compatible_version,
+                        compatible_version,
+                        " (download the .msi file)" if self.log.operating_system == OperatingSystem.WINDOWS else
+                        " (download the .pkg file)" if self.log.operating_system == OperatingSystem.MACOS else
+                        "",
+                        compatible_version
+                    )
+                except: pass
+            else: builder.error("java_comp_check")
         
-        if not self.log.launcher is None and self.log.launcher.lower() == "multimc":
-            if self.log.has_content("java.lang.ClassNotFoundException: org.apache.logging.log4j.spi.AbstractLogger"):
-                builder.error("no_abstract_logger")
+        if self.log.has_content("java.lang.ClassNotFoundException: org.apache.logging.log4j.spi.AbstractLogger"):
+            builder.error("no_abstract_logger")
         
+        if self.log.has_content("ClassLoaders$AppClassLoader cannot be cast to class java.net.URLClassLoader"):
+            builder.error("forge_too_new_java")
+            found_crash_cause = True
         if not self.log.mod_loader is None and self.log.mod_loader == ModLoader.FORGE and not found_crash_cause:
-            if self.log.has_content("ClassLoaders$AppClassLoader cannot be cast to class java.net.URLClassLoader"):
-                builder.error("forge_too_new_java")
             if self.log.has_content("Unable to detect the forge installer!"):
                 builder.error("random_forge_crash_1")
             if self.log.has_content("java.lang.NoClassDefFoundError: cpw/mods/modlauncher/Launcher"):
@@ -531,6 +535,10 @@ class IssueChecker:
             elif len(ranked_rong_mods) > 0:
                 builder.error("ranked_rong_mods", f"a mod `{ranked_rong_mods[0]}` that is", "it")
 
+        if self.log.has_content("com.mcsr.projectelo.anticheat.file.verifiers.ResourcePackVerifier"):
+            builder.error("ranked_resourcepack_crash")
+            found_crash_cause = True
+
         if self.log.has_content("Mixin apply for mod areessgee failed areessgee.mixins.json:nether.StructureFeatureMixin from mod areessgee -> net.minecraft.class_3195"):
             builder.error("incompatible_mod", "AreEssGee", "peepoPractice")
             found_crash_cause = True
@@ -538,12 +546,10 @@ class IssueChecker:
         if self.log.has_mod("speedrunigt") and self.log.has_mod("stronghold-trainer"):
             builder.error("incompatible_mod", "SpeedRunIGT", "Stronghold Trainer")
             found_crash_cause = True
-
-        if self.log.has_content("com.mcsr.projectelo.anticheat.file.verifiers.ResourcePackVerifier"):
-            builder.error("ranked_resourcepack_crash")
         
         if self.log.has_mod("continuity") and self.log.has_mod("sodium") and not self.log.has_mod("indium"):
             builder.error("missing_dependency", "continuity", "indium")
+            found_crash_cause = True
 
         if self.log.has_content("Failed to store chunk") or self.log.has_content("sun.nio.ch.FileDispatcherImpl.pwrite0"):
             builder.error("out_of_disk_space")
@@ -560,7 +566,7 @@ class IssueChecker:
                     found_crash_cause = True
         
         if not found_crash_cause:
-            match = re.search(r"Minecraft has crashed!.*|Failed to start Minecraft:.*|---- Minecraft Crash Report ----.*A detailed walkthrough of the error", self.log._content, re.DOTALL)
+            match = re.search(r"Minecraft has crashed!.*|Failed to start Minecraft:.*|Unable to launch\n.*|---- Minecraft Crash Report ----.*A detailed walkthrough of the error", self.log._content, re.DOTALL)
             if not match is None:
                 stacktrace = match.group().lower()
                 if not "this is not a error" in stacktrace:
@@ -570,16 +576,16 @@ class IssueChecker:
                         wrong_mods = []
                         for mod in self.log.mods:
                             mod_name = mod.lower().replace(".jar", "")
-                            for c in ["+", "-", "_", "=", ",", " "]: mod_name = mod_name.replace(str(c), "-")
+                            for c in ["+", "-", "_", "=", ",", " "]: mod_name = mod_name.replace(c, "-")
                             mod_name_parts = mod_name.split("-")
                             mod_name = ""
                             for part in mod_name_parts:
                                 part0 = part
-                                for c in [".", "fabric", "forge", "quilt", "v", "mc", "mod", "backport", "snapshot", "build"]: part = part.replace(str(c), "")
+                                for c in [".", "fabric", "forge", "quilt", "v", "mc", "mod", "backport", "snapshot", "build"]: part = part.replace(c, "")
                                 for c in range(10): part = part.replace(str(c), "")
                                 if part == "": break
                                 else: mod_name += part0
-                            if not mod_name == "" and mod_name in stacktrace:
+                            if len(mod_name) > 2 and mod_name in stacktrace:
                                 wrong_mods.append(mod)
                     if len(wrong_mods) == 1:
                         builder.error("mod_crash", wrong_mods[0])

@@ -73,6 +73,7 @@
     "error.sodium_config_crash": "If this crash happened when you opened the video settings menu or loaded into a world, delete `.minecraft/config/sodium-options.json`.",
     "error.too_little_ram_crash": "You have too little RAM allocated, which caused this crash.",
     "error.too_much_ram": "You have way too much RAM allocated, which can cause lag spikes. It's recommended to allocate 2000-3000 MB.",
+    "error.try_admin_launch": "You need to your launcher with `administrator privileges`.",
     "error.using_old_ssrng": "You're using an old version of `ServerSideRNG`, which is now illegal and can often cause problems. The server for it is currently down, so the mod is useless regardless and you should delete it.",
     "error.using_other_loader_mcsr": "You seem to be using MCSR mods, but you have `{}` installed, which is not allowed for speedrunning.",
     "info.leaked_username": "Your log has your PC username in it. You might want to delete it.",
@@ -95,7 +96,6 @@
     "warning.relatively_old_fabric": "You're using an old version of `Fabric Loader`. You should update it.",
     "warning.too_little_ram": "You likely have too little RAM allocated. It's recommended to allocate 2000-3000 MB.",
     "warning.too_much_ram": "You have too much RAM allocated, which can cause lag spikes. It's recommended to allocate 2000-3000 MB.",
-    "warning.try_admin_launch": "Try opening your launcher with `administrator privileges`.",
     "warning.using_fabric_api": "You're using `Fabric API`, which is not allowed for speedrunning. Remove it from your `.minecraft/mods` folder.",
     "warning.using_ssrng": "You are using the `ServerSideRNG` mod. The server for it is currently down, so the mod is useless and it's recommended to remove it as it could cause issues."
 }
