@@ -76,6 +76,7 @@
     "error.try_admin_launch": "You need to your launcher with `administrator privileges`.",
     "error.using_old_ssrng": "You're using an old version of `ServerSideRNG`, which is now illegal and can often cause problems. The server for it is currently down, so the mod is useless regardless and you should delete it.",
     "error.using_other_loader_mcsr": "You seem to be using MCSR mods, but you have `{}` installed, which is not allowed for speedrunning.",
+    "info.ghost_nether": "This seems to be a rare crash called a \"ghost nether\" where chunks stop loading, mobs don't move, blocks don't drop, you don't take damage, etc. It's currently not known what causes it.",
     "info.leaked_username": "Your log has your PC username in it. You might want to delete it.",
     "info.lithium_crash": "This seems to be a rare crash caused by `Lithium` that you can't do anything about. It happens really rarely, so far we only know about 4 times of when it happened to someone, so it's not worth it to not use `Lithium` because of it.",
     "info.log_spam": "Your log seems to have lines with random spam. It shouldn't cause any issues within Minecraft, and there aren't any known fixes.",

@@ -534,6 +534,10 @@ class IssueChecker:
             elif len(ranked_rong_mods) > 0:
                 builder.error("ranked_rong_mods", f"a mod `{ranked_rong_mods[0]}` that is", "it")
 
+        if self.log.has_content("com.mcsr.projectelo.vanillafix.VanillaWatchdog") or self.log.has_content("[Integrated Watchdog/FATAL]: Considering it to be crashed, server will forcibly shutdown."):
+            builder.info("ghost_nether")
+            found_crash_cause = True
+
         if self.log.has_content("com.mcsr.projectelo.anticheat.file.verifiers.ResourcePackVerifier"):
             builder.error("ranked_resourcepack_crash")
             found_crash_cause = True
@@ -550,7 +554,7 @@ class IssueChecker:
             builder.error("missing_dependency", "continuity", "indium")
             found_crash_cause = True
 
-        if self.log.has_content("Failed to store chunk"):
+        if not found_crash_cause and self.log.has_content("Failed to store chunk"):
             builder.error("out_of_disk_space")
 
         if not found_crash_cause:
