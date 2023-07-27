@@ -550,7 +550,7 @@ class IssueChecker:
             builder.error("missing_dependency", "continuity", "indium")
             found_crash_cause = True
 
-        if self.log.has_content("Failed to store chunk") or self.log.has_content("sun.nio.ch.FileDispatcherImpl.pwrite0"):
+        if self.log.has_content("Failed to store chunk"):
             builder.error("out_of_disk_space")
 
         if not found_crash_cause:
