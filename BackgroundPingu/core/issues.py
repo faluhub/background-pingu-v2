@@ -235,7 +235,10 @@ class IssueChecker:
                 builder.error("need_new_java", needed_java_version).add("java_update_guide")
                 found_crash_cause = True
         
-        if not found_crash_cause and self.log.has_content("Could not reserve enough space for "):
+        if not found_crash_cause and any(self.log.has_content(crash_32_bit_java) for crash_32_bit_java in [
+            "Could not reserve enough space for ",
+            "Invalid maximum heap size: "
+        ]):
             builder.error("32_bit_java_crash").add("java_update_guide")
             found_crash_cause = True
         
