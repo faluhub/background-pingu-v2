@@ -242,13 +242,15 @@ class IssueChecker:
             builder.error("32_bit_java_crash").add("java_update_guide")
             found_crash_cause = True
         
-        if not found_crash_cause and self.log.has_content("You might want to install a 64bit Java version") and not self.log.has_content("m1-multimc-hack/mcwrap.py"):
+        if self.log.has_content("mcwrap.py"): pass
+        
+        elif not found_crash_cause and self.log.has_content("You might want to install a 64bit Java version"):
             if not self.log.operating_system is None and self.log.operating_system == OperatingSystem.MACOS:
                 builder.error("arm_java_multimc").add("mac_setup_guide").add("arm_java_mmc_workaround")
             else:
                 builder.error("32_bit_java").add("java_update_guide")
             found_crash_cause = True
-        
+
         elif not self.log.launcher is None and self.log.launcher.lower() == "multimc" and not self.log.operating_system is None and self.log.operating_system == OperatingSystem.MACOS:
             builder.note("use_prism").add("mac_setup_guide")
 
