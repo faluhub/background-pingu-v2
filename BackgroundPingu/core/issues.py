@@ -346,7 +346,7 @@ class IssueChecker:
         if self.log.has_content("NSWindow drag regions should only be invalidated on the Main Thread"):
             builder.error("mac_too_new_java")
         
-        if self.log.has_content("Pixel format not accelerated") or not re.compile(r"C  \[(ig[0-9]+icd[0-9]+\.dll)\+(0x[0-9a-f]+)\]").search(self.log._content) is None:
+        if self.log.has_content("Pixel format not accelerated") or not re.compile(r"C  \[(ig[0-9]+icd[0-9]+\.dll)[+ ](0x[0-9a-f]+)\]").search(self.log._content) is None:
             if self.log.has_mod("speedrunigt"):
                 builder.error("eav_crash").add("eav_crash_srigt")
             else:
