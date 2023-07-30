@@ -125,6 +125,10 @@ class Log:
     @cached_property
     def custom_launcher(self) -> bool:
         return not self.launcher is None
+
+    @cached_property
+    def is_prism(self) -> bool:
+        return self.launcher.lower() == "prism"
     
     @cached_property
     def mod_loader(self) -> ModLoader:

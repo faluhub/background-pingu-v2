@@ -186,12 +186,12 @@ class IssueChecker:
         
         if not self.log.mod_loader in [None, ModLoader.FABRIC, ModLoader.VANILLA]:
             if is_mcsr_log:
-                builder.error("using_other_loader_mcsr", self.log.mod_loader.value).add("fabric_guide")
+                builder.error("using_other_loader_mcsr", self.log.mod_loader.value).add("fabric_guide_prism" if self.log.is_prism else "fabric_guide_mmc", "install")
             else:
-                builder.note("using_other_loader", self.log.mod_loader.value).add("fabric_guide")
+                builder.note("using_other_loader", self.log.mod_loader.value).add("fabric_guide_prism" if self.log.is_prism else "fabric_guide_mmc", "install")
 
         if len(self.log.mods) > 0 and self.log.mod_loader == ModLoader.VANILLA:
-            builder.error("no_loader").add("fabric_guide")
+            builder.error("no_loader").add("fabric_guide_prism" if self.log.is_prism else "fabric_guide_mmc", "install")
         
         if not self.log.operating_system is None and self.log.operating_system == OperatingSystem.MACOS:
             if self.log.has_mod("sodium-1.16.1-v1") or self.log.has_mod("sodium-1.16.1-v2"):
@@ -263,7 +263,7 @@ class IssueChecker:
         
         if self.log.has_content("java.lang.IllegalArgumentException: Unsupported class file major version "):
             mod_loader = self.log.mod_loader.value if self.log.mod_loader.value is not None else "mod"
-            builder.error("new_java_old_fabric_crash", mod_loader, mod_loader).add("fabric_guide")
+            builder.error("new_java_old_fabric_crash", mod_loader, mod_loader).add("fabric_guide_prism" if self.log.is_prism else "fabric_guide_mmc", "update")
             found_crash_cause = True
         elif not self.log.mod_loader is None and self.log.mod_loader == ModLoader.FABRIC and not self.log.fabric_version is None:
             highest_srigt_ver = None
@@ -286,13 +286,13 @@ class IssueChecker:
             
             try:
                 if self.log.fabric_version < version.parse("0.13.3"):
-                    builder.error("really_old_fabric").add("fabric_guide")
+                    builder.error("really_old_fabric").add("fabric_guide_prism" if self.log.is_prism else "fabric_guide_mmc", "update")
                 elif self.log.fabric_version < version.parse("0.14.12"):
-                    builder.warning("relatively_old_fabric").add("fabric_guide")
+                    builder.warning("relatively_old_fabric").add("fabric_guide_prism" if self.log.is_prism else "fabric_guide_mmc", "update")
                 elif self.log.fabric_version < version.parse("0.14.14"):
-                    builder.note("old_fabric").add("fabric_guide")
+                    builder.note("old_fabric").add("fabric_guide_prism" if self.log.is_prism else "fabric_guide_mmc", "update")
                 elif self.log.fabric_version.__str__() in ["0.14.15", "0.14.16"]:
-                    builder.error("broken_fabric").add("fabric_guide")
+                    builder.error("broken_fabric").add("fabric_guide_prism" if self.log.is_prism else "fabric_guide_mmc", "update")
             except: pass
         
         if not self.log.max_allocated is None:
@@ -377,8 +377,8 @@ class IssueChecker:
             if self.log.has_content("Failed to locate library:"):
                 builder.error("builtin_lib_crash",
                               system_arg,
-                              self.log.launcher if self.log.launcher is not None else 'your launcher',
-                              ' > Tweaks' if self.log.launcher.lower() == 'prism' else '')
+                              self.log.launcher if self.log.launcher is not None else "your launcher",
+                              " > Tweaks" if self.log.is_prism() else "")
             else: builder.note("builtin_lib_recommendation", system_arg)
 
         required_mod_match = re.findall(r"requires (.*?) of (\w+),", self.log._content)
@@ -449,7 +449,7 @@ class IssueChecker:
             found_crash_cause = True
 
         if self.log.has_content("Launched instance in offline mode") and self.log.has_content("(missing)\n"):
-            builder.error("online_launch_required", "" if self.log.launcher.lower() == "prism" else " Instance")
+            builder.error("online_launch_required", "" if self.log.is_prism() else " Instance")
             found_crash_cause = True
         
         pattern = r"This instance is not compatible with Java version (\d+)\.\nPlease switch to one of the following Java versions for this instance:\nJava version (\d+)"
