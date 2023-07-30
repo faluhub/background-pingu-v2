@@ -378,7 +378,7 @@ class IssueChecker:
                 builder.error("builtin_lib_crash",
                               system_arg,
                               self.log.launcher if self.log.launcher is not None else "your launcher",
-                              " > Tweaks" if self.log.is_prism() else "")
+                              " > Tweaks" if self.log.is_prism else "")
             else: builder.note("builtin_lib_recommendation", system_arg)
 
         required_mod_match = re.findall(r"requires (.*?) of (\w+),", self.log._content)
@@ -449,7 +449,7 @@ class IssueChecker:
             found_crash_cause = True
 
         if self.log.has_content("Launched instance in offline mode") and self.log.has_content("(missing)\n"):
-            builder.error("online_launch_required", "" if self.log.is_prism() else " Instance")
+            builder.error("online_launch_required", "" if self.log.is_prism else " Instance")
             found_crash_cause = True
         
         pattern = r"This instance is not compatible with Java version (\d+)\.\nPlease switch to one of the following Java versions for this instance:\nJava version (\d+)"
