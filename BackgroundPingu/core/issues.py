@@ -81,7 +81,6 @@ class IssueChecker:
             "tab-focus",
             "setspawn",
             "SpeedRunIGT",
-            "atum",
             "standardsettings",
             "forceport",
             "lazystronghold",
