@@ -32,7 +32,18 @@ def get_mods(start: bool=True):
                         if v.endswith("-"):
                             for i in range(11):
                                 final_parts.append(f"{v[:-1]}.{i}")
-                        else: final_parts.append(v)
+                        else:
+                            if v.count(".") == 1:
+                                v += ".0"
+                            try:
+                                if v.startswith("<="):
+                                    for i in range(int(v.split('.')[2])+1):
+                                        final_parts.append(f"{v[:-1]}{i}")
+                                elif v.startswith(">="):
+                                    for i in range(int(v.split('.')[2]),11):
+                                        final_parts.append(f"{v[:-1]}{i}")
+                                else: final_parts.append(v)
+                            except: final_parts.append(v)
                     pi = 0
                     for v in final_parts:
                         if v.count(".") == 1:
