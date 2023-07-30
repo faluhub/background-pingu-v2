@@ -368,6 +368,7 @@ class IssueChecker:
         
         if self.log.has_content("java.lang.NoSuchMethodError: sun.security.util.ManifestEntryVerifier.<init>(Ljava/util/jar/Manifest;)V"):
             builder.error("forge_java_bug")
+            found_crash_cause = True
         
         system_libs = [lib for lib in ["GLFW", "OpenAL"] if self.log.has_content("Using system " + lib)]
         system_arg = None
@@ -592,7 +593,7 @@ class IssueChecker:
                                 for c in [".", "fabric", "forge", "quilt", "v", "mc", "mod", "backport", "snapshot", "build"]: part = part.replace(c, "")
                                 for c in range(10): part = part.replace(str(c), "")
                                 if part == "": break
-                                else: mod_name += part0
+                                elif len(part) > 1: mod_name += part0
                             if len(mod_name) > 2 and mod_name in stacktrace:
                                 wrong_mods.append(mod)
                     if len(wrong_mods) == 1:
