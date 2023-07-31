@@ -562,6 +562,7 @@ class IssueChecker:
         if not found_crash_cause and self.log.has_content("Failed to store chunk"):
             builder.error("out_of_disk_space")
 
+        wrong_mods = []
         if not found_crash_cause:
             for pattern in [
                 r"Mixin apply for mod ([\w\-+]+) failed",
@@ -570,18 +571,18 @@ class IssueChecker:
             ]:
                 match = re.search(pattern, self.log._content)
                 if match:
-                    builder.error("mod_crash", match.group(1))
-                    found_crash_cause = True
+                    mod_name = match.group(1)
+                    wrong_mod = [mod for mod in self.log.mods if mod_name.lower() in mod.lower()]
+                    if len(wrong_mod) > 0: wrong_mods += wrong_mod
+                    else: wrong_mods.append(mod_name)
         
-        if not found_crash_cause:
             match = re.search(r"Minecraft has crashed!.*|Failed to start Minecraft:.*|Unable to launch\n.*|---- Minecraft Crash Report ----.*A detailed walkthrough of the error", self.log._content, re.DOTALL)
             if not match is None:
                 stacktrace = match.group().lower()
                 if not "this is not a error" in stacktrace:
                     if len(self.log.mods) == 0:
-                        wrong_mods = [mcsr_mod for mcsr_mod in self.mcsr_mods if mcsr_mod.replace("-", "").lower() in stacktrace]
+                        wrong_mods += [mcsr_mod for mcsr_mod in self.mcsr_mods if mcsr_mod.replace("-", "").lower() in stacktrace]
                     else:
-                        wrong_mods = []
                         for mod in self.log.mods:
                             mod_name = mod.lower().replace(".jar", "")
                             for c in ["+", "-", "_", "=", ",", " "]: mod_name = mod_name.replace(c, "-")
@@ -594,10 +595,10 @@ class IssueChecker:
                                 if part == "": break
                                 elif len(part) > 1: mod_name += part0
                             if len(mod_name) > 2 and mod_name in stacktrace:
-                                wrong_mods.append(mod)
-                    if len(wrong_mods) == 1:
-                        builder.error("mod_crash", wrong_mods[0])
-                    elif len(wrong_mods) > 0 and len(wrong_mods) < 6:
-                        builder.error("mods_crash", "; ".join(wrong_mods))
+                                if not mod in wrong_mods: wrong_mods.append(mod)
+            if len(wrong_mods) == 1:
+                builder.error("mod_crash", wrong_mods[0])
+            elif len(wrong_mods) > 0 and len(wrong_mods) < 6:
+                builder.error("mods_crash", "; ".join(wrong_mods))
         
         return builder
