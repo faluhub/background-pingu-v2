@@ -559,7 +559,7 @@ class IssueChecker:
             builder.error("missing_dependency", "continuity", "indium")
             found_crash_cause = True
 
-        if not found_crash_cause and self.log.has_content("Failed to store chunk"):
+        if not found_crash_cause and self.log.has_content("Failed to store chunk") or self.log.has_content("There is not enough space on the disk"):
             builder.error("out_of_disk_space")
 
         wrong_mods = []
@@ -581,7 +581,9 @@ class IssueChecker:
                 stacktrace = match.group().lower()
                 if not "this is not a error" in stacktrace:
                     if len(self.log.mods) == 0:
-                        wrong_mods += [mcsr_mod for mcsr_mod in self.mcsr_mods if mcsr_mod.replace("-", "").lower() in stacktrace]
+                        for mcsr_mod in self.mcsr_mods:
+                            if mcsr_mod.replace("-", "").lower() in stacktrace and not mcsr_mod in wrong_mods:
+                                wrong_mods.append(mcsr_mod)
                     else:
                         for mod in self.log.mods:
                             mod_name = mod.lower().replace(".jar", "")
