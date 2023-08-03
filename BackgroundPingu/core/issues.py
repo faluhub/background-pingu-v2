@@ -70,7 +70,12 @@ class IssueChecker:
             "sodium-fabric-mc1.16.5-0.2.0+build.4",
             "optifine",
             "sodium-extra",
-            "biomethreadlocalfix"
+            "biomethreadlocalfix",
+            "forceport"
+        ]
+        self.assume_as_legal = [
+            "mcsrranked",
+            "mangodfps"
         ]
         self.mcsr_mods = [
             "worldpreview",
@@ -158,7 +163,8 @@ class IssueChecker:
                                 all_incompatible_mods[mod_name].append(incompatible_mod)
                     except KeyError: pass
 
-                    if mod_name.lower() in checked_mods: builder.note("duplicate_mod", mod_name.lower())
+                    if mod_name.lower() in checked_mods and not mod_name.lower() == "optifabric":
+                        builder.note("duplicate_mod", mod_name.lower())
                     else: checked_mods.append(mod_name.lower())
 
                     latest_version = self.get_latest_version(metadata)
@@ -168,7 +174,7 @@ class IssueChecker:
                             outdated_mods.append(["outdated_mod", mod_name, latest_version["page"]])
                             continue
                     elif latest_version is None: continue
-            elif not "mcsrranked" in mod: illegal_mods.append(mod)
+            elif all(not weird_mod in mod.lower() for weird_mod in self.assume_as_legal): illegal_mods.append(mod)
         
         if len(illegal_mods) > 0: builder.note("amount_illegal_mods", len(illegal_mods), "s" if len(illegal_mods) > 1 else f" (`{illegal_mods[0]}`)")
         
@@ -565,7 +571,7 @@ class IssueChecker:
         wrong_mods = []
         if not found_crash_cause:
             for pattern in [
-                r"Mixin apply for mod ([\w\-+]+) failed",
+                r"ERROR]: Mixin apply for mod ([\w\-+]+) failed",
                 r"from mod ([\w\-+]+) failed injection check",
                 r"due to errors, provided by '([\w\-+]+)'"
             ]:
