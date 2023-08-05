@@ -202,7 +202,7 @@ class IssueChecker:
             if self.log.has_mod("sodium-1.16.1-v1") or self.log.has_mod("sodium-1.16.1-v2"):
                 builder.error("not_using_mac_sodium")
         
-        if not self.log.major_java_version is None and self.log.major_java_version < 17:
+        if not self.log.major_java_version is None and self.log.major_java_version < 17 and not self.log.short_version == "1.12":
             wrong_mods = []
             for mod in self.java_17_mods:
                 for installed_mod in self.log.mods:
@@ -340,7 +340,7 @@ class IssueChecker:
             if self.log.has_mod("worldpreview"):
                 builder.error("incompatible_mod", "Optifine", "WorldPreview")
                 found_crash_cause = True
-            if self.log.has_mod("z-buffer-fog"):
+            if self.log.has_mod("z-buffer-fog") and self.log.short_version in [f"1.{14 + i}" for i in range(10)]:
                 builder.error("incompatible_mod", "Optifine", "z-buffer-fog")
                 found_crash_cause = True
         
@@ -462,24 +462,25 @@ class IssueChecker:
         match = re.search(pattern, self.log._content)
         if not match is None:
             switch_java = False
-            if self.log.mod_loader == ModLoader.FORGE: switch_java = True
-            elif not self.log.minecraft_version is None:
-                if self.log.short_version in [f"1.{18 + i}" for i in range(10)]: switch_java = True
-            if switch_java:
+            if self.log.short_version in [f"1.{17 + i}" for i in range(10)]:
                 try:
                     current_version = int(match.group(1))
-                    compatible_version = int(match.group(2))
-                    builder.error(
-                        "incorrect_java_prism",
-                        current_version,
-                        compatible_version,
-                        compatible_version,
-                        " (download the .msi file)" if self.log.operating_system == OperatingSystem.WINDOWS else
-                        " (download the .pkg file)" if self.log.operating_system == OperatingSystem.MACOS else
-                        "",
-                        compatible_version
-                    )
-                except: pass
+                    switch_java = (current_version < 17)
+                except: switch_java = True
+            elif self.log.mod_loader == ModLoader.FORGE: switch_java = True
+            if switch_java:
+                current_version = match.group(1)
+                compatible_version = match.group(2)
+                builder.error(
+                    "incorrect_java_prism",
+                    current_version,
+                    compatible_version,
+                    compatible_version,
+                    " (download the .msi file)" if self.log.operating_system == OperatingSystem.WINDOWS else
+                    " (download the .pkg file)" if self.log.operating_system == OperatingSystem.MACOS else
+                    "",
+                    compatible_version
+                )
             else: builder.error("java_comp_check")
         
         if self.log.has_content("java.lang.ClassNotFoundException: org.apache.logging.log4j.spi.AbstractLogger"):
