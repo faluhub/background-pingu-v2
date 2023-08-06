@@ -71,7 +71,8 @@ class IssueChecker:
             "optifine",
             "sodium-extra",
             "biomethreadlocalfix",
-            "forceport"
+            "forceport",
+            "sleepbackground-3.8-1.8.x-1.12.x"
         ]
         self.assume_as_legal = [
             "mcsrranked",
