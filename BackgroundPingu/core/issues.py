@@ -337,14 +337,6 @@ class IssueChecker:
                 if not latest_version is None:
                     builder.add("mod_download", metadata["name"], latest_version["page"])
         
-        if self.log.has_mod("optifine"):
-            if self.log.has_mod("worldpreview"):
-                builder.error("incompatible_mod", "Optifine", "WorldPreview")
-                found_crash_cause = True
-            if self.log.has_mod("z-buffer-fog") and self.log.short_version in [f"1.{14 + i}" for i in range(10)]:
-                builder.error("incompatible_mod", "Optifine", "z-buffer-fog")
-                found_crash_cause = True
-        
         if self.log.has_content("Failed to download the assets index"):
             builder.error("assets_index_fail")
         
@@ -554,6 +546,14 @@ class IssueChecker:
         if self.log.has_content("com.mcsr.projectelo.anticheat.file.verifiers.ResourcePackVerifier"):
             builder.error("ranked_resourcepack_crash")
             found_crash_cause = True
+        
+        if self.log.has_mod("optifine"):
+            if self.log.has_mod("worldpreview"):
+                builder.error("incompatible_mod", "Optifine", "WorldPreview")
+                found_crash_cause = True
+            if self.log.has_mod("z-buffer-fog") and self.log.short_version in [f"1.{14 + i}" for i in range(10)]:
+                builder.error("incompatible_mod", "Optifine", "z-buffer-fog")
+                found_crash_cause = True
 
         if self.log.has_content("Mixin apply for mod areessgee failed areessgee.mixins.json:nether.StructureFeatureMixin from mod areessgee -> net.minecraft.class_3195"):
             builder.error("incompatible_mod", "AreEssGee", "peepoPractice")
@@ -565,6 +565,10 @@ class IssueChecker:
         
         if self.log.has_mod("continuity") and self.log.has_mod("sodium") and not self.log.has_mod("indium"):
             builder.error("missing_dependency", "continuity", "indium")
+            found_crash_cause = True
+        
+        if self.log.has_mod("worldpreview") and self.log.has_mod("carpet"):
+            builder.error("incompatible_mod", "WorldPreview", "carpet")
             found_crash_cause = True
 
         if not found_crash_cause and self.log.has_content("Failed to store chunk") or self.log.has_content("There is not enough space on the disk"):
