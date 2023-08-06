@@ -606,7 +606,6 @@ class IssueChecker:
                                 elif len(part) > 1: mod_name += part0
                             if len(mod_name) > 2 and mod_name in stacktrace:
                                 if not mod in wrong_mods: wrong_mods.append(mod)
-            print(wrong_mods)
             if len(wrong_mods) == 1:
                 builder.error("mod_crash", wrong_mods[0])
             elif len(wrong_mods) > 0 and len(wrong_mods) < 6:
