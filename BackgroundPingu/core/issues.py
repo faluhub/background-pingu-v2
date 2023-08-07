@@ -554,6 +554,11 @@ class IssueChecker:
             if self.log.has_mod("z-buffer-fog") and self.log.short_version in [f"1.{14 + i}" for i in range(10)]:
                 builder.error("incompatible_mod", "Optifine", "z-buffer-fog")
                 found_crash_cause = True
+        
+        if self.log.has_mod("esimod"):
+            for incompatible_mod in ["serverSideRNG", "SpeedRunIGT", "WorldPreview"]:
+                if self.log.has_mod(incompatible_mod):
+                    builder.error("incompatible_mod", "esimod", incompatible_mod)
 
         if self.log.has_content("Mixin apply for mod areessgee failed areessgee.mixins.json:nether.StructureFeatureMixin from mod areessgee -> net.minecraft.class_3195"):
             builder.error("incompatible_mod", "AreEssGee", "peepoPractice")
@@ -591,6 +596,8 @@ class IssueChecker:
             match = re.search(r"Minecraft has crashed!.*|Failed to start Minecraft:.*|Unable to launch\n.*|---- Minecraft Crash Report ----.*A detailed walkthrough of the error", self.log._content, re.DOTALL)
             if not match is None:
                 stacktrace = match.group().lower()
+                print(stacktrace)
+                print(self.log.mods)
                 if not "this is not a error" in stacktrace:
                     if len(self.log.mods) == 0:
                         for mcsr_mod in self.mcsr_mods:
