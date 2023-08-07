@@ -379,6 +379,7 @@ class IssueChecker:
                               system_arg,
                               self.log.launcher if self.log.launcher is not None else "your launcher",
                               " > Tweaks" if self.log.is_prism else "")
+                found_crash_cause = True
             else: builder.note("builtin_lib_recommendation", system_arg)
 
         required_mod_match = re.findall(r"requires (.*?) of (\w+),", self.log._content)
