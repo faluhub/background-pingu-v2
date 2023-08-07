@@ -596,8 +596,6 @@ class IssueChecker:
             match = re.search(r"Minecraft has crashed!.*|Failed to start Minecraft:.*|Unable to launch\n.*|---- Minecraft Crash Report ----.*A detailed walkthrough of the error", self.log._content, re.DOTALL)
             if not match is None:
                 stacktrace = match.group().lower()
-                print(stacktrace)
-                print(self.log.mods)
                 if not "this is not a error" in stacktrace:
                     if len(self.log.mods) == 0:
                         for mcsr_mod in self.mcsr_mods:
