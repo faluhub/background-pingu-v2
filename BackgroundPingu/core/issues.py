@@ -190,15 +190,6 @@ class IssueChecker:
                 if self.log.has_mod(incompatible_mod):
                     builder.error("incompatible_mod", key, incompatible_mod)
         
-        if not self.log.mod_loader in [None, ModLoader.FABRIC, ModLoader.VANILLA]:
-            if is_mcsr_log:
-                builder.error("using_other_loader_mcsr", self.log.mod_loader.value).add("fabric_guide_prism" if self.log.is_prism else "fabric_guide_mmc", "install")
-            else:
-                builder.note("using_other_loader", self.log.mod_loader.value).add("fabric_guide_prism" if self.log.is_prism else "fabric_guide_mmc", "install")
-
-        if len(self.log.mods) > 0 and self.log.mod_loader == ModLoader.VANILLA:
-            builder.error("no_loader").add("fabric_guide_prism" if self.log.is_prism else "fabric_guide_mmc", "install")
-        
         if not self.log.operating_system is None and self.log.operating_system == OperatingSystem.MACOS:
             if self.log.has_mod("sodium-1.16.1-v1") or self.log.has_mod("sodium-1.16.1-v2"):
                 builder.error("not_using_mac_sodium")
@@ -300,6 +291,43 @@ class IssueChecker:
                 elif self.log.fabric_version.__str__() in ["0.14.15", "0.14.16"]:
                     builder.error("broken_fabric").add("fabric_guide_prism" if self.log.is_prism else "fabric_guide_mmc", "update")
             except: pass
+        
+        if not self.log.mod_loader in [None, ModLoader.FABRIC, ModLoader.VANILLA]:
+            if is_mcsr_log:
+                builder.error("using_other_loader_mcsr", self.log.mod_loader.value).add("fabric_guide_prism" if self.log.is_prism else "fabric_guide_mmc", "install")
+                found_crash_cause = True
+            else:
+                builder.note("using_other_loader", self.log.mod_loader.value).add("fabric_guide_prism" if self.log.is_prism else "fabric_guide_mmc", "install")
+
+        if len(self.log.mods) > 0 and self.log.mod_loader == ModLoader.VANILLA:
+            builder.error("no_loader").add("fabric_guide_prism" if self.log.is_prism else "fabric_guide_mmc", "install")
+        
+        if not found_crash_cause:
+            has_fabric_mod = any(self.log.has_mod(mcsr_mod) for mcsr_mod in self.mcsr_mods) or self.log.has_mod("fabric")
+            has_quilt_mod = self.log.has_mod("quilt")
+            has_forge_mod = self.log.has_mod("forge")
+            
+            if has_forge_mod:
+                if has_fabric_mod:
+                    builder.error("mixing_mods", "Forge", "Fabric")
+                    found_crash_cause = True
+                elif has_quilt_mod:
+                    builder.error("mixing_mods", "Forge", "Quilt")
+                    found_crash_cause = True
+                elif self.log.mod_loader == ModLoader.FABRIC:
+                    builder.error("rong_modloader", "Forge", "Fabric")
+                    found_crash_cause = True
+                elif self.log.mod_loader == ModLoader.QUILT:
+                    builder.error("rong_modloader", "Forge", "Quilt")
+                    found_crash_cause = True
+            elif has_fabric_mod:
+                if self.log.mod_loader == ModLoader.FORGE:
+                    builder.error("rong_modloader", "Fabric", "Forge")
+                    found_crash_cause = True
+            elif has_quilt_mod:
+                if self.log.mod_loader == ModLoader.FORGE:
+                    builder.error("rong_modloader", "Quilt", "Forge")
+                    found_crash_cause = True
         
         if not self.log.max_allocated is None:
             has_shenandoah = self.log.has_java_argument("shenandoah")
