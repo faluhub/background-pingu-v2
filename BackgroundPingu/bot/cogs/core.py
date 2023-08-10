@@ -1,6 +1,7 @@
 import discord, re, traceback
 from discord import commands
 from discord.ext.commands import Cog
+from datetime import datetime
 from BackgroundPingu.bot.main import BackgroundPingu
 from BackgroundPingu.core import parser, issues
 from BackgroundPingu.bot.ui import views
@@ -46,11 +47,14 @@ class Core(Cog):
         return result
 
     async def build_embed(self, results: issues.IssueBuilder, messages: list[str]):
-        return discord.Embed(
+        embed = discord.Embed(
             title=f"{results.amount} Issue{'s' if results.amount > 1 else ''} Found:",
             description=messages[0],
-            color=self.bot.color
+            color=self.bot.color,
+            timestamp=datetime.now()
         )
+        embed.set_footer(text=f"Page 1/{len(messages)}")
+        return embed
     
     def should_reply(self, result: dict):
         return not result["text"] is None or (not result["embed"] is None and not result["view"] is None)

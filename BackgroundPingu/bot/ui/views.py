@@ -16,6 +16,7 @@ class Paginator(View):
     async def edit_message(self, interaction: discord.Interaction):
         embed = interaction.message.embeds[0]
         embed.description = self._messages[self.page]
+        embed.set_footer(text=f"Page {self.page + 1}/{len(self._messages)}")
         return await interaction.response.edit_message(content="", embeds=[embed], view=self)
 
     @discord.ui.button(emoji="⬅️", custom_id="back", disabled=True)
