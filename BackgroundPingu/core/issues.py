@@ -70,7 +70,13 @@ class IssueChecker:
             "sodium-fabric-mc1.16.5-0.2.0+build.4",
             "optifine",
             "sodium-extra",
-            "biomethreadlocalfix"
+            "biomethreadlocalfix",
+            "forceport",
+            "sleepbackground-3.8-1.8.x-1.12.x"
+        ]
+        self.assume_as_legal = [
+            "mcsrranked",
+            "mangodfps"
         ]
         self.mcsr_mods = [
             "worldpreview",
@@ -158,7 +164,8 @@ class IssueChecker:
                                 all_incompatible_mods[mod_name].append(incompatible_mod)
                     except KeyError: pass
 
-                    if mod_name.lower() in checked_mods: builder.note("duplicate_mod", mod_name.lower())
+                    if mod_name.lower() in checked_mods and not mod_name.lower() == "optifabric":
+                        builder.note("duplicate_mod", mod_name.lower())
                     else: checked_mods.append(mod_name.lower())
 
                     latest_version = self.get_latest_version(metadata)
@@ -168,7 +175,7 @@ class IssueChecker:
                             outdated_mods.append(["outdated_mod", mod_name, latest_version["page"]])
                             continue
                     elif latest_version is None: continue
-            elif not "mcsrranked" in mod: illegal_mods.append(mod)
+            elif all(not weird_mod in mod.lower() for weird_mod in self.assume_as_legal): illegal_mods.append(mod)
         
         if len(illegal_mods) > 0: builder.note("amount_illegal_mods", len(illegal_mods), "s" if len(illegal_mods) > 1 else f" (`{illegal_mods[0]}`)")
         
@@ -183,20 +190,11 @@ class IssueChecker:
                 if self.log.has_mod(incompatible_mod):
                     builder.error("incompatible_mod", key, incompatible_mod)
         
-        if not self.log.mod_loader in [None, ModLoader.FABRIC, ModLoader.VANILLA]:
-            if is_mcsr_log:
-                builder.error("using_other_loader_mcsr", self.log.mod_loader.value).add("fabric_guide_prism" if self.log.is_prism else "fabric_guide_mmc", "install")
-            else:
-                builder.note("using_other_loader", self.log.mod_loader.value).add("fabric_guide_prism" if self.log.is_prism else "fabric_guide_mmc", "install")
-
-        if len(self.log.mods) > 0 and self.log.mod_loader == ModLoader.VANILLA:
-            builder.error("no_loader").add("fabric_guide_prism" if self.log.is_prism else "fabric_guide_mmc", "install")
-        
         if not self.log.operating_system is None and self.log.operating_system == OperatingSystem.MACOS:
             if self.log.has_mod("sodium-1.16.1-v1") or self.log.has_mod("sodium-1.16.1-v2"):
                 builder.error("not_using_mac_sodium")
         
-        if not self.log.major_java_version is None and self.log.major_java_version < 17:
+        if not self.log.major_java_version is None and self.log.major_java_version < 17 and not self.log.short_version == "1.12":
             wrong_mods = []
             for mod in self.java_17_mods:
                 for installed_mod in self.log.mods:
@@ -294,12 +292,50 @@ class IssueChecker:
                     builder.error("broken_fabric").add("fabric_guide_prism" if self.log.is_prism else "fabric_guide_mmc", "update")
             except: pass
         
+        if not self.log.mod_loader in [None, ModLoader.FABRIC, ModLoader.VANILLA]:
+            if is_mcsr_log:
+                builder.error("using_other_loader_mcsr", self.log.mod_loader.value).add("fabric_guide_prism" if self.log.is_prism else "fabric_guide_mmc", "install")
+                found_crash_cause = True
+            else:
+                builder.note("using_other_loader", self.log.mod_loader.value).add("fabric_guide_prism" if self.log.is_prism else "fabric_guide_mmc", "install")
+
+        if len(self.log.mods) > 0 and self.log.mod_loader == ModLoader.VANILLA:
+            builder.error("no_loader").add("fabric_guide_prism" if self.log.is_prism else "fabric_guide_mmc", "install")
+        
+        if not found_crash_cause:
+            has_fabric_mod = any(self.log.has_mod(mcsr_mod) for mcsr_mod in self.mcsr_mods) or self.log.has_mod("fabric")
+            has_quilt_mod = self.log.has_mod("quilt")
+            has_forge_mod = self.log.has_mod("forge")
+            
+            if has_forge_mod:
+                if has_fabric_mod:
+                    builder.error("mixing_mods", "Forge", "Fabric")
+                    found_crash_cause = True
+                elif has_quilt_mod:
+                    builder.error("mixing_mods", "Forge", "Quilt")
+                    found_crash_cause = True
+                elif self.log.mod_loader == ModLoader.FABRIC:
+                    builder.error("rong_modloader", "Forge", "Fabric")
+                    found_crash_cause = True
+                elif self.log.mod_loader == ModLoader.QUILT:
+                    builder.error("rong_modloader", "Forge", "Quilt")
+                    found_crash_cause = True
+            elif has_fabric_mod:
+                if self.log.mod_loader == ModLoader.FORGE:
+                    builder.error("rong_modloader", "Fabric", "Forge")
+                    found_crash_cause = True
+            elif has_quilt_mod:
+                if self.log.mod_loader == ModLoader.FORGE:
+                    builder.error("rong_modloader", "Quilt", "Forge")
+                    found_crash_cause = True
+        
         if not self.log.max_allocated is None:
             has_shenandoah = self.log.has_java_argument("shenandoah")
             min_limit_1 = 1200 if has_shenandoah else 1900
             min_limit_2 = 850 if has_shenandoah else 1200
             if (self.log.max_allocated < min_limit_1 and self.log.has_content(" -805306369")) or self.log.has_content("OutOfMemoryError"):
                 builder.error("too_little_ram_crash").add("allocate_ram_guide")
+                found_crash_cause = True
             elif self.log.max_allocated < min_limit_2:
                 builder.warning("too_little_ram").add("allocate_ram_guide")
             elif self.log.max_allocated < min_limit_1:
@@ -329,14 +365,6 @@ class IssueChecker:
                 latest_version = self.get_latest_version(metadata)
                 if not latest_version is None:
                     builder.add("mod_download", metadata["name"], latest_version["page"])
-        
-        if self.log.has_mod("optifine"):
-            if self.log.has_mod("worldpreview"):
-                builder.error("incompatible_mod", "Optifine", "WorldPreview")
-                found_crash_cause = True
-            if self.log.has_mod("z-buffer-fog"):
-                builder.error("incompatible_mod", "Optifine", "z-buffer-fog")
-                found_crash_cause = True
         
         if self.log.has_content("Failed to download the assets index"):
             builder.error("assets_index_fail")
@@ -379,6 +407,7 @@ class IssueChecker:
                               system_arg,
                               self.log.launcher if self.log.launcher is not None else "your launcher",
                               " > Tweaks" if self.log.is_prism else "")
+                found_crash_cause = True
             else: builder.note("builtin_lib_recommendation", system_arg)
 
         required_mod_match = re.findall(r"requires (.*?) of (\w+),", self.log._content)
@@ -456,24 +485,25 @@ class IssueChecker:
         match = re.search(pattern, self.log._content)
         if not match is None:
             switch_java = False
-            if self.log.mod_loader == ModLoader.FORGE: switch_java = True
-            elif not self.log.minecraft_version is None:
-                if self.log.short_version in [f"1.{18 + i}" for i in range(10)]: switch_java = True
-            if switch_java:
+            if self.log.short_version in [f"1.{17 + i}" for i in range(10)]:
                 try:
                     current_version = int(match.group(1))
-                    compatible_version = int(match.group(2))
-                    builder.error(
-                        "incorrect_java_prism",
-                        current_version,
-                        compatible_version,
-                        compatible_version,
-                        " (download the .msi file)" if self.log.operating_system == OperatingSystem.WINDOWS else
-                        " (download the .pkg file)" if self.log.operating_system == OperatingSystem.MACOS else
-                        "",
-                        compatible_version
-                    )
-                except: pass
+                    switch_java = (current_version < 17)
+                except: switch_java = True
+            elif self.log.mod_loader == ModLoader.FORGE: switch_java = True
+            if switch_java:
+                current_version = match.group(1)
+                compatible_version = match.group(2)
+                builder.error(
+                    "incorrect_java_prism",
+                    current_version,
+                    compatible_version,
+                    compatible_version,
+                    " (download the .msi file)" if self.log.operating_system == OperatingSystem.WINDOWS else
+                    " (download the .pkg file)" if self.log.operating_system == OperatingSystem.MACOS else
+                    "",
+                    compatible_version
+                )
             else: builder.error("java_comp_check")
         
         if self.log.has_content("java.lang.ClassNotFoundException: org.apache.logging.log4j.spi.AbstractLogger"):
@@ -546,6 +576,19 @@ class IssueChecker:
         if self.log.has_content("com.mcsr.projectelo.anticheat.file.verifiers.ResourcePackVerifier"):
             builder.error("ranked_resourcepack_crash")
             found_crash_cause = True
+        
+        if self.log.has_mod("optifine"):
+            if self.log.has_mod("worldpreview"):
+                builder.error("incompatible_mod", "Optifine", "WorldPreview")
+                found_crash_cause = True
+            if self.log.has_mod("z-buffer-fog") and self.log.short_version in [f"1.{14 + i}" for i in range(10)]:
+                builder.error("incompatible_mod", "Optifine", "z-buffer-fog")
+                found_crash_cause = True
+        
+        if self.log.has_mod("esimod"):
+            for incompatible_mod in ["serverSideRNG", "SpeedRunIGT", "WorldPreview"]:
+                if self.log.has_mod(incompatible_mod):
+                    builder.error("incompatible_mod", "esimod", incompatible_mod)
 
         if self.log.has_content("Mixin apply for mod areessgee failed areessgee.mixins.json:nether.StructureFeatureMixin from mod areessgee -> net.minecraft.class_3195"):
             builder.error("incompatible_mod", "AreEssGee", "peepoPractice")
@@ -558,30 +601,37 @@ class IssueChecker:
         if self.log.has_mod("continuity") and self.log.has_mod("sodium") and not self.log.has_mod("indium"):
             builder.error("missing_dependency", "continuity", "indium")
             found_crash_cause = True
+        
+        if self.log.has_mod("worldpreview") and self.log.has_mod("carpet"):
+            builder.error("incompatible_mod", "WorldPreview", "carpet")
+            found_crash_cause = True
 
-        if not found_crash_cause and self.log.has_content("Failed to store chunk"):
+        if not found_crash_cause and self.log.has_content("Failed to store chunk") or self.log.has_content("There is not enough space on the disk"):
             builder.error("out_of_disk_space")
 
+        wrong_mods = []
         if not found_crash_cause:
             for pattern in [
-                r"Mixin apply for mod ([\w\-+]+) failed",
+                r"ERROR]: Mixin apply for mod ([\w\-+]+) failed",
                 r"from mod ([\w\-+]+) failed injection check",
                 r"due to errors, provided by '([\w\-+]+)'"
             ]:
                 match = re.search(pattern, self.log._content)
                 if match:
-                    builder.error("mod_crash", match.group(1))
-                    found_crash_cause = True
+                    mod_name = match.group(1)
+                    wrong_mod = [mod for mod in self.log.mods if mod_name.lower() in mod.lower()]
+                    if len(wrong_mod) > 0: wrong_mods += wrong_mod
+                    else: wrong_mods.append(mod_name)
         
-        if not found_crash_cause:
             match = re.search(r"Minecraft has crashed!.*|Failed to start Minecraft:.*|Unable to launch\n.*|---- Minecraft Crash Report ----.*A detailed walkthrough of the error", self.log._content, re.DOTALL)
             if not match is None:
                 stacktrace = match.group().lower()
                 if not "this is not a error" in stacktrace:
                     if len(self.log.mods) == 0:
-                        wrong_mods = [mcsr_mod for mcsr_mod in self.mcsr_mods if mcsr_mod.replace("-", "").lower() in stacktrace]
+                        for mcsr_mod in self.mcsr_mods:
+                            if mcsr_mod.replace("-", "").lower() in stacktrace and not mcsr_mod in wrong_mods:
+                                wrong_mods.append(mcsr_mod)
                     else:
-                        wrong_mods = []
                         for mod in self.log.mods:
                             mod_name = mod.lower().replace(".jar", "")
                             for c in ["+", "-", "_", "=", ",", " "]: mod_name = mod_name.replace(c, "-")
@@ -594,10 +644,10 @@ class IssueChecker:
                                 if part == "": break
                                 elif len(part) > 1: mod_name += part0
                             if len(mod_name) > 2 and mod_name in stacktrace:
-                                wrong_mods.append(mod)
-                    if len(wrong_mods) == 1:
-                        builder.error("mod_crash", wrong_mods[0])
-                    elif len(wrong_mods) > 0 and len(wrong_mods) < 6:
-                        builder.error("mods_crash", "; ".join(wrong_mods))
+                                if not mod in wrong_mods: wrong_mods.append(mod)
+            if len(wrong_mods) == 1:
+                builder.error("mod_crash", wrong_mods[0])
+            elif len(wrong_mods) > 0 and len(wrong_mods) < 6:
+                builder.error("mods_crash", "; ".join(wrong_mods))
         
         return builder
