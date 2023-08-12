@@ -304,18 +304,19 @@ class IssueChecker:
             has_quilt_mod = self.log.has_mod("quilt")
             has_forge_mod = self.log.has_mod("forge")
             
-            if has_forge_mod and not has_quilt_mod and self.log.mod_loader == ModLoader.FABRIC:
+            if has_forge_mod and not has_quilt_mod and not has_fabric_mod:
+                if self.log.mod_loader == ModLoader.FABRIC:
                     builder.error("rong_modloader", "Forge", "Fabric")
                     found_crash_cause = True
-            elif has_forge_mod and not has_fabric_mod and self.log.mod_loader == ModLoader.QUILT:
+                elif self.log.mod_loader == ModLoader.QUILT:
                     builder.error("rong_modloader", "Forge", "Quilt")
                     found_crash_cause = True
             elif has_fabric_mod and not has_forge_mod and self.log.mod_loader == ModLoader.FORGE:
-                    builder.error("rong_modloader", "Fabric", "Forge")
-                    found_crash_cause = True
+                builder.error("rong_modloader", "Fabric", "Forge")
+                found_crash_cause = True
             elif has_quilt_mod and not has_forge_mod and self.log.mod_loader == ModLoader.FORGE:
-                    builder.error("rong_modloader", "Quilt", "Forge")
-                    found_crash_cause = True
+                builder.error("rong_modloader", "Quilt", "Forge")
+                found_crash_cause = True
         
         if not self.log.max_allocated is None:
             has_shenandoah = self.log.has_java_argument("shenandoah")
