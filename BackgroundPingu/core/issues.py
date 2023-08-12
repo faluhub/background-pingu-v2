@@ -330,22 +330,23 @@ class IssueChecker:
             has_shenandoah = self.log.has_java_argument("shenandoah")
             min_limit_1 = 1200 if has_shenandoah else 1900
             min_limit_2 = 850 if has_shenandoah else 1200
+            ram_guide = "allocate_ram_guide_mmc" if self.log.is_multimc_or_fork else "allocate_ram_guide"
             if (self.log.max_allocated < min_limit_1 and self.log.has_content(" -805306369")) or self.log.has_content("OutOfMemoryError"):
-                builder.error("too_little_ram_crash").add("allocate_ram_guide")
+                builder.error("too_little_ram_crash").add(ram_guide)
                 found_crash_cause = True
             elif self.log.max_allocated < min_limit_2:
-                builder.warning("too_little_ram").add("allocate_ram_guide")
+                builder.warning("too_little_ram").add(ram_guide)
             elif self.log.max_allocated < min_limit_1:
-                builder.note("too_little_ram").add("allocate_ram_guide")
+                builder.note("too_little_ram").add(ram_guide)
             if is_mcsr_log and not self.log.short_version in [f"1.{18 + i}" for i in range(10)]:
                 if self.log.max_allocated > 10000:
-                    builder.error("too_much_ram").add("allocate_ram_guide")
+                    builder.error("too_much_ram").add(ram_guide)
                 elif self.log.max_allocated > 4800:
-                    builder.warning("too_much_ram").add("allocate_ram_guide")
+                    builder.warning("too_much_ram").add(ram_guide)
                 elif self.log.max_allocated > 3500:
-                    builder.note("too_much_ram").add("allocate_ram_guide")
+                    builder.note("too_much_ram").add(ram_guide)
         elif self.log.has_content("OutOfMemoryError"):
-            builder.error("too_little_ram_crash").add("allocate_ram_guide")
+            builder.error("too_little_ram_crash").add(ram_guide)
         
         if not self.log.minecraft_folder is None:
             if "OneDrive" in self.log.minecraft_folder:
@@ -392,6 +393,10 @@ class IssueChecker:
         
         if self.log.has_content("java.lang.NoSuchMethodError: sun.security.util.ManifestEntryVerifier.<init>(Ljava/util/jar/Manifest;)V"):
             builder.error("forge_java_bug")
+            found_crash_cause = True
+        
+        if self.log.has_content("java.lang.IllegalStateException: GLFW error before init: [0x10008]Cocoa: Failed to find service port for display"):
+            builder.error("incompatible_forge_mac")
             found_crash_cause = True
         
         system_libs = [lib for lib in ["GLFW", "OpenAL"] if self.log.has_content("Using system " + lib)]
@@ -620,7 +625,7 @@ class IssueChecker:
                     if len(wrong_mod) > 0: wrong_mods += wrong_mod
                     else: wrong_mods.append(mod_name)
         
-            match = re.search(r"Minecraft has crashed!.*|Failed to start Minecraft:.*|Unable to launch\n.*|---- Minecraft Crash Report ----.*A detailed walkthrough of the error", self.log._content, re.DOTALL)
+            match = re.search(r"Minecraft has crashed!.*|Failed to start Minecraft:.*|Unable to launch\n.*|Exception caught from launcher\n.*|---- Minecraft Crash Report ----.*A detailed walkthrough of the error", self.log._content, re.DOTALL)
             if not match is None:
                 stacktrace = match.group().lower()
                 if not "this is not a error" in stacktrace:

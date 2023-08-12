@@ -123,7 +123,7 @@ class Log:
         return result if result in self.launchers else None
 
     @cached_property
-    def custom_launcher(self) -> bool:
+    def is_multimc_or_fork(self) -> bool:
         return not self.launcher is None
 
     @cached_property
