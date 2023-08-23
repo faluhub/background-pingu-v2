@@ -300,7 +300,7 @@ class IssueChecker:
                 builder.error("using_other_loader_mcsr", self.log.mod_loader.value).add("fabric_guide_prism" if self.log.is_prism else "fabric_guide_mmc", "install")
                 found_crash_cause = True
             else:
-                builder.note("using_other_loader", self.log.mod_loader.value).add("fabric_guide_prism" if self.log.is_prism else "fabric_guide_mmc", "install")
+                builder.note("using_other_loader", self.log.mod_loader.value)
 
         if len(self.log.mods) > 0 and self.log.mod_loader == ModLoader.VANILLA:
             builder.error("no_loader").add("fabric_guide_prism" if self.log.is_prism else "fabric_guide_mmc", "install")
