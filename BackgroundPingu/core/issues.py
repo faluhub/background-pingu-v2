@@ -604,6 +604,13 @@ class IssueChecker:
 
         if not found_crash_cause and self.log.has_content("Failed to store chunk") or self.log.has_content("There is not enough space on the disk"):
             builder.error("out_of_disk_space")
+        
+        if self.log.has_content("Mappings not present!"):
+            if not self.log.short_version in [f"1.{14 + i}" for i in range(15)] and self.log.mod_loader == ModLoader.FABRIC:
+                builder.error("legacy_fabric_modpack")
+                found_crash_cause = True
+            else:
+                builder.warning("no_mappings", "" if self.log.is_prism else " Instance")
 
         wrong_mods = []
         if not found_crash_cause:
