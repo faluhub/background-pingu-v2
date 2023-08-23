@@ -56,6 +56,7 @@
     "error.new_java_old_fabric_crash": "This crash seems to be caused by using an old version of `{} loader` with a new version of `Java`. Update your `{} loader`.",
     "error.no_abstract_logger": "Try deleting the folder `.../MultiMC/libraries/org/apache/logging/log4j` and then launching the instance again.",
     "error.no_fabric": "You don't have `Fabric` installed, while all MCSR mods require it.",
+    "error.no_java": "You don't have `Java` installed.",
     "error.no_loader": "You seem to be using mods, but haven't installed a mod loader.",
     "error.no_voyager_crash": "This is a rare crash that can be prevented by using [**Voyager**](https://github.com/modmuss50/Voyager/releases/latest). You should install it.",
     "error.not_using_mac_sodium": "You seem to be using a version of `Sodium` that has a memory leak on `MacOS`. Delete the one you have and download [**this version**](https://github.com/Minecraft-Java-Edition-Speedrunning/mcsr-sodium-mac-1.16.1/releases/tag/latest) instead.",
