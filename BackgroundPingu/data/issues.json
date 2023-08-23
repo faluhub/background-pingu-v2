@@ -49,7 +49,7 @@
     "error.mod_crash": "Mod `{}` seems to be causing this crash. Removing it should stop this crash from happening.",
     "error.mods_crash": "Mods `{}` seem to be causing this crash. Removing one of them should stop this crash from happening.",
     "error.need_java_17_mc": "You are playing on a Minecraft version that requires using `Java 17+`.",
-    "error.need_java_17_mods": "You are using {} (`{}`) that require{} using `Java 17+`.",
+    "error.need_java_17_mods": "You are using {} (`{}`) that require{} using `Java 17+`{}.",
     "error.need_new_java": "You need to use `Java {}+`.",
     "error.need_to_extract_from_zip": "You didn't extract `{}` when downloading it, which can cause it to be deleted by your operating system. Close the launcher and extract it.",
     "error.new_java_old_fabric_crash": "This crash seems to be caused by using an old version of `{} loader` with a new version of `Java`. Update your `{} loader`.",
