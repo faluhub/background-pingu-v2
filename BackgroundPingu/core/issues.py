@@ -329,7 +329,7 @@ class IssueChecker:
             min_limit_1 = 1200 if has_shenandoah else 1900
             min_limit_2 = 850 if has_shenandoah else 1200
             ram_guide = "allocate_ram_guide_mmc" if self.log.is_multimc_or_fork else "allocate_ram_guide"
-            if (self.log.max_allocated < min_limit_1 and self.log.has_content(" -805306369")) or self.log.has_content("OutOfMemoryError"):
+            if (self.log.max_allocated < min_limit_1 and self.log.has_content(" -805306369")) or self.log.has_content("OutOfMemoryError") or self.log.has_content("GL error GL_OUT_OF_MEMORY"):
                 builder.error("too_little_ram_crash").add(ram_guide)
                 found_crash_cause = True
             elif self.log.max_allocated < min_limit_2:
@@ -343,7 +343,7 @@ class IssueChecker:
                     builder.warning("too_much_ram").add(ram_guide)
                 elif self.log.max_allocated > 3500:
                     builder.note("too_much_ram").add(ram_guide)
-        elif self.log.has_content("OutOfMemoryError"):
+        elif self.log.has_content("OutOfMemoryError") or self.log.has_content("GL error GL_OUT_OF_MEMORY"):
             builder.error("too_little_ram_crash").add(ram_guide)
         
         if not self.log.minecraft_folder is None:
