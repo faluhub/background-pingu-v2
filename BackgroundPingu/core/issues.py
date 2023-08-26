@@ -586,7 +586,7 @@ class IssueChecker:
                 found_crash_cause = True
         
         if self.log.has_mod("esimod"):
-            for incompatible_mod in ["serverSideRNG", "SpeedRunIGT", "WorldPreview"]:
+            for incompatible_mod in ["serverSideRNG", "SpeedRunIGT", "WorldPreview", "mcsrranked"]:
                 if self.log.has_mod(incompatible_mod):
                     builder.error("incompatible_mod", "esimod", incompatible_mod)
 
