@@ -204,7 +204,9 @@ class IssueChecker:
                     "a mod",
                     "`, `".join(wrong_mods),
                     "s" if len(wrong_mods) == 1 else
-                    ""
+                    "",
+                    f", but you're using `Java {self.log.major_java_version}`" if not self.log.major_java_version is None
+                    else ""
                 ).add("java_update_guide")
                 found_crash_cause = True
         
@@ -247,11 +249,15 @@ class IssueChecker:
 
         elif not self.log.launcher is None and self.log.launcher.lower() == "multimc" and not self.log.operating_system is None and self.log.operating_system == OperatingSystem.MACOS:
             builder.note("use_prism").add("mac_setup_guide")
+        
+        if self.log.has_content("The java binary \"\" couldn't be found."):
+            builder.error("no_java").add("java_update_guide")
+            found_crash_cause = True
 
-        if not found_crash_cause and any(self.log.has_content(broken_java) for broken_java in [
+        if not found_crash_cause and (any(self.log.has_content(broken_java) for broken_java in [
             "Incompatible magic value 0 in class file sun/security/provider/SunEntries",
             "Assertion `version->filename == NULL || ! _dl_name_match_p (version->filename, map)' failed"
-        ]):
+        ]) or not re.compile(r"The java binary \"(.+)\" couldn't be found.").search(self.log._content) is None):
             builder.error("broken_java").add("java_update_guide")
             found_crash_cause = True
         
@@ -294,7 +300,7 @@ class IssueChecker:
                 builder.error("using_other_loader_mcsr", self.log.mod_loader.value).add("fabric_guide_prism" if self.log.is_prism else "fabric_guide_mmc", "install")
                 found_crash_cause = True
             else:
-                builder.note("using_other_loader", self.log.mod_loader.value).add("fabric_guide_prism" if self.log.is_prism else "fabric_guide_mmc", "install")
+                builder.note("using_other_loader", self.log.mod_loader.value)
 
         if len(self.log.mods) > 0 and self.log.mod_loader == ModLoader.VANILLA:
             builder.error("no_loader").add("fabric_guide_prism" if self.log.is_prism else "fabric_guide_mmc", "install")
@@ -304,48 +310,41 @@ class IssueChecker:
             has_quilt_mod = self.log.has_mod("quilt")
             has_forge_mod = self.log.has_mod("forge")
             
-            if has_forge_mod:
-                if has_fabric_mod:
-                    builder.error("mixing_mods", "Forge", "Fabric")
-                    found_crash_cause = True
-                elif has_quilt_mod:
-                    builder.error("mixing_mods", "Forge", "Quilt")
-                    found_crash_cause = True
-                elif self.log.mod_loader == ModLoader.FABRIC:
+            if has_forge_mod and not has_quilt_mod and not has_fabric_mod:
+                if self.log.mod_loader == ModLoader.FABRIC:
                     builder.error("rong_modloader", "Forge", "Fabric")
                     found_crash_cause = True
                 elif self.log.mod_loader == ModLoader.QUILT:
                     builder.error("rong_modloader", "Forge", "Quilt")
                     found_crash_cause = True
-            elif has_fabric_mod:
-                if self.log.mod_loader == ModLoader.FORGE:
-                    builder.error("rong_modloader", "Fabric", "Forge")
-                    found_crash_cause = True
-            elif has_quilt_mod:
-                if self.log.mod_loader == ModLoader.FORGE:
-                    builder.error("rong_modloader", "Quilt", "Forge")
-                    found_crash_cause = True
+            elif has_fabric_mod and not has_forge_mod and self.log.mod_loader == ModLoader.FORGE:
+                builder.error("rong_modloader", "Fabric", "Forge")
+                found_crash_cause = True
+            elif has_quilt_mod and not has_forge_mod and self.log.mod_loader == ModLoader.FORGE:
+                builder.error("rong_modloader", "Quilt", "Forge")
+                found_crash_cause = True
         
         if not self.log.max_allocated is None:
             has_shenandoah = self.log.has_java_argument("shenandoah")
             min_limit_1 = 1200 if has_shenandoah else 1900
             min_limit_2 = 850 if has_shenandoah else 1200
+            ram_guide = "allocate_ram_guide_mmc" if self.log.is_multimc_or_fork else "allocate_ram_guide"
             if (self.log.max_allocated < min_limit_1 and self.log.has_content(" -805306369")) or self.log.has_content("OutOfMemoryError"):
-                builder.error("too_little_ram_crash").add("allocate_ram_guide")
+                builder.error("too_little_ram_crash").add(ram_guide)
                 found_crash_cause = True
             elif self.log.max_allocated < min_limit_2:
-                builder.warning("too_little_ram").add("allocate_ram_guide")
+                builder.warning("too_little_ram").add(ram_guide)
             elif self.log.max_allocated < min_limit_1:
-                builder.note("too_little_ram").add("allocate_ram_guide")
+                builder.note("too_little_ram").add(ram_guide)
             if is_mcsr_log and not self.log.short_version in [f"1.{18 + i}" for i in range(10)]:
                 if self.log.max_allocated > 10000:
-                    builder.error("too_much_ram").add("allocate_ram_guide")
+                    builder.error("too_much_ram").add(ram_guide)
                 elif self.log.max_allocated > 4800:
-                    builder.warning("too_much_ram").add("allocate_ram_guide")
+                    builder.warning("too_much_ram").add(ram_guide)
                 elif self.log.max_allocated > 3500:
-                    builder.note("too_much_ram").add("allocate_ram_guide")
+                    builder.note("too_much_ram").add(ram_guide)
         elif self.log.has_content("OutOfMemoryError"):
-            builder.error("too_little_ram_crash").add("allocate_ram_guide")
+            builder.error("too_little_ram_crash").add(ram_guide)
         
         if not self.log.minecraft_folder is None:
             if "OneDrive" in self.log.minecraft_folder:
@@ -392,6 +391,10 @@ class IssueChecker:
         
         if self.log.has_content("java.lang.NoSuchMethodError: sun.security.util.ManifestEntryVerifier.<init>(Ljava/util/jar/Manifest;)V"):
             builder.error("forge_java_bug")
+            found_crash_cause = True
+        
+        if self.log.has_content("java.lang.IllegalStateException: GLFW error before init: [0x10008]Cocoa: Failed to find service port for display"):
+            builder.error("incompatible_forge_mac")
             found_crash_cause = True
         
         system_libs = [lib for lib in ["GLFW", "OpenAL"] if self.log.has_content("Using system " + lib)]
@@ -583,7 +586,7 @@ class IssueChecker:
                 found_crash_cause = True
         
         if self.log.has_mod("esimod"):
-            for incompatible_mod in ["serverSideRNG", "SpeedRunIGT", "WorldPreview"]:
+            for incompatible_mod in ["serverSideRNG", "SpeedRunIGT", "WorldPreview", "mcsrranked"]:
                 if self.log.has_mod(incompatible_mod):
                     builder.error("incompatible_mod", "esimod", incompatible_mod)
 
@@ -605,6 +608,13 @@ class IssueChecker:
 
         if not found_crash_cause and self.log.has_content("Failed to store chunk") or self.log.has_content("There is not enough space on the disk"):
             builder.error("out_of_disk_space")
+        
+        if self.log.has_content("Mappings not present!"):
+            if not self.log.short_version in [f"1.{14 + i}" for i in range(15)] and self.log.mod_loader == ModLoader.FABRIC:
+                builder.error("legacy_fabric_modpack")
+                found_crash_cause = True
+            else:
+                builder.warning("no_mappings", "" if self.log.is_prism else " Instance")
 
         wrong_mods = []
         if not found_crash_cause:
@@ -620,7 +630,7 @@ class IssueChecker:
                     if len(wrong_mod) > 0: wrong_mods += wrong_mod
                     else: wrong_mods.append(mod_name)
         
-            match = re.search(r"Minecraft has crashed!.*|Failed to start Minecraft:.*|Unable to launch\n.*|---- Minecraft Crash Report ----.*A detailed walkthrough of the error", self.log._content, re.DOTALL)
+            match = re.search(r"Minecraft has crashed!.*|Failed to start Minecraft:.*|Unable to launch\n.*|Exception caught from launcher\n.*|---- Minecraft Crash Report ----.*A detailed walkthrough of the error", self.log._content, re.DOTALL)
             if not match is None:
                 stacktrace = match.group().lower()
                 if not "this is not a error" in stacktrace:
