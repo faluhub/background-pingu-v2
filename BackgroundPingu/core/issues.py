@@ -261,7 +261,10 @@ class IssueChecker:
             builder.error("broken_java").add("java_update_guide")
             found_crash_cause = True
         
-        if self.log.has_content("java.lang.IllegalArgumentException: Unsupported class file major version "):
+        if any(self.log.has_content(new_java_old_fabric) for new_java_old_fabric in [
+            "java.lang.IllegalArgumentException: Unsupported class file major version ",
+            "java.lang.IllegalArgumentException: Class file major version "
+        ]):
             mod_loader = self.log.mod_loader.value if self.log.mod_loader.value is not None else "mod"
             builder.error("new_java_old_fabric_crash", mod_loader, mod_loader).add("fabric_guide_prism" if self.log.is_prism else "fabric_guide_mmc", "update")
             found_crash_cause = True
@@ -568,10 +571,6 @@ class IssueChecker:
                 builder.error("ranked_rong_mods", f"`{len(ranked_rong_mods)}` mods (`{', '.join(ranked_rong_mods)}`) that are", "them")
             elif len(ranked_rong_mods) > 0:
                 builder.error("ranked_rong_mods", f"a mod `{ranked_rong_mods[0]}` that is", "it")
-
-        if self.log.has_content("com.mcsr.projectelo.vanillafix.VanillaWatchdog") or self.log.has_content("[Integrated Watchdog/FATAL]: Considering it to be crashed, server will forcibly shutdown."):
-            builder.info("ghost_nether")
-            found_crash_cause = True
 
         if self.log.has_content("com.mcsr.projectelo.anticheat.file.verifiers.ResourcePackVerifier"):
             builder.error("ranked_resourcepack_crash")
