@@ -266,7 +266,8 @@ class IssueChecker:
             "java.lang.IllegalArgumentException: Class file major version "
         ]):
             mod_loader = self.log.mod_loader.value if self.log.mod_loader.value is not None else "mod"
-            builder.error("new_java_old_fabric_crash", mod_loader, mod_loader).add("fabric_guide_prism" if self.log.is_prism else "fabric_guide_mmc", "update")
+            builder.error("new_java_old_fabric_crash", mod_loader, mod_loader)
+            if self.log.short_version in [f"1.{14 + i}" for i in range(10)]: builder.add("fabric_guide_prism" if self.log.is_prism else "fabric_guide_mmc", "update")
             found_crash_cause = True
         elif not self.log.mod_loader is None and self.log.mod_loader == ModLoader.FABRIC and not self.log.fabric_version is None:
             highest_srigt_ver = None
@@ -289,24 +290,29 @@ class IssueChecker:
             
             try:
                 if self.log.fabric_version < version.parse("0.13.3"):
-                    builder.error("really_old_fabric").add("fabric_guide_prism" if self.log.is_prism else "fabric_guide_mmc", "update")
+                    builder.error("really_old_fabric")
+                    if self.log.short_version in [f"1.{14 + i}" for i in range(10)]: builder.add("fabric_guide_prism" if self.log.is_prism else "fabric_guide_mmc", "update")
                 elif self.log.fabric_version < version.parse("0.14.12"):
-                    builder.warning("relatively_old_fabric").add("fabric_guide_prism" if self.log.is_prism else "fabric_guide_mmc", "update")
+                    builder.warning("relatively_old_fabric")
+                    if self.log.short_version in [f"1.{14 + i}" for i in range(10)]: builder.add("fabric_guide_prism" if self.log.is_prism else "fabric_guide_mmc", "update")
                 elif self.log.fabric_version < version.parse("0.14.14"):
                     builder.note("old_fabric").add("fabric_guide_prism" if self.log.is_prism else "fabric_guide_mmc", "update")
                 elif self.log.fabric_version.__str__() in ["0.14.15", "0.14.16"]:
-                    builder.error("broken_fabric").add("fabric_guide_prism" if self.log.is_prism else "fabric_guide_mmc", "update")
+                    builder.error("broken_fabric")
+                    if self.log.short_version in [f"1.{14 + i}" for i in range(10)]: builder.add("fabric_guide_prism" if self.log.is_prism else "fabric_guide_mmc", "update")
             except: pass
         
         if not self.log.mod_loader in [None, ModLoader.FABRIC, ModLoader.VANILLA]:
             if is_mcsr_log:
-                builder.error("using_other_loader_mcsr", self.log.mod_loader.value).add("fabric_guide_prism" if self.log.is_prism else "fabric_guide_mmc", "install")
+                builder.error("using_other_loader_mcsr", self.log.mod_loader.value)
+                if self.log.short_version in [f"1.{14 + i}" for i in range(10)]: builder.add("fabric_guide_prism" if self.log.is_prism else "fabric_guide_mmc", "install")
                 found_crash_cause = True
             else:
                 builder.note("using_other_loader", self.log.mod_loader.value)
 
         if len(self.log.mods) > 0 and self.log.mod_loader == ModLoader.VANILLA:
-            builder.error("no_loader").add("fabric_guide_prism" if self.log.is_prism else "fabric_guide_mmc", "install")
+            builder.error("no_loader")
+            if self.log.short_version in [f"1.{14 + i}" for i in range(10)]: builder.add("fabric_guide_prism" if self.log.is_prism else "fabric_guide_mmc", "install")
         
         if not found_crash_cause:
             has_fabric_mod = any(self.log.has_mod(mcsr_mod) for mcsr_mod in self.mcsr_mods) or self.log.has_mod("fabric")
