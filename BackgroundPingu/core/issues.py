@@ -470,7 +470,7 @@ class IssueChecker:
             builder.error("using_old_ssrng")
         elif self.log.has_content("Failed to light chunk") and self.log.has_content("net.minecraft.class_148: Feature placement") and self.log.has_content("java.lang.ArrayIndexOutOfBoundsException"):
             builder.info("starlight_crash")
-        elif self.log.has_content(" -805306369") or self.log.has_content("java.lang.ArithmeticException"):
+        elif not found_crash_cause and self.log.has_content(" -805306369") or self.log.has_content("java.lang.ArithmeticException"):
             builder.warning("exitcode_805306369")
 
         if self.log.has_content(" -1073741819") or self.log.has_content("The instruction at 0x%p referenced memory at 0x%p. The memory could not be %s."):
