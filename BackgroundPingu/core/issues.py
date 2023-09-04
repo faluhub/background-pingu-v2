@@ -456,11 +456,12 @@ class IssueChecker:
             builder.info("lithium_crash")
             found_crash_cause = True
         
-        if any(self.log.has_content(log_spam) for log_spam in [
+        if is_mcsr_log and any(self.log.has_content(log_spam) for log_spam in [
             "Using missing texture, unable to load",
             "Exception loading blockstate definition",
             "Unable to load model",
-            "java.lang.NullPointerException: Cannot invoke \"com.mojang.authlib.minecraft.MinecraftProfileTexture.getHash()\" because \"?\" is null"
+            "java.lang.NullPointerException: Cannot invoke \"com.mojang.authlib.minecraft.MinecraftProfileTexture.getHash()\" because \"?\" is null",
+            " to profiler if profiler tick hasn't started - missing "
         ]): builder.info("log_spam")
         
         if self.log.has_mod("serversiderng-9"):
