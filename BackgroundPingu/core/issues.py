@@ -255,6 +255,7 @@ class IssueChecker:
             found_crash_cause = True
 
         if not found_crash_cause and (any(self.log.has_content(broken_java) for broken_java in [
+            "Could not start java:\n\n\nCheck your MultiMC Java settings.",
             "Incompatible magic value 0 in class file sun/security/provider/SunEntries",
             "Assertion `version->filename == NULL || ! _dl_name_match_p (version->filename, map)' failed"
         ]) or not re.compile(r"The java binary \"(.+)\" couldn't be found.").search(self.log._content) is None):
