@@ -253,6 +253,10 @@ class IssueChecker:
         if self.log.has_content("The java binary \"\" couldn't be found."):
             builder.error("no_java").add("java_update_guide")
             found_crash_cause = True
+        
+        if self.log.has_content("java.awt.AWTError: Assistive Technology not found: org.GNOME.Accessibility.AtkWrapper"):
+            builder.error("headless_java")
+            found_crash_cause = True
 
         if not found_crash_cause and (any(self.log.has_content(broken_java) for broken_java in [
             "Could not start java:\n\n\nCheck your MultiMC Java settings.",
