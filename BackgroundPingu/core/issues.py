@@ -428,10 +428,8 @@ class IssueChecker:
         required_mod_match = re.findall(r"requires (.*?) of (\w+),", self.log._content)
         for required_mod in required_mod_match:
             mod_name = required_mod[1]
-            if mod_name.lower() == "fabric":
-                builder.error("requires_fabric_api")
-                continue
-            builder.error("requires_mod", mod_name)
+            if mod_name.lower() == "fabric": builder.error("requires_fabric_api")
+            else: builder.error("requires_mod", mod_name)
         
         if self.log.has_mod("fabric-api") and is_mcsr_log:
             builder.warning("using_fabric_api")

@@ -8,7 +8,7 @@
     "add.eav_crash_5": "- Driver issues. Check if your drivers are updated and update them, or downgrade them if they're already updated.",
     "add.eav_crash_disclaimer": "Please note that the options listed above are not inherently bad things.",
     "add.eav_crash_srigt": "- A compatibility issue between `SpeedRunIGT`, `Intel Graphics` and `OpenGL`. (Enable `Safe Font Mode` in `SpeedRunIGT`'s options).",
-    "add.exitcode_1073741819_1": "- Check if you have a controller plugged in. If you do, unplug it.",
+    "add.exitcode_1073741819_1": "- If you have a controller plugged in, unplug it.",
     "add.exitcode_1073741819_2": "- Reboot your PC.",
     "add.exitcode_1073741819_3": "- Some mods may cause this crash for currently unknown reasons. So far, this has happened with `Sodium`, `SleepBackground` and `LazyDFU`. Try removing these mods/other mods one by one and test if the game still crashes.",
     "add.exitcode_1073741819_4": "- Update your graphics drivers.",
