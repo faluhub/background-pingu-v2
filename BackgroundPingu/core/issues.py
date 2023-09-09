@@ -623,6 +623,9 @@ class IssueChecker:
             else:
                 builder.warning("no_mappings", "" if self.log.is_prism else " Instance")
 
+        if not found_crash_cause and self.log.has_content("ERROR]: Mixin apply for mod fabric-networking-api-v1 failed"):
+            builder.error("delete_dot_fabric")
+
         wrong_mods = []
         if not found_crash_cause:
             for pattern in [
