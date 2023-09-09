@@ -353,6 +353,7 @@ class IssueChecker:
                 elif self.log.max_allocated > 3500:
                     builder.note("too_much_ram").add(ram_guide)
         elif self.log.has_content("OutOfMemoryError") or self.log.has_content("GL error GL_OUT_OF_MEMORY"):
+            ram_guide = "allocate_ram_guide_mmc" if self.log.is_multimc_or_fork else "allocate_ram_guide"
             builder.error("too_little_ram_crash").add(ram_guide)
         
         if not self.log.minecraft_folder is None:
