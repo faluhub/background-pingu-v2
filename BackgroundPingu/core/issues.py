@@ -253,17 +253,26 @@ class IssueChecker:
         if self.log.has_content("The java binary \"\" couldn't be found."):
             builder.error("no_java").add("java_update_guide")
             found_crash_cause = True
+        
+        if self.log.has_content("java.awt.AWTError: Assistive Technology not found: org.GNOME.Accessibility.AtkWrapper"):
+            builder.error("headless_java")
+            found_crash_cause = True
 
         if not found_crash_cause and (any(self.log.has_content(broken_java) for broken_java in [
+            "Could not start java:\n\n\nCheck your MultiMC Java settings.",
             "Incompatible magic value 0 in class file sun/security/provider/SunEntries",
             "Assertion `version->filename == NULL || ! _dl_name_match_p (version->filename, map)' failed"
         ]) or not re.compile(r"The java binary \"(.+)\" couldn't be found.").search(self.log._content) is None):
             builder.error("broken_java").add("java_update_guide")
             found_crash_cause = True
         
-        if self.log.has_content("java.lang.IllegalArgumentException: Unsupported class file major version "):
+        if any(self.log.has_content(new_java_old_fabric) for new_java_old_fabric in [
+            "java.lang.IllegalArgumentException: Unsupported class file major version ",
+            "java.lang.IllegalArgumentException: Class file major version "
+        ]):
             mod_loader = self.log.mod_loader.value if self.log.mod_loader.value is not None else "mod"
-            builder.error("new_java_old_fabric_crash", mod_loader, mod_loader).add("fabric_guide_prism" if self.log.is_prism else "fabric_guide_mmc", "update")
+            builder.error("new_java_old_fabric_crash", mod_loader, mod_loader)
+            if self.log.short_version in [f"1.{14 + i}" for i in range(10)]: builder.add("fabric_guide_prism" if self.log.is_prism else "fabric_guide_mmc", "update")
             found_crash_cause = True
         elif not self.log.mod_loader is None and self.log.mod_loader == ModLoader.FABRIC and not self.log.fabric_version is None:
             highest_srigt_ver = None
@@ -286,24 +295,29 @@ class IssueChecker:
             
             try:
                 if self.log.fabric_version < version.parse("0.13.3"):
-                    builder.error("really_old_fabric").add("fabric_guide_prism" if self.log.is_prism else "fabric_guide_mmc", "update")
+                    builder.error("really_old_fabric")
+                    if self.log.short_version in [f"1.{14 + i}" for i in range(10)]: builder.add("fabric_guide_prism" if self.log.is_prism else "fabric_guide_mmc", "update")
                 elif self.log.fabric_version < version.parse("0.14.12"):
-                    builder.warning("relatively_old_fabric").add("fabric_guide_prism" if self.log.is_prism else "fabric_guide_mmc", "update")
+                    builder.warning("relatively_old_fabric")
+                    if self.log.short_version in [f"1.{14 + i}" for i in range(10)]: builder.add("fabric_guide_prism" if self.log.is_prism else "fabric_guide_mmc", "update")
                 elif self.log.fabric_version < version.parse("0.14.14"):
                     builder.note("old_fabric").add("fabric_guide_prism" if self.log.is_prism else "fabric_guide_mmc", "update")
                 elif self.log.fabric_version.__str__() in ["0.14.15", "0.14.16"]:
-                    builder.error("broken_fabric").add("fabric_guide_prism" if self.log.is_prism else "fabric_guide_mmc", "update")
+                    builder.error("broken_fabric")
+                    if self.log.short_version in [f"1.{14 + i}" for i in range(10)]: builder.add("fabric_guide_prism" if self.log.is_prism else "fabric_guide_mmc", "update")
             except: pass
         
         if not self.log.mod_loader in [None, ModLoader.FABRIC, ModLoader.VANILLA]:
             if is_mcsr_log:
-                builder.error("using_other_loader_mcsr", self.log.mod_loader.value).add("fabric_guide_prism" if self.log.is_prism else "fabric_guide_mmc", "install")
+                builder.error("using_other_loader_mcsr", self.log.mod_loader.value)
+                if self.log.short_version in [f"1.{14 + i}" for i in range(10)]: builder.add("fabric_guide_prism" if self.log.is_prism else "fabric_guide_mmc", "install")
                 found_crash_cause = True
             else:
                 builder.note("using_other_loader", self.log.mod_loader.value)
 
         if len(self.log.mods) > 0 and self.log.mod_loader == ModLoader.VANILLA:
-            builder.error("no_loader").add("fabric_guide_prism" if self.log.is_prism else "fabric_guide_mmc", "install")
+            builder.error("no_loader")
+            if self.log.short_version in [f"1.{14 + i}" for i in range(10)]: builder.add("fabric_guide_prism" if self.log.is_prism else "fabric_guide_mmc", "install")
         
         if not found_crash_cause:
             has_fabric_mod = any(self.log.has_mod(mcsr_mod) for mcsr_mod in self.mcsr_mods) or self.log.has_mod("fabric")
@@ -329,7 +343,7 @@ class IssueChecker:
             min_limit_1 = 1200 if has_shenandoah else 1900
             min_limit_2 = 850 if has_shenandoah else 1200
             ram_guide = "allocate_ram_guide_mmc" if self.log.is_multimc_or_fork else "allocate_ram_guide"
-            if (self.log.max_allocated < min_limit_1 and self.log.has_content(" -805306369")) or self.log.has_content("OutOfMemoryError"):
+            if (self.log.max_allocated < min_limit_1 and self.log.has_content(" -805306369")) or self.log.has_content("OutOfMemoryError") or self.log.has_content("GL error GL_OUT_OF_MEMORY"):
                 builder.error("too_little_ram_crash").add(ram_guide)
                 found_crash_cause = True
             elif self.log.max_allocated < min_limit_2:
@@ -343,7 +357,8 @@ class IssueChecker:
                     builder.warning("too_much_ram").add(ram_guide)
                 elif self.log.max_allocated > 3500:
                     builder.note("too_much_ram").add(ram_guide)
-        elif self.log.has_content("OutOfMemoryError"):
+        elif self.log.has_content("OutOfMemoryError") or self.log.has_content("GL error GL_OUT_OF_MEMORY"):
+            ram_guide = "allocate_ram_guide_mmc" if self.log.is_multimc_or_fork else "allocate_ram_guide"
             builder.error("too_little_ram_crash").add(ram_guide)
         
         if not self.log.minecraft_folder is None:
@@ -413,10 +428,8 @@ class IssueChecker:
         required_mod_match = re.findall(r"requires (.*?) of (\w+),", self.log._content)
         for required_mod in required_mod_match:
             mod_name = required_mod[1]
-            if mod_name.lower() == "fabric":
-                builder.error("requires_fabric_api")
-                continue
-            builder.error("requires_mod", mod_name)
+            if mod_name.lower() == "fabric": builder.error("requires_fabric_api")
+            else: builder.error("requires_mod", mod_name)
         
         if self.log.has_mod("fabric-api") and is_mcsr_log:
             builder.warning("using_fabric_api")
@@ -447,11 +460,12 @@ class IssueChecker:
             builder.info("lithium_crash")
             found_crash_cause = True
         
-        if any(self.log.has_content(log_spam) for log_spam in [
+        if is_mcsr_log and any(self.log.has_content(log_spam) for log_spam in [
             "Using missing texture, unable to load",
             "Exception loading blockstate definition",
             "Unable to load model",
-            "java.lang.NullPointerException: Cannot invoke \"com.mojang.authlib.minecraft.MinecraftProfileTexture.getHash()\" because \"?\" is null"
+            "java.lang.NullPointerException: Cannot invoke \"com.mojang.authlib.minecraft.MinecraftProfileTexture.getHash()\" because \"?\" is null",
+            " to profiler if profiler tick hasn't started - missing "
         ]): builder.info("log_spam")
         
         if self.log.has_mod("serversiderng-9"):
@@ -461,7 +475,7 @@ class IssueChecker:
             builder.error("using_old_ssrng")
         elif self.log.has_content("Failed to light chunk") and self.log.has_content("net.minecraft.class_148: Feature placement") and self.log.has_content("java.lang.ArrayIndexOutOfBoundsException"):
             builder.info("starlight_crash")
-        elif self.log.has_content(" -805306369") or self.log.has_content("java.lang.ArithmeticException"):
+        elif not found_crash_cause and self.log.has_content(" -805306369") or self.log.has_content("java.lang.ArithmeticException"):
             builder.warning("exitcode_805306369")
 
         if self.log.has_content(" -1073741819") or self.log.has_content("The instruction at 0x%p referenced memory at 0x%p. The memory could not be %s."):
@@ -569,10 +583,6 @@ class IssueChecker:
             elif len(ranked_rong_mods) > 0:
                 builder.error("ranked_rong_mods", f"a mod `{ranked_rong_mods[0]}` that is", "it")
 
-        if self.log.has_content("com.mcsr.projectelo.vanillafix.VanillaWatchdog") or self.log.has_content("[Integrated Watchdog/FATAL]: Considering it to be crashed, server will forcibly shutdown."):
-            builder.info("ghost_nether")
-            found_crash_cause = True
-
         if self.log.has_content("com.mcsr.projectelo.anticheat.file.verifiers.ResourcePackVerifier"):
             builder.error("ranked_resourcepack_crash")
             found_crash_cause = True
@@ -615,6 +625,9 @@ class IssueChecker:
                 found_crash_cause = True
             else:
                 builder.warning("no_mappings", "" if self.log.is_prism else " Instance")
+
+        if not found_crash_cause and self.log.has_content("ERROR]: Mixin apply for mod fabric-networking-api-v1 failed"):
+            builder.error("delete_dot_fabric")
 
         wrong_mods = []
         if not found_crash_cause:
