@@ -1,4 +1,4 @@
-import semver, re
+import semver, re, requests
 from packaging import version
 from BackgroundPingu.bot.main import BackgroundPingu
 from BackgroundPingu.core.parser import Log, ModLoader, OperatingSystem
@@ -8,6 +8,7 @@ class IssueBuilder:
         self.bot = bot
         self._messages = {
             "error": [],
+            "top_info": [],
             "warning": [],
             "note": [],
             "info": []
@@ -21,6 +22,9 @@ class IssueBuilder:
             self.amount += 1
             self._last_added = type
         return self
+
+    def top_info(self, key: str, *args):
+        return self._add_to("top_info", "<:infokekw:1123567743355060344> " + self.bot.strings.get(f"top_info.{key}", key).format(*args))
 
     def error(self, key: str, *args):
         return self._add_to("error", "<:dangerkekw:1123554236626636880> " + self.bot.strings.get(f"error.{key}", key).format(*args))
@@ -142,11 +146,23 @@ class IssueChecker:
 
         if self.log.has_content("(Session ID is token:") and not self.log.has_content("(Session ID is token:<"):
             builder.error("leaked_session_id_token")
-
+        else:
+            api_url = "https://api.mclo.gs/1/log"
+            payload = {
+                "content": self.log._content
+            }
+            response = requests.post(api_url, data = payload)
+            if response.status_code == 200:
+                match = re.search(r"/(Users|home)/([^/]+)/", self.log._content)
+                if match and match.group(2).lower() not in ["user", "admin", "********"]:
+                    builder.top_info("uploaded_log_2", response.json().get("url"))
+                else:
+                    builder.top_info("uploaded_log", response.json().get("url"))
+        
         match = re.search(r"/(Users|home)/([^/]+)/", self.log._content)
         if match and match.group(2).lower() not in ["user", "admin", "********"]:
             builder.info("leaked_username")
-        match = ""
+        match = None
 
         for mod in self.log.mods:
             metadata = self.get_mod_metadata(mod)
