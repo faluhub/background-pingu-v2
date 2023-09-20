@@ -72,7 +72,8 @@ class IssueChecker:
             "sodium-extra",
             "biomethreadlocalfix",
             "forceport",
-            "sleepbackground-3.8-1.8.x-1.12.x"
+            "sleepbackground-3.8-1.8.x-1.12.x",
+            "tab-focus"
         ]
         self.assume_as_legal = [
             "mcsrranked",
@@ -293,19 +294,24 @@ class IssueChecker:
                         found_crash_cause = True
                 except: pass
             
-            try:
-                if self.log.fabric_version < version.parse("0.13.3"):
-                    builder.error("really_old_fabric")
-                    if self.log.short_version in [f"1.{14 + i}" for i in range(10)]: builder.add("fabric_guide_prism" if self.log.is_prism else "fabric_guide_mmc", "update")
-                elif self.log.fabric_version < version.parse("0.14.12"):
-                    builder.warning("relatively_old_fabric")
-                    if self.log.short_version in [f"1.{14 + i}" for i in range(10)]: builder.add("fabric_guide_prism" if self.log.is_prism else "fabric_guide_mmc", "update")
-                elif self.log.fabric_version < version.parse("0.14.14"):
-                    builder.note("old_fabric").add("fabric_guide_prism" if self.log.is_prism else "fabric_guide_mmc", "update")
-                elif self.log.fabric_version.__str__() in ["0.14.15", "0.14.16"]:
-                    builder.error("broken_fabric")
-                    if self.log.short_version in [f"1.{14 + i}" for i in range(10)]: builder.add("fabric_guide_prism" if self.log.is_prism else "fabric_guide_mmc", "update")
-            except: pass
+            if self.log.has_content("java.lang.ClassNotFoundException: can't find class com.llamalad7.mixinextras.MixinExtrasBootstrap"):
+                builder.error("old_fabric_crash").add("fabric_guide_prism" if self.log.is_prism else "fabric_guide_mmc", "update")
+                found_crash_cause = True
+            
+            else:
+                try:
+                    if self.log.fabric_version < version.parse("0.13.3"):
+                        builder.error("really_old_fabric")
+                        if self.log.short_version in [f"1.{14 + i}" for i in range(10)]: builder.add("fabric_guide_prism" if self.log.is_prism else "fabric_guide_mmc", "update")
+                    elif self.log.fabric_version < version.parse("0.14.12"):
+                        builder.warning("relatively_old_fabric")
+                        if self.log.short_version in [f"1.{14 + i}" for i in range(10)]: builder.add("fabric_guide_prism" if self.log.is_prism else "fabric_guide_mmc", "update")
+                    elif self.log.fabric_version < version.parse("0.14.14"):
+                        builder.note("old_fabric").add("fabric_guide_prism" if self.log.is_prism else "fabric_guide_mmc", "update")
+                    elif self.log.fabric_version.__str__() in ["0.14.15", "0.14.16"]:
+                        builder.error("broken_fabric")
+                        if self.log.short_version in [f"1.{14 + i}" for i in range(10)]: builder.add("fabric_guide_prism" if self.log.is_prism else "fabric_guide_mmc", "update")
+                except: pass
         
         if not self.log.mod_loader in [None, ModLoader.FABRIC, ModLoader.VANILLA]:
             if is_mcsr_log:
@@ -649,7 +655,7 @@ class IssueChecker:
                 if not "this is not a error" in stacktrace:
                     if len(self.log.mods) == 0:
                         for mcsr_mod in self.mcsr_mods:
-                            if mcsr_mod.replace("-", "").lower() in stacktrace and not mcsr_mod in wrong_mods:
+                            if mcsr_mod.replace("-", "").lower() in stacktrace and not mcsr_mod in wrong_mods and not mcsr_mod.lower() in wrong_mods:
                                 wrong_mods.append(mcsr_mod)
                     else:
                         for mod in self.log.mods:

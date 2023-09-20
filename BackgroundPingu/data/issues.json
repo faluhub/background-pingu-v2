@@ -62,6 +62,7 @@
     "error.no_loader": "You seem to be using mods, but haven't installed a mod loader.",
     "error.no_voyager_crash": "This is a rare crash that can be prevented by using [**Voyager**](https://github.com/modmuss50/Voyager/releases/latest). You should install it.",
     "error.not_using_mac_sodium": "You seem to be using a version of `Sodium` that has a memory leak on `MacOS`. Delete the one you have and download [**this version**](https://github.com/Minecraft-Java-Edition-Speedrunning/mcsr-sodium-mac-1.16.1/releases/tag/latest) instead.",
+    "error.old_fabric_crash": "This crash seems to be caused by using an outdated version of `Fabric Loader`. You should update it.",
     "error.old_sodium_crash": "This crash is caused by using an old version of `Sodium`.",
     "error.online_launch_required": "Either launch your instance **not** in `offline mode` or do `Edit{} > Version > Download All` so that your launcher can download assets.",
     "error.out_of_disk_space": "It looks like you may have run out of disk space. If that's the case, you should free up some space on it.",
