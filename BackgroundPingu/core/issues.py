@@ -81,7 +81,8 @@ class IssueChecker:
         ]
         self.assume_as_legal = [
             "mcsrranked",
-            "mangodfps"
+            "mangodfps",
+            "serversiderng"
         ]
         self.mcsr_mods = [
             "worldpreview",
