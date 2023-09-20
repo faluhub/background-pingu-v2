@@ -488,7 +488,7 @@ class IssueChecker:
             if not metadata is None:
                 latest_version = self.get_latest_version(metadata)
                 if not latest_version is None:
-                    builder.add(metadata["name"], latest_version["page"])
+                    builder.add("mod_download", metadata["name"], latest_version["page"])
             found_crash_cause = True
 
         if self.log.has_content("Launched instance in offline mode") and self.log.has_content("(missing)\n"):
