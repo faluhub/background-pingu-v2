@@ -503,12 +503,16 @@ class IssueChecker:
         if self.log.has_content(" -1073741819") or self.log.has_content("The instruction at 0x%p referenced memory at 0x%p. The memory could not be %s."):
             builder.error("exitcode", "-1073741819")
             builder.add("exitcode_1073741819_1").add("exitcode_1073741819_2")
-            if self.log.has_mod("sodium") and not self.log.has_mod("sodiummac"): builder.add(f"exitcode_1073741819_4")
-            builder.add(f"exitcode_1073741819_4").add("exitcode_1073741819_5")
+            if self.log._content.count("\n") < 500:
+                if self.log.has_mod("sodium") and not self.log.has_mod("sodiummac"): builder.add(f"exitcode_1073741819_3")
+                builder.add(f"exitcode_1073741819_4")
+            builder.add("exitcode_1073741819_5")
 
         if self.log.has_content(" -1073740791"):
             builder.error("exitcode", "-1073740791")
-            builder.add("exitcode_1073741819_2").add("exitcode_1073741819_4").add("exitcode_1073741819_5")
+            builder.add("exitcode_1073741819_2")
+            if self.log._content.count("\n") < 500: builder.add("exitcode_1073741819_4")
+            builder.add("exitcode_1073741819_5")
         
         if self.log.has_mod("autoreset") or self.log.has_content("the mods atum and autoreset"):
             builder.error("autoreset_user")
