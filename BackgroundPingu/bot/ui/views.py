@@ -1,10 +1,9 @@
 import discord
 from discord.ui import View, Button
-from discord.ui.item import Item
 from BackgroundPingu.core.issues import IssueBuilder
 
 class Paginator(View):
-    def __init__(self, messages: list[str], builder: IssueBuilder):
+    def __init__(self, messages: list[str], builder: IssueBuilder, post: discord.Message):
         super().__init__()
         self.timeout = 180
         self.disable_on_timeout = True
@@ -12,6 +11,7 @@ class Paginator(View):
         self.uploaded = False
         self._messages = messages
         self.builder = builder
+        self.post = post
         next_button = self.get_item("next")
         if isinstance(next_button, Button):
             next_button.disabled = len(self._messages) == 1
@@ -47,13 +47,12 @@ class Paginator(View):
     
     @discord.ui.button(label="Re-Upload Log", emoji="📜", custom_id="upload", disabled=True)
     async def upload_callback(self, button: Button, interaction: discord.Interaction):
+        if interaction.user.id != self.post.author.id:
+            return await interaction.response.send_message("You're not the original poster of this log.", ephemeral=True)
         includes, new_url = self.builder.log.upload()
         self.builder.top_info("uploaded_log" + ("_2" if includes else ""), new_url)
         self._messages = self.builder.build()
         button.disabled = True
         await self.edit_message(interaction)
-        try:
-            if interaction.message.reference is not None:
-                await self.builder.bot.get_message(interaction.message.reference.message_id).delete(reason="Re-uploaded log.")
+        try: await self.post.delete(reason="Re-uploaded log.")
         except discord.Forbidden: pass
-

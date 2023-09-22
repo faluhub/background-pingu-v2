@@ -31,7 +31,7 @@ class Core(Cog):
                     if results.has_values():
                         messages = results.build()
                         result["embed"] = await self.build_embed(results, messages, msg)
-                        result["view"] = views.Paginator(messages, results)
+                        result["view"] = views.Paginator(messages, results, msg)
                         found_result = True
                 except Exception as e:
                     error = "".join(traceback.format_exception(e))
@@ -43,7 +43,7 @@ class Core(Cog):
             if results.has_values():
                 messages = results.build()
                 result["embed"] = await self.build_embed(results, messages, msg)
-                result["view"] = views.Paginator(messages)
+                result["view"] = views.Paginator(messages, results, msg)
         return result
 
     async def build_embed(self, results: issues.IssueBuilder, messages: list[str], msg: discord.Message):
