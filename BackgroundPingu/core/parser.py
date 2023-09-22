@@ -193,5 +193,18 @@ class Log:
     def has_java_argument(self, argument: str) -> bool:
         return argument.lower() in self.java_arguments.lower()
     
+    def upload(self) -> (bool, str):
+        api_url = "https://api.mclo.gs/1/log"
+        payload = {
+            "content": self._content
+        }
+        response = requests.post(api_url, data=payload)
+        if response.status_code == 200:
+            match = re.search(r"/(Users|home)/([^/]+)/", self._content)
+            return (
+                match and match.group(2).lower() not in ["user", "admin", "********"],
+                response.json().get("url")
+            )
+    
     def __str__(self) -> str:
         return f"mods={self.mods}\njava_version={self.java_version}\nmajor_java_version={self.major_java_version}\nminecraft_folder={self.minecraft_folder}\noperating_system={self.operating_system}\nminecraft_version={self.minecraft_version}\nfabric_version={self.fabric_version}\nlauncher={self.launcher}\ncustom_launcher={self.custom_launcher}\nmod_loader={self.mod_loader}\njava_arguments={self.java_arguments}\nmax_allocated={self.max_allocated}"

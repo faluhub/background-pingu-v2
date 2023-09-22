@@ -30,8 +30,8 @@ class Core(Cog):
                     results = issues.IssueChecker(self.bot, log).check()
                     if results.has_values():
                         messages = results.build()
-                        result["embed"] = await self.build_embed(results, messages)
-                        result["view"] = views.Paginator(messages)
+                        result["embed"] = await self.build_embed(results, messages, msg)
+                        result["view"] = views.Paginator(messages, results)
                         found_result = True
                 except Exception as e:
                     error = "".join(traceback.format_exception(e))
@@ -42,17 +42,18 @@ class Core(Cog):
             results = issues.IssueChecker(self.bot, parser.Log(msg.content)).check()
             if results.has_values():
                 messages = results.build()
-                result["embed"] = await self.build_embed(results, messages)
+                result["embed"] = await self.build_embed(results, messages, msg)
                 result["view"] = views.Paginator(messages)
         return result
 
-    async def build_embed(self, results: issues.IssueBuilder, messages: list[str]):
+    async def build_embed(self, results: issues.IssueBuilder, messages: list[str], msg: discord.Message):
         embed = discord.Embed(
             title=f"{results.amount} Issue{'s' if results.amount > 1 else ''} Found:",
             description=messages[0],
             color=self.bot.color,
             timestamp=datetime.now()
         )
+        embed.set_author(name=msg.author.name, icon_url=msg.author.avatar.url)
         embed.set_footer(text=f"Page 1/{len(messages)}")
         return embed
     

@@ -1,17 +1,23 @@
 import discord
 from discord.ui import View, Button
 from discord.ui.item import Item
+from BackgroundPingu.core.issues import IssueBuilder
 
 class Paginator(View):
-    def __init__(self, messages: list[str]):
+    def __init__(self, messages: list[str], builder: IssueBuilder):
         super().__init__()
         self.timeout = 180
         self.disable_on_timeout = True
         self.page = 0
+        self.uploaded = False
         self._messages = messages
+        self.builder = builder
         next_button = self.get_item("next")
         if isinstance(next_button, Button):
             next_button.disabled = len(self._messages) == 1
+        upload_button = self.get_item("upload")
+        if isinstance(upload_button, Button):
+            upload_button.disabled = self.uploaded or self.builder.has("top_info", "uploaded_log") or self.builder.has("top_info", "uploaded_log_2") or self.builder.has("error", "leaked_session_id_token")
     
     async def edit_message(self, interaction: discord.Interaction):
         embed = interaction.message.embeds[0]
@@ -38,3 +44,16 @@ class Paginator(View):
         if isinstance(back_button, Button):
             back_button.disabled = False
         return await self.edit_message(interaction)
+    
+    @discord.ui.button(label="Re-Upload Log", emoji="📜", custom_id="upload", disabled=True)
+    async def upload_callback(self, button: Button, interaction: discord.Interaction):
+        includes, new_url = self.builder.log.upload()
+        self.builder.top_info("uploaded_log" + ("_2" if includes else ""), new_url)
+        self._messages = self.builder.build()
+        button.disabled = True
+        await self.edit_message(interaction)
+        try:
+            if interaction.message.reference is not None:
+                await self.builder.bot.get_message(interaction.message.reference.message_id).delete(reason="Re-uploaded log.")
+        except discord.Forbidden: pass
+

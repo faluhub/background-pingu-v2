@@ -4,15 +4,16 @@ from BackgroundPingu.bot.main import BackgroundPingu
 from BackgroundPingu.core.parser import Log, ModLoader, OperatingSystem
 
 class IssueBuilder:
-    def __init__(self, bot: BackgroundPingu) -> None:
+    def __init__(self, bot: BackgroundPingu, log: Log) -> None:
         self.bot = bot
         self._messages = {
-            "error": [],
             "top_info": [],
+            "error": [],
             "warning": [],
             "note": [],
             "info": []
         }
+        self.log = log
         self.amount = 0
         self._last_added = None
     
@@ -24,7 +25,7 @@ class IssueBuilder:
         return self
 
     def top_info(self, key: str, *args):
-        return self._add_to("top_info", "<:infokekw:1123567743355060344> " + self.bot.strings.get(f"top_info.{key}", key).format(*args))
+        return self._add_to("top_info", "‼️ **" + self.bot.strings.get(f"top_info.{key}", key).format(*args) + "**")
 
     def error(self, key: str, *args):
         return self._add_to("error", "<:dangerkekw:1123554236626636880> " + self.bot.strings.get(f"error.{key}", key).format(*args))
@@ -41,6 +42,13 @@ class IssueBuilder:
     def add(self, key: str, *args):
         return self._add_to(self._last_added, "<:reply:1121924702756143234>*" + self.bot.strings.get(f"add.{key}", key).format(*args) + "*", add=True)
 
+    def has(self, type: str, key: str) -> bool:
+        key = self.bot.strings.get(f"{type}.{key}", key)
+        for string in self._messages[type]:
+            if key == str(string).split(" ", 1)[1]:
+                return True
+        return False
+
     def has_values(self) -> bool:
         return self.amount > 0
 
@@ -49,7 +57,7 @@ class IssueBuilder:
         index = 0
         for i in self._messages:
             for j in self._messages[i]:
-                add = j + "\n"
+                add = j + "\n" + ("\n" if i == "top_info" and index == len(self._messages[i]) - 1 else "")
                 if len(messages) == 0 or index % 9 == 0: messages.append(add)
                 else: messages[len(messages) - 1] += add
                 index += 1
@@ -136,7 +144,7 @@ class IssueChecker:
         return latest_match
 
     def check(self) -> IssueBuilder:
-        builder = IssueBuilder(self.bot)
+        builder = IssueBuilder(self.bot, self.log)
 
         is_mcsr_log = any(self.log.has_mod(mcsr_mod) for mcsr_mod in self.mcsr_mods) or self.log.minecraft_version == "1.16.1"
         found_crash_cause = False
@@ -147,18 +155,6 @@ class IssueChecker:
 
         if self.log.has_content("(Session ID is token:") and not self.log.has_content("(Session ID is token:<"):
             builder.error("leaked_session_id_token")
-        else:
-            api_url = "https://api.mclo.gs/1/log"
-            payload = {
-                "content": self.log._content
-            }
-            response = requests.post(api_url, data = payload)
-            if response.status_code == 200:
-                match = re.search(r"/(Users|home)/([^/]+)/", self.log._content)
-                if match and match.group(2).lower() not in ["user", "admin", "********"]:
-                    builder.top_info("uploaded_log_2", response.json().get("url"))
-                else:
-                    builder.top_info("uploaded_log", response.json().get("url"))
         
         match = re.search(r"/(Users|home)/([^/]+)/", self.log._content)
         if match and match.group(2).lower() not in ["user", "admin", "********"]:
