@@ -483,7 +483,11 @@ class IssueChecker:
             builder.error("no_voyager_crash")
         
         if self.log.has_content("java.lang.IllegalStateException: Adding Entity listener a second time") and self.log.has_content("me.jellysquid.mods.lithium.common.entity.tracker.nearby"):
-            builder.info("lithium_crash")
+            builder.error("lithium_crash")
+            found_crash_cause = True
+        
+        if self.log.has_content("java.lang.IllegalStateException: Lock is no longer valid") and self.log.has_content("Exception in server tick loop"):
+            builder.error("wp_3_plus_crash")
             found_crash_cause = True
         
         if is_mcsr_log and any(self.log.has_content(log_spam) for log_spam in [
@@ -500,7 +504,7 @@ class IssueChecker:
         if any(self.log.has_mod(f"serversiderng-{i}") for i in range(1, 9)):
             builder.error("using_old_ssrng")
         elif self.log.has_content("Failed to light chunk") and self.log.has_content("net.minecraft.class_148: Feature placement") and self.log.has_content("java.lang.ArrayIndexOutOfBoundsException"):
-            builder.info("starlight_crash")
+            builder.error("starlight_crash")
         elif not found_crash_cause and self.log.has_content(" -805306369") or self.log.has_content("java.lang.ArithmeticException"):
             builder.warning("exitcode_805306369")
 
