@@ -49,10 +49,13 @@ class Paginator(View):
     async def upload_callback(self, button: Button, interaction: discord.Interaction):
         if interaction.user.id != self.post.author.id:
             return await interaction.response.send_message("You're not the original poster of this log.", ephemeral=True)
-        includes, new_url = self.builder.log.upload()
-        self.builder.top_info("uploaded_log" + ("_2" if includes else ""), new_url)
-        self._messages = self.builder.build()
-        button.disabled = True
-        await self.edit_message(interaction)
-        try: await self.post.delete(reason="Re-uploaded log.")
-        except discord.Forbidden: pass
+        try:
+            includes, new_url = self.builder.log.upload()
+            self.builder.top_info("uploaded_log" + ("_2" if includes else ""), new_url)
+            self._messages = self.builder.build()
+            button.disabled = True
+            await self.edit_message(interaction)
+            try: await self.post.delete(reason="Re-uploaded log.")
+            except discord.Forbidden: pass
+        except TypeError:
+            return await interaction.response.send_message("Something went wrong while re-uploading this log. Try again.", ephemeral=True)
