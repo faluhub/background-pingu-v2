@@ -665,6 +665,11 @@ class IssueChecker:
         if not found_crash_cause and self.log.has_content("ERROR]: Mixin apply for mod fabric-networking-api-v1 failed"):
             builder.error("delete_dot_fabric")
 
+        pattern = r"\[Integrated Watchdog/ERROR\]: This crash report has been saved to: (.*\.txt)"
+        match = re.search(pattern, self.log._content)
+        if not match is None:
+            builder.info("send_watchdog_report", re.sub(r"C:\\Users\\[^\\]+\\", "C:/Users/********/", match.group(1)))
+        
         wrong_mods = []
         if not found_crash_cause:
             for pattern in [

@@ -89,6 +89,7 @@
     "info.leaked_username": "Your log has your PC username in it. You might want to delete it.",
     "info.lithium_crash": "This seems to be a rare crash caused by `Lithium` that you can't do anything about. It happens really rarely, so far we only know about 4 times of when it happened to someone, so it's not worth it to not use `Lithium` because of it.",
     "info.log_spam": "Your log seems to have lines with random spam. It shouldn't cause any issues within Minecraft, and there aren't any known fixes.",
+    "info.send_watchdog_report": "Please send `{}` as it would have more info about this crash.",
     "info.starlight_crash": "This seems to be a rare crash caused by `Starlight` that you can't do anything about. It happens really rarely, so far we only know about 1 time of when it happened to someone, so it's not worth it to not use `Starlight` because of it.",
     "info.upload_log_attachment": "You sent your log as a file. Please press the `Re-Upload Log` button so the log will be re-uploaded to mclo.gs so people can see it without having to download it.",
     "note.amount_illegal_mods": "You are using `{}` illegal mod{}!",
