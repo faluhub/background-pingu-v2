@@ -64,9 +64,10 @@ class IssueBuilder:
         return messages
 
 class IssueChecker:
-    def __init__(self, bot: BackgroundPingu, log: Log) -> None:
+    def __init__(self, bot: BackgroundPingu, log: Log, link: str) -> None:
         self.bot = bot
         self.log = log
+        self.link = link
         self.java_17_mods = [
             "antiresourcereload",
             "serversiderng",
@@ -158,8 +159,11 @@ class IssueChecker:
         
         match = re.search(r"/(Users|home)/([^/]+)/", self.log._content)
         if match and match.group(2).lower() not in ["user", "admin", "********"]:
-            builder.info("leaked_username")
+            builder.info("leaked_username").add("upload_log_leaked_username")
         match = None
+
+        if any(self.link.endswith(file_extension) for file_extension in [".log", ".txt"]):
+            builder.info("upload_log_attachment")
 
         for mod in self.log.mods:
             metadata = self.get_mod_metadata(mod)

@@ -22,12 +22,12 @@ class Core(Cog):
         matches = re.findall(link_pattern, msg.content)
         if len(msg.attachments) > 0:
             for attachment in msg.attachments:
-                matches.append(attachment.url)
+                matches.append(attachment.url.split("?ex=")[0])
         for match in matches:
             log = parser.Log.from_link(match)
             if not log is None:
                 try:
-                    results = issues.IssueChecker(self.bot, log).check()
+                    results = issues.IssueChecker(self.bot, log, match).check()
                     if results.has_values():
                         messages = results.build()
                         result["embed"] = await self.build_embed(results, messages, msg)
