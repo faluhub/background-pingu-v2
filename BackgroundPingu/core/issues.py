@@ -241,6 +241,9 @@ class IssueChecker:
                     if needed_java_version is None or parsed_version > needed_java_version:
                         needed_java_version = parsed_version
                 except: pass
+            if needed_java_version is None and self.log.has_content("java.lang.UnsupportedClassVersionError: net/minecraft/class_310"):
+                builder.error("need_new_java", 17).add("k4_setup_guide")
+                found_crash_cause = True
             if not needed_java_version is None:
                 builder.error("need_new_java", needed_java_version).add("java_update_guide")
                 found_crash_cause = True

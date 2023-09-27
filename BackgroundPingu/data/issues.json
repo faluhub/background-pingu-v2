@@ -1,5 +1,6 @@
 {
     "add.allocate_ram_guide": "Check out [**this document**](https://docs.google.com/document/d/1aPF1lyBAfPWyeHIH80F8JJw8rvvy6lRm0WJ2xxSrRh8/edit#heading=h.owelqvpsehpw) for a guide on how to fix it.",
+    "add.k4_setup_guide": "Check out [**this video**](https://www.youtube.com/watch?v=VL8Syekw4Q0) for a guide on how to set up for Minecraft speedrunning.",
     "add.allocate_ram_guide_mmc": "See [**this image**](https://cdn.discordapp.com/attachments/1060236401838403699/1139608929068924928/image.png) for a guide on how to fix it.",
     "add.eav_crash_1": "- Concurrently running programs, such as `OBS` and `Discord`, that use the same graphics card as the game.",
     "add.eav_crash_2": "- Using game capture instead of window capture in `OBS`.",
