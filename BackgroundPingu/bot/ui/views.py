@@ -12,6 +12,7 @@ class Paginator(View):
         self._messages = messages
         self.builder = builder
         self.post = post
+        self.reupload_url = None
         next_button = self.get_item("next")
         if isinstance(next_button, Button):
             next_button.disabled = len(self._messages) == 1
@@ -23,10 +24,12 @@ class Paginator(View):
         embed = interaction.message.embeds[0]
         embed.description = self._messages[self.page]
         embed.set_footer(text=f"Page {self.page + 1}/{len(self._messages)}")
-        return await interaction.response.edit_message(content="", embeds=[embed], view=self)
+        return await interaction.response.edit_message(content="" if self.reupload_url is None else f"<{self.reupload_url}>", embeds=[embed], view=self)
 
     @discord.ui.button(emoji="⬅️", custom_id="back", disabled=True)
     async def back_callback(self, button: Button, interaction: discord.Interaction):
+        if interaction.user.id != self.post.author.id:
+            return await interaction.response.send_message("You're not the original poster of this log.", ephemeral=True)
         if self.page == 0: return
         self.page -= 1
         button.disabled = self.page == 0
@@ -37,6 +40,8 @@ class Paginator(View):
     
     @discord.ui.button(emoji="➡️", custom_id="next", disabled=True)
     async def next_callback(self, button: Button, interaction: discord.Interaction):
+        if interaction.user.id != self.post.author.id:
+            return await interaction.response.send_message("You're not the original poster of this log.", ephemeral=True)
         if self.page == len(self._messages) - 1: return
         self.page += 1
         button.disabled = self.page == len(self._messages) - 1
@@ -50,8 +55,8 @@ class Paginator(View):
         if interaction.user.id != self.post.author.id:
             return await interaction.response.send_message("You're not the original poster of this log.", ephemeral=True)
         try:
-            includes, new_url = self.builder.log.upload()
-            self.builder.top_info("uploaded_log" + ("_2" if includes else ""), new_url)
+            includes, self.reupload_url = self.builder.log.upload()
+            self.builder.top_info("uploaded_log" + ("_2" if includes else ""), self.reupload_url)
             self._messages = self.builder.build()
             button.disabled = True
             await self.edit_message(interaction)
