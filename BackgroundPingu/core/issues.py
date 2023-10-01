@@ -64,9 +64,10 @@ class IssueBuilder:
         return messages
 
 class IssueChecker:
-    def __init__(self, bot: BackgroundPingu, log: Log) -> None:
+    def __init__(self, bot: BackgroundPingu, log: Log, link: str) -> None:
         self.bot = bot
         self.log = log
+        self.link = link
         self.java_17_mods = [
             "antiresourcereload",
             "serversiderng",
@@ -158,8 +159,11 @@ class IssueChecker:
         
         match = re.search(r"/(Users|home)/([^/]+)/", self.log._content)
         if match and match.group(2).lower() not in ["user", "admin", "********"]:
-            builder.info("leaked_username")
+            builder.info("leaked_username").add("upload_log_leaked_username")
         match = None
+
+        if any(self.link.endswith(file_extension) for file_extension in [".log", ".txt"]):
+            builder.info("upload_log_attachment")
 
         for mod in self.log.mods:
             metadata = self.get_mod_metadata(mod)
@@ -241,6 +245,9 @@ class IssueChecker:
                     if needed_java_version is None or parsed_version > needed_java_version:
                         needed_java_version = parsed_version
                 except: pass
+            if needed_java_version is None and self.log.has_content("java.lang.UnsupportedClassVersionError: net/minecraft/class_310"):
+                builder.error("need_new_java", 17).add("k4_setup_guide")
+                found_crash_cause = True
             if not needed_java_version is None:
                 builder.error("need_new_java", needed_java_version).add("java_update_guide")
                 found_crash_cause = True
@@ -476,7 +483,11 @@ class IssueChecker:
             builder.error("no_voyager_crash")
         
         if self.log.has_content("java.lang.IllegalStateException: Adding Entity listener a second time") and self.log.has_content("me.jellysquid.mods.lithium.common.entity.tracker.nearby"):
-            builder.info("lithium_crash")
+            builder.error("lithium_crash")
+            found_crash_cause = True
+        
+        if self.log.has_content("java.lang.IllegalStateException: Lock is no longer valid") and self.log.has_content("Exception in server tick loop"):
+            builder.error("wp_3_plus_crash")
             found_crash_cause = True
         
         if is_mcsr_log and any(self.log.has_content(log_spam) for log_spam in [
@@ -493,7 +504,7 @@ class IssueChecker:
         if any(self.log.has_mod(f"serversiderng-{i}") for i in range(1, 9)):
             builder.error("using_old_ssrng")
         elif self.log.has_content("Failed to light chunk") and self.log.has_content("net.minecraft.class_148: Feature placement") and self.log.has_content("java.lang.ArrayIndexOutOfBoundsException"):
-            builder.info("starlight_crash")
+            builder.error("starlight_crash")
         elif not found_crash_cause and self.log.has_content(" -805306369") or self.log.has_content("java.lang.ArithmeticException"):
             builder.warning("exitcode_805306369")
 
@@ -658,6 +669,11 @@ class IssueChecker:
         if not found_crash_cause and self.log.has_content("ERROR]: Mixin apply for mod fabric-networking-api-v1 failed"):
             builder.error("delete_dot_fabric")
 
+        pattern = r"\[Integrated Watchdog/ERROR\]: This crash report has been saved to: (.*\.txt)"
+        match = re.search(pattern, self.log._content)
+        if not match is None:
+            builder.info("send_watchdog_report", re.sub(r"C:\\Users\\[^\\]+\\", "C:/Users/********/", match.group(1)))
+        
         wrong_mods = []
         if not found_crash_cause:
             for pattern in [
