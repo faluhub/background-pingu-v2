@@ -496,7 +496,7 @@ class IssueChecker:
             builder.error("lithium_crash")
             found_crash_cause = True
         
-        if self.log.has_content("java.lang.IllegalStateException: Lock is no longer valid") and self.log.has_content("Exception in server tick loop"):
+        if self.log.has_content("Description: Exception in server tick loop\n\njava.lang.IllegalStateException: Lock is no longer valid"):
             builder.error("wp_3_plus_crash")
             found_crash_cause = True
         
@@ -692,7 +692,7 @@ class IssueChecker:
                 r"due to errors, provided by '([\w\-+]+)'"
             ]:
                 match = re.search(pattern, self.log._content)
-                if match:
+                if not match is None:
                     mod_name = match.group(1)
                     wrong_mod = [mod for mod in self.log.mods if mod_name.lower() in mod.lower()]
                     if len(wrong_mod) > 0: wrong_mods += wrong_mod
