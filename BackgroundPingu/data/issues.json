@@ -105,7 +105,7 @@
     "note.use_prism": "If you use `M1` or `M2`, it is recommended to use `Prism Launcher` with `ARM Java` instead of `MultiMC` for better performance since `Prism` has native `ARM` support.",
     "note.using_other_loader": "Note that using `{} Loader` is not allowed for speedrunning.",
     "top_info.uploaded_log": "The log has been uploaded to {}.",
-    "top_info.uploaded_log_2": "The log has been uploaded to {}. (Note that `mclo.gs` censors sensitive information)",
+    "top_info.uploaded_log_2": "The log has been uploaded to {} (note that `mclo.gs` censors sensitive information).",
     "warning.exitcode_805306369": "Check your `.minecraft/options.txt` file for the line `maxFps:0`. If you find it, change `0` to the value you want and save the file.",
     "warning.no_mappings": "Your instance seems to be missing mappings. You might want to check the `Edit{} > Version` tab.",
     "warning.outdated_mod": "The mod `{}` is not listed as the most recent legal version! Download the latest legal version [**here**]({}).",

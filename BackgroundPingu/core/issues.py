@@ -113,6 +113,16 @@ class IssueChecker:
             "fast-reset",
             "mcsrranked"
         ]
+        self.general_mods = [
+            "atum",
+            "sodium",
+            "lithium",
+            "starlight",
+            "krypton",
+            "lazydfu",
+            "dynamicfps",
+            "voyager"
+        ]
     
     def get_mod_metadata(self, mod_filename: str) -> dict:
         mod_filename = mod_filename.lower().replace("optifine", "optifabric")
@@ -693,9 +703,9 @@ class IssueChecker:
                 stacktrace = match.group().lower()
                 if not "this is not a error" in stacktrace:
                     if len(self.log.mods) == 0:
-                        for mcsr_mod in self.mcsr_mods:
-                            if mcsr_mod.replace("-", "").lower() in stacktrace and not mcsr_mod in wrong_mods and not mcsr_mod.lower() in wrong_mods:
-                                wrong_mods.append(mcsr_mod)
+                        for mod in self.mcsr_mods + self.general_mods:
+                            if mod.replace("-", "").lower() in stacktrace and not mod in wrong_mods and not mod.lower() in wrong_mods:
+                                wrong_mods.append(mod)
                     else:
                         for mod in self.log.mods:
                             mod_name = mod.lower().replace(".jar", "")
