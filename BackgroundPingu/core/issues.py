@@ -496,7 +496,7 @@ class IssueChecker:
             builder.error("lithium_crash")
             found_crash_cause = True
         
-        if self.log.has_content("Description: Exception in server tick loop\n\njava.lang.IllegalStateException: Lock is no longer valid"):
+        if self.log.has_pattern(r"Description: Exception in server tick loop[\s\n]*java\.lang\.IllegalStateException: Lock is no longer valid"):
             builder.error("wp_3_plus_crash")
             found_crash_cause = True
         
