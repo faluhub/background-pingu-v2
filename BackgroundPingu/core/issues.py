@@ -93,6 +93,32 @@ class IssueChecker:
             "mangodfps",
             "serversiderng"
         ]
+        self.ranked_recommended_mods = [
+            "antigone",
+            "lazystronghold",
+            "sodium",
+            "lithium",
+            "starlight",
+            "voyager"
+        ]
+        self.rsg_recommended_mods = [
+            "antigone",
+            "worldpreview",
+            "sleepbackground",
+            "SpeedRunIGT",
+            "lazystronghold",
+            "antiresourcereload",
+            "fast-reset",
+            "atum",
+            "sodium",
+            "lithium",
+            "starlight",
+            "voyager"
+        ]
+        self.ssg_mods = [
+            "setspawn",
+            "chunkcacher"
+        ]
         self.mcsr_mods = [
             "worldpreview",
             "anchiale",
@@ -111,6 +137,7 @@ class IssueChecker:
             "serverSideRNG",
             "peepopractice",
             "fast-reset",
+            "antigone",
             "mcsrranked"
         ]
         self.general_mods = [
@@ -197,7 +224,7 @@ class IssueChecker:
                     
                     if not latest_version is None and not (latest_version["name"] == mod or latest_version["version"] in mod):
                         if all(not weird_mod in mod.lower() for weird_mod in self.assume_as_latest):
-                            outdated_mods.append(["outdated_mod", mod_name, latest_version["page"]])
+                            outdated_mods.append([mod_name, latest_version["page"]])
                             continue
                     elif latest_version is None: continue
             elif all(not weird_mod in mod.lower() for weird_mod in self.assume_as_legal): illegal_mods.append(mod)
@@ -208,12 +235,26 @@ class IssueChecker:
             builder.error("amount_outdated_mods", len(outdated_mods)).add("update_mods")
         else:
             for outdated_mod in outdated_mods:
-                builder.warning(outdated_mod[0], outdated_mod[1], outdated_mod[2])
+                builder.warning("outdated_mod", outdated_mod[0], outdated_mod[1])
 
         for key, value in all_incompatible_mods.items():
             for incompatible_mod in value:
                 if self.log.has_mod(incompatible_mod):
                     builder.error("incompatible_mod", key, incompatible_mod)
+        
+        if (self.log.minecraft_version == "1.16.1" and len(self.log.mods) > 0
+        and not any(self.log.has_mod(ssg_mod) for ssg_mod in self.ssg_mods)):
+            missing_mods = []
+            for recommended_mod in (self.ranked_recommended_mods if self.log.has_mod("mcsrranked") else self.rsg_recommended_mods):
+                if not self.log.has_mod(recommended_mod):
+                    metadata = self.get_mod_metadata(recommended_mod)
+                    latest_version = self.get_latest_version(metadata)
+                    missing_mods.append([recommended_mod, latest_version["page"]])
+            if len(missing_mods) > 4:
+                builder.warning("missing_mods", len(missing_mods)).add("update_mods")
+            else:
+                for missing_mod in missing_mods:
+                    builder.warning("missing_mod", missing_mod[0], missing_mod[1])
         
         if not self.log.operating_system is None and self.log.operating_system == OperatingSystem.MACOS:
             if self.log.has_mod("sodium-1.16.1-v1") or self.log.has_mod("sodium-1.16.1-v2"):

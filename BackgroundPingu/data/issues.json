@@ -107,6 +107,8 @@
     "top_info.uploaded_log": "The log has been uploaded to {}.",
     "top_info.uploaded_log_2": "The log has been uploaded to {} (note that `mclo.gs` censors sensitive information).",
     "warning.exitcode_805306369": "Check your `.minecraft/options.txt` file for the line `maxFps:0`. If you find it, change `0` to the value you want and save the file.",
+    "warning.missing_mod": "You seem to be missing the mod `{}`. You can download it [**here**]({}).",
+    "warning.missing_mods": "You seem to be missing {} recommended mods.",
     "warning.no_mappings": "Your instance seems to be missing mappings. You might want to check the `Edit{} > Version` tab.",
     "warning.outdated_mod": "The mod `{}` is not listed as the most recent legal version! Download the latest legal version [**here**]({}).",
     "warning.relatively_old_fabric": "You're using an old version of `Fabric Loader`. You should update it.",
