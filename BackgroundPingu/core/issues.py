@@ -94,7 +94,6 @@ class IssueChecker:
             "serversiderng"
         ]
         self.ranked_recommended_mods = [
-            "antigone",
             "lazystronghold",
             "sodium",
             "lithium",
@@ -245,7 +244,9 @@ class IssueChecker:
         if (self.log.minecraft_version == "1.16.1" and len(self.log.mods) > 0
         and not any(self.log.has_mod(ssg_mod) for ssg_mod in self.ssg_mods)):
             missing_mods = []
-            for recommended_mod in (self.ranked_recommended_mods if self.log.has_mod("mcsrranked") else self.rsg_recommended_mods):
+            for recommended_mod in (self.ranked_recommended_mods
+                                    if self.log.has_mod("mcsrranked") or self.log.has_mod("peepopractice")
+                                    else self.rsg_recommended_mods):
                 if not self.log.has_mod(recommended_mod):
                     metadata = self.get_mod_metadata(recommended_mod)
                     latest_version = self.get_latest_version(metadata)
@@ -716,6 +717,17 @@ class IssueChecker:
                 found_crash_cause = True
             else:
                 builder.warning("no_mappings", "" if self.log.is_prism else " Instance")
+        
+        if not found_crash_cause and self.log.has_content("com.google.gson.stream.MalformedJsonException"):
+            pattern = r"due to errors, provided by '([\w\-+]+)'"
+            match = re.search(pattern, self.log._content)
+            if not match is None:
+                mod_name = match.group(1)
+                wrong_mod = [mod for mod in self.log.mods if mod_name.lower() in mod.lower()]
+                if len(wrong_mod) > 0: wrong_mod = wrong_mod[0]
+                else: wrong_mod = mod_name
+                builder.error("corrupted_mod_config", wrong_mod)
+                found_crash_cause = True
 
         if not found_crash_cause and self.log.has_content("ERROR]: Mixin apply for mod fabric-networking-api-v1 failed"):
             builder.error("delete_dot_fabric")
@@ -724,7 +736,7 @@ class IssueChecker:
         match = re.search(pattern, self.log._content)
         if not match is None:
             builder.info("send_watchdog_report", re.sub(r"C:\\Users\\[^\\]+\\", "C:/Users/********/", match.group(1)))
-        
+
         wrong_mods = []
         if not found_crash_cause:
             for pattern in [
