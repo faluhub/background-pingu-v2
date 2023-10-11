@@ -93,6 +93,31 @@ class IssueChecker:
             "mangodfps",
             "serversiderng"
         ]
+        self.ranked_recommended_mods = [
+            "lazystronghold",
+            "sodium",
+            "lithium",
+            "starlight",
+            "voyager"
+        ]
+        self.rsg_recommended_mods = [
+            "antigone",
+            "worldpreview",
+            "sleepbackground",
+            "SpeedRunIGT",
+            "lazystronghold",
+            "antiresourcereload",
+            "fast-reset",
+            "atum",
+            "sodium",
+            "lithium",
+            "starlight",
+            "voyager"
+        ]
+        self.ssg_mods = [
+            "setspawn",
+            "chunkcacher"
+        ]
         self.mcsr_mods = [
             "worldpreview",
             "anchiale",
@@ -111,7 +136,18 @@ class IssueChecker:
             "serverSideRNG",
             "peepopractice",
             "fast-reset",
+            "antigone",
             "mcsrranked"
+        ]
+        self.general_mods = [
+            "atum",
+            "sodium",
+            "lithium",
+            "starlight",
+            "krypton",
+            "lazydfu",
+            "dynamicfps",
+            "voyager"
         ]
     
     def get_mod_metadata(self, mod_filename: str) -> dict:
@@ -187,7 +223,7 @@ class IssueChecker:
                     
                     if not latest_version is None and not (latest_version["name"] == mod or latest_version["version"] in mod):
                         if all(not weird_mod in mod.lower() for weird_mod in self.assume_as_latest):
-                            outdated_mods.append(["outdated_mod", mod_name, latest_version["page"]])
+                            outdated_mods.append([mod_name, latest_version["page"]])
                             continue
                     elif latest_version is None: continue
             elif all(not weird_mod in mod.lower() for weird_mod in self.assume_as_legal): illegal_mods.append(mod)
@@ -198,12 +234,28 @@ class IssueChecker:
             builder.error("amount_outdated_mods", len(outdated_mods)).add("update_mods")
         else:
             for outdated_mod in outdated_mods:
-                builder.warning(outdated_mod[0], outdated_mod[1], outdated_mod[2])
+                builder.warning("outdated_mod", outdated_mod[0], outdated_mod[1])
 
         for key, value in all_incompatible_mods.items():
             for incompatible_mod in value:
                 if self.log.has_mod(incompatible_mod):
                     builder.error("incompatible_mod", key, incompatible_mod)
+        
+        if (self.log.minecraft_version == "1.16.1" and len(self.log.mods) > 0
+        and not any(self.log.has_mod(ssg_mod) for ssg_mod in self.ssg_mods)):
+            missing_mods = []
+            for recommended_mod in (self.ranked_recommended_mods
+                                    if self.log.has_mod("mcsrranked") or self.log.has_mod("peepopractice")
+                                    else self.rsg_recommended_mods):
+                if not self.log.has_mod(recommended_mod):
+                    metadata = self.get_mod_metadata(recommended_mod)
+                    latest_version = self.get_latest_version(metadata)
+                    missing_mods.append([recommended_mod, latest_version["page"]])
+            if len(missing_mods) > 4:
+                builder.warning("missing_mods", len(missing_mods)).add("update_mods")
+            else:
+                for missing_mod in missing_mods:
+                    builder.warning("missing_mod", missing_mod[0], missing_mod[1])
         
         if not self.log.operating_system is None and self.log.operating_system == OperatingSystem.MACOS:
             if self.log.has_mod("sodium-1.16.1-v1") or self.log.has_mod("sodium-1.16.1-v2"):
@@ -486,7 +538,7 @@ class IssueChecker:
             builder.error("lithium_crash")
             found_crash_cause = True
         
-        if self.log.has_content("java.lang.IllegalStateException: Lock is no longer valid") and self.log.has_content("Exception in server tick loop"):
+        if self.log.has_pattern(r"Description: Exception in server tick loop[\s\n]*java\.lang\.IllegalStateException: Lock is no longer valid"):
             builder.error("wp_3_plus_crash")
             found_crash_cause = True
         
@@ -665,6 +717,17 @@ class IssueChecker:
                 found_crash_cause = True
             else:
                 builder.warning("no_mappings", "" if self.log.is_prism else " Instance")
+        
+        if not found_crash_cause and self.log.has_content("com.google.gson.stream.MalformedJsonException"):
+            pattern = r"due to errors, provided by '([\w\-+]+)'"
+            match = re.search(pattern, self.log._content)
+            if not match is None:
+                mod_name = match.group(1)
+                wrong_mod = [mod for mod in self.log.mods if mod_name.lower() in mod.lower()]
+                if len(wrong_mod) > 0: wrong_mod = wrong_mod[0]
+                else: wrong_mod = mod_name
+                builder.error("corrupted_mod_config", wrong_mod)
+                found_crash_cause = True
 
         if not found_crash_cause and self.log.has_content("ERROR]: Mixin apply for mod fabric-networking-api-v1 failed"):
             builder.error("delete_dot_fabric")
@@ -673,7 +736,7 @@ class IssueChecker:
         match = re.search(pattern, self.log._content)
         if not match is None:
             builder.info("send_watchdog_report", re.sub(r"C:\\Users\\[^\\]+\\", "C:/Users/********/", match.group(1)))
-        
+
         wrong_mods = []
         if not found_crash_cause:
             for pattern in [
@@ -682,7 +745,7 @@ class IssueChecker:
                 r"due to errors, provided by '([\w\-+]+)'"
             ]:
                 match = re.search(pattern, self.log._content)
-                if match:
+                if not match is None:
                     mod_name = match.group(1)
                     wrong_mod = [mod for mod in self.log.mods if mod_name.lower() in mod.lower()]
                     if len(wrong_mod) > 0: wrong_mods += wrong_mod
@@ -693,9 +756,9 @@ class IssueChecker:
                 stacktrace = match.group().lower()
                 if not "this is not a error" in stacktrace:
                     if len(self.log.mods) == 0:
-                        for mcsr_mod in self.mcsr_mods:
-                            if mcsr_mod.replace("-", "").lower() in stacktrace and not mcsr_mod in wrong_mods and not mcsr_mod.lower() in wrong_mods:
-                                wrong_mods.append(mcsr_mod)
+                        for mod in self.mcsr_mods + self.general_mods:
+                            if mod.replace("-", "").lower() in stacktrace and not mod in wrong_mods and not mod.lower() in wrong_mods:
+                                wrong_mods.append(mod)
                     else:
                         for mod in self.log.mods:
                             mod_name = mod.lower().replace(".jar", "")

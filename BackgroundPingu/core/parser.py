@@ -183,6 +183,9 @@ class Log:
     
     def has_content(self, content: str) -> bool:
         return content.lower() in self._lower_content
+
+    def has_pattern(self, pattern: str) -> bool:
+        return bool(re.compile(pattern, re.IGNORECASE).search(self._lower_content))
     
     def has_mod(self, mod_name: str) -> bool:
         for mod in self.mods:
