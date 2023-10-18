@@ -787,7 +787,7 @@ class IssueChecker:
                                 if not mod in wrong_mods: wrong_mods.append(mod)
             if len(wrong_mods) == 1:
                 builder.error("mod_crash", wrong_mods[0])
-            elif len(wrong_mods) > 0 and len(wrong_mods) < 16:
+            elif len(wrong_mods) > 0 and len(wrong_mods) < 8:
                 builder.error("mods_crash", "; ".join(wrong_mods))
         
         return builder
