@@ -43,9 +43,11 @@ class IssueBuilder:
         return self._add_to(self._last_added, "<:reply:1121924702756143234>*" + self.bot.strings.get(f"add.{key}", key).format(*args) + "*", add=True)
 
     def has(self, type: str, key: str) -> bool:
-        key = self.bot.strings.get(f"{type}.{key}", key)
+        key = self.bot.strings.get(f"{type}.{key}", key).replace("*", "")
         for string in self._messages[type]:
-            if key == str(string).split(" ", 1)[1]:
+            string = str(string).split(" ", 1)[1].replace("*", "")
+            pattern = re.escape(key).replace(r"\{\}", r".*")
+            if re.match(pattern, string):
                 return True
         return False
 
@@ -57,6 +59,7 @@ class IssueBuilder:
         index = 0
         for i in self._messages:
             for j in self._messages[i]:
+                if "Re-Upload Log" in j and self.has("top_info", "uploaded_log"): continue
                 add = j + "\n" + ("\n" if i == "top_info" and index == len(self._messages[i]) - 1 else "")
                 if len(messages) == 0 or index % 9 == 0: messages.append(add)
                 else: messages[len(messages) - 1] += add
