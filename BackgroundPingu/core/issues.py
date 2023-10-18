@@ -201,7 +201,7 @@ class IssueChecker:
             builder.info("leaked_username").add("upload_log_leaked_username")
         match = None
 
-        if any(self.link.endswith(file_extension) for file_extension in [".log", ".txt"]):
+        if any(self.link.endswith(file_extension) for file_extension in [".log", ".txt"]) and self.log.has_content("minecraft"):
             builder.info("upload_log_attachment")
 
         for mod in self.log.mods:
