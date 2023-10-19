@@ -43,9 +43,11 @@ class IssueBuilder:
         return self._add_to(self._last_added, "<:reply:1121924702756143234>*" + self.bot.strings.get(f"add.{key}", key).format(*args) + "*", add=True)
 
     def has(self, type: str, key: str) -> bool:
-        key = self.bot.strings.get(f"{type}.{key}", key)
+        key = self.bot.strings.get(f"{type}.{key}", key).replace("*", "")
         for string in self._messages[type]:
-            if key == str(string).split(" ", 1)[1]:
+            string = str(string).split(" ", 1)[1].replace("*", "")
+            pattern = re.escape(key).replace(r"\{\}", r".*")
+            if re.match(pattern, string):
                 return True
         return False
 
@@ -57,6 +59,7 @@ class IssueBuilder:
         index = 0
         for i in self._messages:
             for j in self._messages[i]:
+                if "Re-Upload Log" in j and self.has("top_info", "uploaded_log"): continue
                 add = j + "\n" + ("\n" if i == "top_info" and index == len(self._messages[i]) - 1 else "")
                 if len(messages) == 0 or index % 9 == 0: messages.append(add)
                 else: messages[len(messages) - 1] += add
@@ -198,7 +201,7 @@ class IssueChecker:
             builder.info("leaked_username").add("upload_log_leaked_username")
         match = None
 
-        if any(self.link.endswith(file_extension) for file_extension in [".log", ".txt"]):
+        if any(self.link.endswith(file_extension) for file_extension in [".log", ".txt"]) and self.log.has_content("minecraft"):
             builder.info("upload_log_attachment")
 
         for mod in self.log.mods:
@@ -464,7 +467,7 @@ class IssueChecker:
         if self.log.has_content("NSWindow drag regions should only be invalidated on the Main Thread"):
             builder.error("mac_too_new_java")
         
-        if self.log.has_content("Pixel format not accelerated") or not re.compile(r"C  \[(ig[0-9]+icd[0-9]+\.dll)[+ ](0x[0-9a-f]+)\]").search(self.log._content) is None:
+        if self.log.has_content("Pixel format not accelerated") or self.log.has_pattern(r"  \[(ig[0-9]+icd[0-9]+\.dll)[+ ](0x[0-9a-f]+)\]"):
             if self.log.has_mod("speedrunigt"):
                 builder.error("eav_crash").add("eav_crash_srigt")
             else:
@@ -472,7 +475,16 @@ class IssueChecker:
         
         elif self.log.has_content("A fatal error has been detected by the Java Runtime Environment") or self.log.has_content("EXCEPTION_ACCESS_VIOLATION"):
             builder.error("eav_crash")
-            for i in range(5): builder.add(f"eav_crash_{i + 1}")
+            if self.log.has_pattern(r"  \[ntdll\.dll\+(0x[0-9a-f]+)\]"):
+                builder.add("eav_crash_1", "**","**")
+                builder.add("eav_crash_2", "**","**")
+                builder.add("eav_crash_3", "**","**")
+            else:
+                builder.add("eav_crash_1", "","")
+                builder.add("eav_crash_2", "","")
+                builder.add("eav_crash_3", "","")
+            builder.add("eav_crash_4")
+            builder.add("eav_crash_5")
             if self.log.has_mod("speedrunigt"): builder.add("eav_crash_srigt")
             builder.add("eav_crash_disclaimer")
         
@@ -775,7 +787,7 @@ class IssueChecker:
                                 if not mod in wrong_mods: wrong_mods.append(mod)
             if len(wrong_mods) == 1:
                 builder.error("mod_crash", wrong_mods[0])
-            elif len(wrong_mods) > 0 and len(wrong_mods) < 6:
+            elif len(wrong_mods) > 0 and len(wrong_mods) < 8:
                 builder.error("mods_crash", "; ".join(wrong_mods))
         
         return builder
