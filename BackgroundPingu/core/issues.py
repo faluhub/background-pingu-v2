@@ -748,6 +748,7 @@ class IssueChecker:
         match = re.search(pattern, self.log._content)
         if not match is None:
             builder.info("send_watchdog_report", re.sub(r"C:\\Users\\[^\\]+\\", "C:/Users/********/", match.group(1)))
+            found_crash_cause = True
 
         wrong_mods = []
         if not found_crash_cause:
