@@ -567,7 +567,11 @@ class IssueChecker:
         
         if any(self.log.has_mod(f"serversiderng-{i}") for i in range(1, 9)):
             builder.error("using_old_ssrng")
-        elif self.log.has_content("Failed to light chunk") and self.log.has_content("net.minecraft.class_148: Feature placement") and self.log.has_content("java.lang.ArrayIndexOutOfBoundsException"):
+        elif all(self.log.has_content(text) for text in [
+            "net.minecraft.class_148: Feature placement",
+            "java.lang.ArrayIndexOutOfBoundsException",
+            "StarLightInterface"
+        ]):
             builder.error("starlight_crash")
         elif not found_crash_cause and self.log.has_content(" -805306369") or self.log.has_content("java.lang.ArithmeticException"):
             builder.warning("exitcode_805306369")
