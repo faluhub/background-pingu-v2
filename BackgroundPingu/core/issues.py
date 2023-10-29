@@ -327,7 +327,10 @@ class IssueChecker:
             builder.note("use_prism").add("mac_setup_guide")
         
         if self.log.has_content("The java binary \"\" couldn't be found."):
-            builder.error("no_java").add("java_update_guide")
+            if self.log.has_content("Please set up java in the settings."): # java isn't selected globally & no override
+                builder.error("no_java").add("java_update_guide")
+            else: # java isn't selected in instance settings
+                builder.error("no_java").add("java_update_guide").add("java_override_warning")
             found_crash_cause = True
         
         if self.log.has_content("java.awt.AWTError: Assistive Technology not found: org.GNOME.Accessibility.AtkWrapper"):
