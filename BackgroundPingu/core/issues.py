@@ -775,6 +775,9 @@ class IssueChecker:
             if not match is None:
                 stacktrace = match.group().lower()
                 if not "this is not a error" in stacktrace:
+                    pattern = r"(?s)warning: coremods are present:.*?contact their authors before contacting forge"
+                    stacktrace = re.sub(pattern, "", stacktrace)
+
                     if len(self.log.mods) == 0:
                         for mod in self.mcsr_mods + self.general_mods:
                             if mod.replace("-", "").lower() in stacktrace and not mod in wrong_mods and not mod.lower() in wrong_mods:
