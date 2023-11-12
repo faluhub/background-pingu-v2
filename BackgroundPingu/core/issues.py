@@ -771,7 +771,7 @@ class IssueChecker:
                     if len(wrong_mod) > 0: wrong_mods += wrong_mod
                     else: wrong_mods.append(mod_name)
         
-            match = re.search(r"Minecraft has crashed!.*|Failed to start Minecraft:.*|Unable to launch\n.*|Exception caught from launcher\n.*|---- Minecraft Crash Report ----.*A detailed walkthrough of the error", self.log._content, re.DOTALL)
+            match = re.search(r"Minecraft has crashed!.*|Failed to start Minecraft:.*|Unable to launch\n.*|Exception caught from launcher\n.*|Shutdown failure!\n.*|---- Minecraft Crash Report ----.*A detailed walkthrough of the error", self.log._content, re.DOTALL)
             if not match is None:
                 stacktrace = match.group().lower()
                 if not "this is not a error" in stacktrace:
