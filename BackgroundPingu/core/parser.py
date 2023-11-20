@@ -47,13 +47,10 @@ class Log:
     
     @cached_property
     def java_version(self) -> str:
-        match = re.compile(r"Checking Java version\.\.\.\n(.*)\n").search(self._content)
-        if not match is None:
-            line = match.group(1)
-            version_match = re.compile(r"Java is version (\S+),").search(line)
-            if not version_match is None:
-                return version_match.group(1)
-        version_match = re.compile(r"Java Version: (\S+),").search(self._content)
+        version_match = re.compile(r"\nJava is version (\S+),").search(self._content) # mmc/prism logs
+        if not version_match is None:
+            return version_match.group(1)
+        version_match = re.compile(r"\n\tJava Version: (\S+),").search(self._content) # crash reports
         if not version_match is None:
             return version_match.group(1)
         return None
