@@ -161,6 +161,7 @@ class IssueChecker:
             mod_name = original_name.replace(" ", "").replace("-", "").replace("_", "")
             mod_name = "zbufferfog" if mod_name == "legacyplanarfog" else mod_name
             mod_name = "dynamicmenufps" if mod_name == "dynamicfps" else mod_name
+            mod_name = "setspawn" if mod_name == "setspawnmod" else mod_name
             if mod_name in filename: return mod
         return None
     
@@ -281,6 +282,7 @@ class IssueChecker:
                     f", but you're using `Java {self.log.major_java_version}`" if not self.log.major_java_version is None
                     else ""
                 ).add("java_update_guide")
+                if self.log.is_prism: builder.add("prism_java_compat_check")
                 found_crash_cause = True
         
         if not found_crash_cause and self.log.has_content("require the use of Java 17"):
@@ -300,11 +302,11 @@ class IssueChecker:
                     if needed_java_version is None or parsed_version > needed_java_version:
                         needed_java_version = parsed_version
                 except: pass
-            if needed_java_version is None and self.log.has_content("java.lang.UnsupportedClassVersionError: net/minecraft/class_310"):
-                builder.error("need_new_java", 17).add("k4_setup_guide")
-                found_crash_cause = True
             if not needed_java_version is None:
                 builder.error("need_new_java", needed_java_version).add("java_update_guide")
+                found_crash_cause = True
+            elif self.log.has_content("java.lang.UnsupportedClassVersionError: net/minecraft/class_310"):
+                builder.error("need_new_java", 17).add("k4_setup_guide")
                 found_crash_cause = True
         
         if not found_crash_cause and any(self.log.has_content(crash_32_bit_java) for crash_32_bit_java in [
@@ -327,7 +329,10 @@ class IssueChecker:
             builder.note("use_prism").add("mac_setup_guide")
         
         if self.log.has_content("The java binary \"\" couldn't be found."):
-            builder.error("no_java").add("java_update_guide")
+            if self.log.has_content("Please set up java in the settings."): # java isn't selected globally & no override
+                builder.error("no_java").add("java_update_guide")
+            else: # java isn't selected in instance settings
+                builder.error("no_java").add("java_update_guide").add("java_override_warning")
             found_crash_cause = True
         
         if self.log.has_content("java.awt.AWTError: Assistive Technology not found: org.GNOME.Accessibility.AtkWrapper"):
@@ -551,7 +556,7 @@ class IssueChecker:
             found_crash_cause = True
         
         if self.log.has_pattern(r"Description: Exception in server tick loop[\s\n]*java\.lang\.IllegalStateException: Lock is no longer valid"):
-            builder.error("wp_3_plus_crash")
+            builder.error("wp_3_plus_crash").add("wp_5_download")
             found_crash_cause = True
         
         if is_mcsr_log and any(self.log.has_content(log_spam) for log_spam in [
@@ -567,7 +572,11 @@ class IssueChecker:
         
         if any(self.log.has_mod(f"serversiderng-{i}") for i in range(1, 9)):
             builder.error("using_old_ssrng")
-        elif self.log.has_content("Failed to light chunk") and self.log.has_content("net.minecraft.class_148: Feature placement") and self.log.has_content("java.lang.ArrayIndexOutOfBoundsException"):
+        elif all(self.log.has_content(text) for text in [
+            "net.minecraft.class_148: Feature placement",
+            "java.lang.ArrayIndexOutOfBoundsException",
+            "StarLightInterface"
+        ]):
             builder.error("starlight_crash")
         elif not found_crash_cause and self.log.has_content(" -805306369") or self.log.has_content("java.lang.ArithmeticException"):
             builder.warning("exitcode_805306369")
@@ -748,6 +757,7 @@ class IssueChecker:
         match = re.search(pattern, self.log._content)
         if not match is None:
             builder.info("send_watchdog_report", re.sub(r"C:\\Users\\[^\\]+\\", "C:/Users/********/", match.group(1)))
+            found_crash_cause = True
 
         wrong_mods = []
         if not found_crash_cause:
@@ -763,10 +773,13 @@ class IssueChecker:
                     if len(wrong_mod) > 0: wrong_mods += wrong_mod
                     else: wrong_mods.append(mod_name)
         
-            match = re.search(r"Minecraft has crashed!.*|Failed to start Minecraft:.*|Unable to launch\n.*|Exception caught from launcher\n.*|---- Minecraft Crash Report ----.*A detailed walkthrough of the error", self.log._content, re.DOTALL)
+            match = re.search(r"Minecraft has crashed!.*|Failed to start Minecraft:.*|Unable to launch\n.*|Exception caught from launcher\n.*|Shutdown failure!\n.*|---- Minecraft Crash Report ----.*A detailed walkthrough of the error", self.log._content, re.DOTALL)
             if not match is None:
                 stacktrace = match.group().lower()
                 if not "this is not a error" in stacktrace:
+                    pattern = r"(?s)warning: coremods are present:.*?contact their authors before contacting forge"
+                    stacktrace = re.sub(pattern, "", stacktrace)
+
                     if len(self.log.mods) == 0:
                         for mod in self.mcsr_mods + self.general_mods:
                             if mod.replace("-", "").lower() in stacktrace and not mod in wrong_mods and not mod.lower() in wrong_mods:
