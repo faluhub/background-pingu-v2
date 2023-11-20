@@ -26,6 +26,7 @@
     "add.update_mods": "You can get the latest versions of all mods from [**this website**](https://redlime.github.io/MCSRMods/) or by using [**ModCheck**](https://github.com/RedLime/ModCheck/releases/latest).",
     "add.update_mods_ranked": "You can get the latest versions of all mods from [**this website**](https://gist.github.com/RedLime/bb1d3f49a01ff43f21bc218da964cdd8) or by using [**ModCheck**](https://github.com/RedLime/ModCheck/releases/latest).",
     "add.upload_log_leaked_username": "You can press the `Re-Upload Log` button so the bot will re-upload the log with the PC username censored.",
+    "add.wp_5_download": "You can download an **illegal** version of `WorldPreview` which has this crash fixed [**here**](https://discord.com/channels/1062467800641306696/1062467804877561878/1176034365826928691) (link from [Julti Discord server](https://discord.gg/cXf86mXAWR)).",
     "error.32_bit_java": "You're using 32-bit `Java`, which prevents you from allocating more than `2048 MB` to Minecraft.",
     "error.32_bit_java_crash": "This crash is caused by using a 32-bit installation of `Java`.",
     "error.amount_outdated_mods": "You are using `{}` outdated mods!",

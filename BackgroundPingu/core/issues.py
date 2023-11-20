@@ -556,7 +556,7 @@ class IssueChecker:
             found_crash_cause = True
         
         if self.log.has_pattern(r"Description: Exception in server tick loop[\s\n]*java\.lang\.IllegalStateException: Lock is no longer valid"):
-            builder.error("wp_3_plus_crash")
+            builder.error("wp_3_plus_crash").add("wp_5_download")
             found_crash_cause = True
         
         if is_mcsr_log and any(self.log.has_content(log_spam) for log_spam in [
