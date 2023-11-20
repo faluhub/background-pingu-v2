@@ -22,6 +22,7 @@
     "add.k4_setup_guide": "Check out [**this video**](https://www.youtube.com/watch?v=VL8Syekw4Q0) for a guide on how to set up for Minecraft speedrunning.",
     "add.mac_setup_guide": "You can check out [**this guide**](https://www.youtube.com/watch?v=GomIeW5xdBM) for how to set up speedrunning on a Mac.",
     "add.mod_download": "You can download `{}` [**here**]({}).",
+    "add.prism_java_compat_check": "Make sure to enable the `Skip Java compatibility checks` option.",
     "add.update_mods": "You can get the latest versions of all mods from [**this website**](https://redlime.github.io/MCSRMods/) or by using [**ModCheck**](https://github.com/RedLime/ModCheck/releases/latest).",
     "add.update_mods_ranked": "You can get the latest versions of all mods from [**this website**](https://gist.github.com/RedLime/bb1d3f49a01ff43f21bc218da964cdd8) or by using [**ModCheck**](https://github.com/RedLime/ModCheck/releases/latest).",
     "add.upload_log_leaked_username": "You can press the `Re-Upload Log` button so the bot will re-upload the log with the PC username censored.",

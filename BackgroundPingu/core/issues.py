@@ -282,6 +282,7 @@ class IssueChecker:
                     f", but you're using `Java {self.log.major_java_version}`" if not self.log.major_java_version is None
                     else ""
                 ).add("java_update_guide")
+                if self.log.is_prism: builder.add("prism_java_compat_check")
                 found_crash_cause = True
         
         if not found_crash_cause and self.log.has_content("require the use of Java 17"):
@@ -301,11 +302,11 @@ class IssueChecker:
                     if needed_java_version is None or parsed_version > needed_java_version:
                         needed_java_version = parsed_version
                 except: pass
-            if needed_java_version is None and self.log.has_content("java.lang.UnsupportedClassVersionError: net/minecraft/class_310"):
-                builder.error("need_new_java", 17).add("k4_setup_guide")
-                found_crash_cause = True
             if not needed_java_version is None:
                 builder.error("need_new_java", needed_java_version).add("java_update_guide")
+                found_crash_cause = True
+            elif self.log.has_content("java.lang.UnsupportedClassVersionError: net/minecraft/class_310"):
+                builder.error("need_new_java", 17).add("k4_setup_guide")
                 found_crash_cause = True
         
         if not found_crash_cause and any(self.log.has_content(crash_32_bit_java) for crash_32_bit_java in [
