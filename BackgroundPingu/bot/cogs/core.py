@@ -18,7 +18,7 @@ class Core(Cog):
             "embed": None,
             "view": None
         }
-        link_pattern = r"https:\/\/paste\.ee\/p\/\w+|https:\/\/mclo\.gs\/\w+|https?:\/\/[\w\-_\/.]+\.(?:txt|log)"
+        link_pattern = r"https:\/\/(?:api\.)?paste\.ee\/.\/\w+|https:\/\/mclo\.gs\/\w+|https?:\/\/[\w\-_\/.]+\.(?:txt|log)"
         matches = re.findall(link_pattern, msg.content)
         if len(msg.attachments) > 0:
             for attachment in msg.attachments:
