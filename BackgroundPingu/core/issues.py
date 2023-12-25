@@ -732,6 +732,10 @@ class IssueChecker:
         if not found_crash_cause and self.log.has_content("Failed to store chunk") or self.log.has_content("There is not enough space on the disk"):
             builder.error("out_of_disk_space")
         
+        if not found_crash_cause and (len(self.log.mods) == 0 or self.log.has_mod("atum")) and self.log.has_content("java.lang.StackOverflowError: null"):
+            builder.error("stack_overflow_crash")
+            found_crash_cause = True
+        
         if self.log.has_content("Mappings not present!"):
             if not self.log.short_version in [f"1.{14 + i}" for i in range(15)] and self.log.mod_loader == ModLoader.FABRIC:
                 builder.error("legacy_fabric_modpack")
