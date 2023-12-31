@@ -651,9 +651,7 @@ class IssueChecker:
         ]):
             builder.error("sodium_rtss")
 
-        
         match = re.search(r"Incompatible mod set found! READ THE BELOW LINES!(.*?$)", self.log._content, re.DOTALL)
-        
         if not match is None:
             found_crash_cause = True
             ranked_rong_files = []
@@ -718,6 +716,13 @@ class IssueChecker:
             if self.log.has_mod("z-buffer-fog") and self.log.short_version in [f"1.{14 + i}" for i in range(10)]:
                 builder.error("incompatible_mod", "Optifine", "z-buffer-fog")
                 found_crash_cause = True
+            if self.log.short_version in [f"1.{15 + i}" for i in range(15)]:
+                if is_mcsr_log:
+                    builder.error("use_sodium_not_optifine_mcsr").add("update_mods")
+                elif self.log.mod_loader == ModLoader.FORGE:
+                    builder.error("use_sodium_not_optifine", "Embeddium").add("embeddium_download")
+                else:
+                    builder.error("use_sodium_not_optifine", "Sodium").add("sodium_download")
         
         if self.log.has_mod("esimod"):
             for incompatible_mod in ["serverSideRNG", "SpeedRunIGT", "WorldPreview", "mcsrranked"]:
