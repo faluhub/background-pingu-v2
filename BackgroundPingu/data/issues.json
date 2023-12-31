@@ -86,6 +86,7 @@
     "error.requires_mod": "A mod you're using is requiring a mod called `{}`, but it is not present. Download it and add it to your mods folder.",
     "error.rong_modloader": "You seem to be using `{}` mods, but you have `{}` installed.",
     "error.sodium_config_crash": "Your config file for `Sodium` seems to be corrupted. Try deleting it from `.minecraft/config/sodium-options.json`.",
+    "error.sodium_rtss": "RivaTuner Statistics Server (RTSS) is not compatible with Sodium. See [**this issue**](https://github.com/CaffeineMC/sodium-fabric/issues/2048) for more details.",
     "error.stack_overflow_crash": "This crash seems to be caused by doing too many resets in a row without letting it finish loading a preview. If you were doing a benchmark, you should pick a lower amount of resets.",
     "error.starlight_crash": "This seems to be a rare crash caused by `Starlight` that was fixed in a newer update.",
     "error.too_little_ram_crash": "You have too little RAM allocated, which caused this crash.",

@@ -645,6 +645,13 @@ class IssueChecker:
             if self.log.has_content("java.lang.NoClassDefFoundError: cpw/mods/modlauncher/Launcher"):
                 builder.error("random_forge_crash_2")
         
+        if any(self.log.has_content(sodium_rtss_crash) for sodium_rtss_crash in [
+            "RivaTuner Statistics Server (RTSS) is not compatible with Sodium, see this issue for more details:",
+            "READ ME! You appear to be using the RivaTuner Statistics Server (RTSS)!"
+        ]):
+            builder.error("sodium_rtss")
+
+        
         match = re.search(r"Incompatible mod set found! READ THE BELOW LINES!(.*?)(?=at com\.mcsr\.projectelo\.anticheat)", self.log._content, re.DOTALL)
         if match:
             found_crash_cause = True
