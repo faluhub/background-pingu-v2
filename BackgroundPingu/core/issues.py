@@ -89,7 +89,8 @@ class IssueChecker:
             "biomethreadlocalfix",
             "forceport",
             "sleepbackground-3.8-1.8.x-1.12.x",
-            "tab-focus"
+            "tab-focus",
+            "speedrunigt-14.0"
         ]
         self.assume_as_legal = [
             "mcsrranked",
