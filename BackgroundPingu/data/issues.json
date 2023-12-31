@@ -94,6 +94,7 @@
     "error.too_little_ram_crash": "You have too little RAM allocated, which caused this crash.",
     "error.too_much_ram": "You have way too much RAM allocated, which can cause lag spikes. It's recommended to allocate 2000-3000 MB.",
     "error.try_admin_launch": "You need to open your launcher with `administrator privileges`.",
+    "error.update_mmc": "This crash is likely caused by using an old `MultiMC` version. Try updating it.",
     "error.use_sodium_not_optifine": "You're using `Optifine`. For newer versions, `{}` is way better, so it's recommended to use it instead.",
     "error.use_sodium_not_optifine_mcsr": "You're using `Optifine`. It's not allowed for speedrunning on 1.15+, and `Sodium` is recommended to use over `Optifine`.",
     "error.using_old_ssrng": "You're using an old version of `ServerSideRNG`, which is now illegal and can often cause problems. The server for it is currently down, so the mod is useless regardless and you should delete it.",

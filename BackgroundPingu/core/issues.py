@@ -340,8 +340,11 @@ class IssueChecker:
             builder.error("headless_java")
             found_crash_cause = True
 
+        if self.log.has_content("[LWJGL] Failed to load a library. Possible solutions:") and self.log.short_version in [f"1.{20 + i}" for i in range(15)]:
+            builder.error("update_mmc")
+        
         if not found_crash_cause and (any(self.log.has_content(broken_java) for broken_java in [
-            "Could not start java:\n\n\nCheck your MultiMC Java settings.",
+            "Could not start java:\n\n\nCheck your ",
             "Incompatible magic value 0 in class file sun/security/provider/SunEntries",
             "Assertion `version->filename == NULL || ! _dl_name_match_p (version->filename, map)' failed"
         ]) or not re.compile(r"The java binary \"(.+)\" couldn't be found.").search(self.log._content) is None):
