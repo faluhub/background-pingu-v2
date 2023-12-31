@@ -652,13 +652,15 @@ class IssueChecker:
             builder.error("sodium_rtss")
 
         
-        match = re.search(r"Incompatible mod set found! READ THE BELOW LINES!(.*?)(?=at com\.mcsr\.projectelo\.anticheat)", self.log._content, re.DOTALL)
-        if match:
+        match = re.search(r"Incompatible mod set found! READ THE BELOW LINES!(.*?$)", self.log._content, re.DOTALL)
+        
+        if not match is None:
             found_crash_cause = True
             ranked_rong_files = []
             ranked_rong_mods = []
             ranked_rong_versions = []
             ranked_anticheat = match.group(1).strip().replace("\t","")
+            
             ranked_anticheat_split = ranked_anticheat.split("These Fabric Mods are whitelisted but different version! Make sure to update these!")
             if len(ranked_anticheat_split) > 1:
                 ranked_anticheat, ranked_anticheat_split = ranked_anticheat_split[0], ranked_anticheat_split[1].split("\n")
@@ -666,6 +668,7 @@ class IssueChecker:
                     match = re.search(r"\[(.*?)\]", mod)
                     if match:
                         ranked_rong_versions.append(match.group(1))
+            
             ranked_anticheat_split = ranked_anticheat.split("These Fabric Mods are whitelisted and you seem to be using the correct version but the files do not match. Try downloading these files again!")
             if len(ranked_anticheat_split) > 1:
                 ranked_anticheat, ranked_anticheat_split = ranked_anticheat_split[0], ranked_anticheat_split[1].split("\n")
@@ -673,6 +676,7 @@ class IssueChecker:
                     match = re.search(r"\[(.*?)\]", mod)
                     if match:
                         ranked_rong_files.append(match.group(1))
+            
             ranked_anticheat_split = ranked_anticheat.split("These Fabric Mods are not whitelisted! You should delete these from Minecraft.")
             if len(ranked_anticheat_split) > 1:
                 ranked_anticheat, ranked_anticheat_split = ranked_anticheat_split[0], ranked_anticheat_split[1].split("\n")
