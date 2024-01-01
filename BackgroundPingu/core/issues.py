@@ -831,4 +831,28 @@ class IssueChecker:
             elif len(wrong_mods) > 0 and len(wrong_mods) < 8:
                 builder.error("mods_crash", "; ".join(wrong_mods))
         
+        
+        if self.link == "message":
+            if self.log.has_pattern(r"-\s*1"):
+                entity_culling_indicators = {
+                    "entit": 2,
+                    "F3": 1,
+                    r"\be\b": 1,
+                    "counter": 1
+                }
+                total = 0
+
+                for pattern, value in entity_culling_indicators.items():
+                    if self.log.has_pattern(pattern):
+                        total += value
+                
+                if total >= 2: builder.error("entity_culling")
+            
+            if any(self.log.has_content(crash) for crash in [
+                "Process exited with code ",
+                "Process crashed with exitcode ",
+                "Process crashed with exit code ",
+            ]):
+                builder.error("send_full_log")
+        
         return builder
