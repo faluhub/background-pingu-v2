@@ -269,7 +269,7 @@ class IssueChecker:
         if not self.log.major_java_version is None and self.log.major_java_version < 17 and not self.log.short_version == "1.12":
             wrong_mods = []
             for mod in self.java_17_mods:
-                for installed_mod in self.log.mods:
+                for installed_mod in (self.log.mods if len(self.log.mods) > 0 else self.log.fabric_mods):
                     if mod in installed_mod.lower():
                         wrong_mods.append(mod)
             if len(wrong_mods) > 0:
@@ -573,8 +573,12 @@ class IssueChecker:
         
         if self.log.has_mod("serversiderng-9"):
             builder.warning("using_ssrng")
+        elif self.log.has_mod("serversiderng 9"):
+            builder.warning("using_ssrng")
         
         if any(self.log.has_mod(f"serversiderng-{i}") for i in range(1, 9)):
+            builder.error("using_old_ssrng")
+        elif any(self.log.has_mod(f"serversiderng {i}") for i in range(1, 9)):
             builder.error("using_old_ssrng")
         elif all(self.log.has_content(text) for text in [
             "net.minecraft.class_148: Feature placement",
@@ -804,12 +808,12 @@ class IssueChecker:
                     pattern = r"(?s)warning: coremods are present:.*?contact their authors before contacting forge"
                     stacktrace = re.sub(pattern, "", stacktrace)
 
-                    if len(self.log.mods) == 0:
+                    if len(self.log.mods + self.log.fabric_mods) == 0:
                         for mod in self.mcsr_mods + self.general_mods:
                             if mod.replace("-", "").lower() in stacktrace and not mod in wrong_mods and not mod.lower() in wrong_mods:
                                 wrong_mods.append(mod)
                     else:
-                        for mod in self.log.mods:
+                        for mod in (self.log.mods if len(self.log.mods) > 0 else self.log.fabric_mods):
                             mod_name = mod.lower().replace(".jar", "")
                             for c in ["+", "-", "_", "=", ",", " "]: mod_name = mod_name.replace(c, "-")
                             mod_name_parts = mod_name.split("-")
