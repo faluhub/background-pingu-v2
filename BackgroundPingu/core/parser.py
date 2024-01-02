@@ -56,6 +56,10 @@ class Log:
         pattern = re.compile(r"\t- ([^\n]+)", re.DOTALL)
         fabric_mods = [mod for mod in pattern.findall(self._content) if not any(mod.startswith(prefix) for prefix in excluded_prefixes)]
         return fabric_mods
+    
+    @cached_property
+    def whatever_mods(self) -> list[str]:
+        return self.mods if len(self.mods) > 0 else self.fabric_mods
 
     @cached_property
     def java_version(self) -> str:

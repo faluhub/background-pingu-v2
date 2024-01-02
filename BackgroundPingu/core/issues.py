@@ -269,7 +269,7 @@ class IssueChecker:
         if not self.log.major_java_version is None and self.log.major_java_version < 17 and not self.log.short_version == "1.12":
             wrong_mods = []
             for mod in self.java_17_mods:
-                for installed_mod in (self.log.mods if len(self.log.mods) > 0 else self.log.fabric_mods):
+                for installed_mod in self.log.whatever_mods:
                     if mod in installed_mod.lower():
                         wrong_mods.append(mod)
             if len(wrong_mods) > 0:
@@ -797,23 +797,23 @@ class IssueChecker:
                 match = re.search(pattern, self.log._content)
                 if not match is None:
                     mod_name = match.group(1)
-                    wrong_mod = [mod for mod in self.log.mods if mod_name.lower() in mod.lower()]
+                    wrong_mod = [mod for mod in self.log.whatever_mods if mod_name.lower() in mod.lower()]
                     if len(wrong_mod) > 0: wrong_mods += wrong_mod
                     else: wrong_mods.append(mod_name)
         
-            match = re.search(r"Minecraft has crashed!.*|Failed to start Minecraft:.*|Unable to launch\n.*|Exception caught from launcher\n.*|Shutdown failure!\n.*|---- Minecraft Crash Report ----.*A detailed walkthrough of the error", self.log._content, re.DOTALL)
+            match = re.search(r"Minecraft has crashed!.*|Failed to start Minecraft:.*|Unable to launch\n.*|Exception caught from launcher\n.*|Reported exception thrown!\n.*|Shutdown failure!\n.*|---- Minecraft Crash Report ----.*A detailed walkthrough of the error", self.log._content, re.DOTALL)
             if not match is None:
                 stacktrace = match.group().lower()
                 if not "this is not a error" in stacktrace:
                     pattern = r"(?s)warning: coremods are present:.*?contact their authors before contacting forge"
                     stacktrace = re.sub(pattern, "", stacktrace)
 
-                    if len(self.log.mods + self.log.fabric_mods) == 0:
+                    if len(self.log.whatever_mods) == 0:
                         for mod in self.mcsr_mods + self.general_mods:
                             if mod.replace("-", "").lower() in stacktrace and not mod in wrong_mods and not mod.lower() in wrong_mods:
                                 wrong_mods.append(mod)
                     else:
-                        for mod in (self.log.mods if len(self.log.mods) > 0 else self.log.fabric_mods):
+                        for mod in self.log.whatever_mods:
                             mod_name = mod.lower().replace(".jar", "")
                             for c in ["+", "-", "_", "=", ",", " "]: mod_name = mod_name.replace(c, "-")
                             mod_name_parts = mod_name.split("-")
@@ -841,11 +841,9 @@ class IssueChecker:
                     "counter": 1
                 }
                 total = 0
-
                 for pattern, value in entity_culling_indicators.items():
                     if self.log.has_pattern(pattern):
                         total += value
-                
                 if total >= 2: builder.error("entity_culling")
             
             if any(self.log.has_content(crash) for crash in [
@@ -854,5 +852,13 @@ class IssueChecker:
                 "Process crashed with exit code ",
             ]):
                 builder.error("send_full_log")
+            
+            pattern = r"https://minecraft\.fandom\.com/wiki/([A-Za-z0-9_]+)"
+            for match in re.findall(pattern, self.log._content):
+                if match.endswith("_"): match = match[:-1] # if someone uses an _ to make it cursive idk
+                builder.note("fandom_wiki", match)
+
+            if self.log.has_content("water") and self.log.has_content("invisible"):
+                builder.error("chunk_multidraw")
         
         return builder
