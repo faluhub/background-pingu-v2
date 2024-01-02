@@ -457,7 +457,7 @@ class IssueChecker:
             if "C:/Program Files" in self.log.minecraft_folder:
                 builder.note("program_files")
             if "Rar$" in self.log.minecraft_folder:
-                builder.error("need_to_extract_from_zip",self.log.launcher if not self.log.launcher is None else "the launcher")
+                builder.error("need_to_extract_from_zip", self.log.launcher if not self.log.launcher is None else "the launcher")
         
         if self.log.has_mod("phosphor") and not self.log.minecraft_version == "1.12.2":
             builder.note("starlight_better")
@@ -571,38 +571,6 @@ class IssueChecker:
             " to profiler if profiler tick hasn't started - missing "
         ]): builder.info("log_spam")
         
-        if self.log.has_mod("serversiderng-9"):
-            builder.warning("using_ssrng")
-        elif self.log.has_mod("serversiderng 9"):
-            builder.warning("using_ssrng")
-        
-        if any(self.log.has_mod(f"serversiderng-{i}") for i in range(1, 9)):
-            builder.error("using_old_ssrng")
-        elif any(self.log.has_mod(f"serversiderng {i}") for i in range(1, 9)):
-            builder.error("using_old_ssrng")
-        elif all(self.log.has_content(text) for text in [
-            "net.minecraft.class_148: Feature placement",
-            "java.lang.ArrayIndexOutOfBoundsException",
-            "StarLightInterface"
-        ]):
-            builder.error("starlight_crash")
-        elif not found_crash_cause and self.log.has_content(" -805306369") or self.log.has_content("java.lang.ArithmeticException"):
-            builder.warning("exitcode_805306369")
-
-        if self.log.has_content(" -1073741819") or self.log.has_content("The instruction at 0x%p referenced memory at 0x%p. The memory could not be %s."):
-            builder.error("exitcode", "-1073741819")
-            builder.add("exitcode_1073741819_1").add("exitcode_1073741819_2")
-            if self.log._content.count("\n") < 500:
-                if self.log.has_mod("sodium") and not self.log.has_mod("sodiummac"): builder.add(f"exitcode_1073741819_3")
-                builder.add(f"exitcode_1073741819_4")
-            builder.add("exitcode_1073741819_5")
-
-        if self.log.has_content(" -1073740791"):
-            builder.error("exitcode", "-1073740791")
-            builder.add("exitcode_1073741819_2")
-            if self.log._content.count("\n") < 500: builder.add("exitcode_1073741819_4")
-            builder.add("exitcode_1073741819_5")
-        
         if self.log.has_mod("autoreset") or self.log.has_content("the mods atum and autoreset"):
             builder.error("autoreset_user")
             metadata = self.get_mod_metadata("atum")
@@ -666,6 +634,9 @@ class IssueChecker:
             ranked_rong_mods = []
             ranked_rong_versions = []
             ranked_anticheat = match.group(1).strip().replace("\t","")
+
+            if self.log.has_pattern("You should delete these from Minecraft.\s*?Process exited with code 1."):
+                builder.error("ranked_fabric_0_15_x").add("fabric_guide_prism" if self.log.is_prism else "fabric_guide_mmc", "downgrade")
             
             ranked_anticheat_split = ranked_anticheat.split("These Fabric Mods are whitelisted but different version! Make sure to update these!")
             if len(ranked_anticheat_split) > 1:
@@ -766,20 +737,52 @@ class IssueChecker:
                 found_crash_cause = True
             else:
                 builder.warning("no_mappings", "" if self.log.is_prism else " Instance")
+
+        if not found_crash_cause and self.log.has_content("ERROR]: Mixin apply for mod fabric-networking-api-v1 failed"):
+            builder.error("delete_dot_fabric")
         
         if not found_crash_cause and self.log.has_content("com.google.gson.stream.MalformedJsonException"):
             pattern = r"due to errors, provided by '([\w\-+]+)'"
             match = re.search(pattern, self.log._content)
             if not match is None:
                 mod_name = match.group(1)
-                wrong_mod = [mod for mod in self.log.mods if mod_name.lower() in mod.lower()]
+                wrong_mod = [mod for mod in self.log.whatever_mods if mod_name.lower() in mod.lower()]
                 if len(wrong_mod) > 0: wrong_mod = wrong_mod[0]
                 else: wrong_mod = mod_name
                 builder.error("corrupted_mod_config", wrong_mod)
                 found_crash_cause = True
+        
+        if self.log.has_mod("serversiderng-9"):
+            builder.warning("using_ssrng")
+        elif self.log.has_mod("serversiderng 9"):
+            builder.warning("using_ssrng")
+        
+        if any(self.log.has_mod(f"serversiderng-{i}") for i in range(1, 9)):
+            builder.error("using_old_ssrng")
+        elif any(self.log.has_mod(f"serversiderng {i}") for i in range(1, 9)):
+            builder.error("using_old_ssrng")
+        elif all(self.log.has_content(text) for text in [
+            "net.minecraft.class_148: Feature placement",
+            "java.lang.ArrayIndexOutOfBoundsException",
+            "StarLightInterface"
+        ]):
+            builder.error("starlight_crash")
+        elif not found_crash_cause and self.log.has_content(" -805306369") or self.log.has_content("java.lang.ArithmeticException"):
+            builder.warning("exitcode_805306369")
 
-        if not found_crash_cause and self.log.has_content("ERROR]: Mixin apply for mod fabric-networking-api-v1 failed"):
-            builder.error("delete_dot_fabric")
+        if not found_crash_cause and self.log.has_content(" -1073741819") or self.log.has_content("The instruction at 0x%p referenced memory at 0x%p. The memory could not be %s."):
+            builder.error("exitcode", "-1073741819")
+            builder.add("exitcode_1073741819_1").add("exitcode_1073741819_2")
+            if self.log._content.count("\n") < 500:
+                if self.log.has_mod("sodium") and not self.log.has_mod("sodiummac"): builder.add(f"exitcode_1073741819_3")
+                builder.add(f"exitcode_1073741819_4")
+            builder.add("exitcode_1073741819_5")
+
+        if not found_crash_cause and self.log.has_content(" -1073740791"):
+            builder.error("exitcode", "-1073740791")
+            builder.add("exitcode_1073741819_2")
+            if self.log._content.count("\n") < 500: builder.add("exitcode_1073741819_4")
+            builder.add("exitcode_1073741819_5")
 
         pattern = r"\[Integrated Watchdog/ERROR\]: This crash report has been saved to: (.*\.txt)"
         match = re.search(pattern, self.log._content)
@@ -787,8 +790,8 @@ class IssueChecker:
             builder.info("send_watchdog_report", re.sub(r"C:\\Users\\[^\\]+\\", "C:/Users/********/", match.group(1)))
             found_crash_cause = True
 
-        wrong_mods = []
         if not found_crash_cause:
+            wrong_mods = []
             for pattern in [
                 r"ERROR]: Mixin apply for mod ([\w\-+]+) failed",
                 r"from mod ([\w\-+]+) failed injection check",
@@ -826,6 +829,7 @@ class IssueChecker:
                                 elif len(part) > 1: mod_name += part0
                             if len(mod_name) > 2 and mod_name in stacktrace:
                                 if not mod in wrong_mods: wrong_mods.append(mod)
+            
             if len(wrong_mods) == 1:
                 builder.error("mod_crash", wrong_mods[0])
             elif len(wrong_mods) > 0 and len(wrong_mods) < 8:

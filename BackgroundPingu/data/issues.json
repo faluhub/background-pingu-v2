@@ -81,6 +81,7 @@
     "error.outdated_nvidia_flatpack_driver": "**[warning: experimental]** Update the Nvidia driver for flatpak by running `flatpak update`. If the issue persists, wait for the driver to be added to Flathub and try again.",
     "error.random_forge_crash_1": "Try using a different version of `Forge`.",
     "error.random_forge_crash_2": "Try restarting your launcher, creating an instance without `Forge` and then installing `Forge` on this instance.",
+    "error.ranked_fabric_0_15_x": "You seem to be using a version of `MCSR Ranked` that is incompatible with `Fabric Loader 0.15+`. Either downgrade `Fabric` to `0.14.x` or update `MCSR Ranked`.",
     "error.ranked_resourcepack_crash": "You seem to be using resource packs which isn't allowed for `MCSR Ranked`. Remove all resource packs from the `.minecraft/resourcepacks` folder.",
     "error.ranked_rong_files": "You're using {} to be fine, but the files don't match. Try redownloading/updating {}.",
     "error.ranked_rong_mods": "You're using {}n't whitelisted for `MCSR Ranked`. Remove {} from your `mods` folder.",
