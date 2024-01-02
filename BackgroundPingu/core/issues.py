@@ -89,7 +89,8 @@ class IssueChecker:
             "biomethreadlocalfix",
             "forceport",
             "sleepbackground-3.8-1.8.x-1.12.x",
-            "tab-focus"
+            "tab-focus",
+            "speedrunigt-14.0"
         ]
         self.assume_as_legal = [
             "mcsrranked",
@@ -268,7 +269,7 @@ class IssueChecker:
         if not self.log.major_java_version is None and self.log.major_java_version < 17 and not self.log.short_version == "1.12":
             wrong_mods = []
             for mod in self.java_17_mods:
-                for installed_mod in self.log.mods:
+                for installed_mod in self.log.whatever_mods:
                     if mod in installed_mod.lower():
                         wrong_mods.append(mod)
             if len(wrong_mods) > 0:
@@ -339,8 +340,11 @@ class IssueChecker:
             builder.error("headless_java")
             found_crash_cause = True
 
+        if self.log.has_content("[LWJGL] Failed to load a library. Possible solutions:") and self.log.short_version in [f"1.{20 + i}" for i in range(15)]:
+            builder.error("update_mmc")
+        
         if not found_crash_cause and (any(self.log.has_content(broken_java) for broken_java in [
-            "Could not start java:\n\n\nCheck your MultiMC Java settings.",
+            "Could not start java:\n\n\nCheck your ",
             "Incompatible magic value 0 in class file sun/security/provider/SunEntries",
             "Assertion `version->filename == NULL || ! _dl_name_match_p (version->filename, map)' failed"
         ]) or not re.compile(r"The java binary \"(.+)\" couldn't be found.").search(self.log._content) is None):
@@ -453,7 +457,7 @@ class IssueChecker:
             if "C:/Program Files" in self.log.minecraft_folder:
                 builder.note("program_files")
             if "Rar$" in self.log.minecraft_folder:
-                builder.error("need_to_extract_from_zip",self.log.launcher if not self.log.launcher is None else "the launcher")
+                builder.error("need_to_extract_from_zip", self.log.launcher if not self.log.launcher is None else "the launcher")
         
         if self.log.has_mod("phosphor") and not self.log.minecraft_version == "1.12.2":
             builder.note("starlight_better")
@@ -567,34 +571,6 @@ class IssueChecker:
             " to profiler if profiler tick hasn't started - missing "
         ]): builder.info("log_spam")
         
-        if self.log.has_mod("serversiderng-9"):
-            builder.warning("using_ssrng")
-        
-        if any(self.log.has_mod(f"serversiderng-{i}") for i in range(1, 9)):
-            builder.error("using_old_ssrng")
-        elif all(self.log.has_content(text) for text in [
-            "net.minecraft.class_148: Feature placement",
-            "java.lang.ArrayIndexOutOfBoundsException",
-            "StarLightInterface"
-        ]):
-            builder.error("starlight_crash")
-        elif not found_crash_cause and self.log.has_content(" -805306369") or self.log.has_content("java.lang.ArithmeticException"):
-            builder.warning("exitcode_805306369")
-
-        if self.log.has_content(" -1073741819") or self.log.has_content("The instruction at 0x%p referenced memory at 0x%p. The memory could not be %s."):
-            builder.error("exitcode", "-1073741819")
-            builder.add("exitcode_1073741819_1").add("exitcode_1073741819_2")
-            if self.log._content.count("\n") < 500:
-                if self.log.has_mod("sodium") and not self.log.has_mod("sodiummac"): builder.add(f"exitcode_1073741819_3")
-                builder.add(f"exitcode_1073741819_4")
-            builder.add("exitcode_1073741819_5")
-
-        if self.log.has_content(" -1073740791"):
-            builder.error("exitcode", "-1073740791")
-            builder.add("exitcode_1073741819_2")
-            if self.log._content.count("\n") < 500: builder.add("exitcode_1073741819_4")
-            builder.add("exitcode_1073741819_5")
-        
         if self.log.has_mod("autoreset") or self.log.has_content("the mods atum and autoreset"):
             builder.error("autoreset_user")
             metadata = self.get_mod_metadata("atum")
@@ -645,13 +621,23 @@ class IssueChecker:
             if self.log.has_content("java.lang.NoClassDefFoundError: cpw/mods/modlauncher/Launcher"):
                 builder.error("random_forge_crash_2")
         
-        match = re.search(r"Incompatible mod set found! READ THE BELOW LINES!(.*?)(?=at com\.mcsr\.projectelo\.anticheat)", self.log._content, re.DOTALL)
-        if match:
+        if any(self.log.has_content(sodium_rtss_crash) for sodium_rtss_crash in [
+            "RivaTuner Statistics Server (RTSS) is not compatible with Sodium, see this issue for more details:",
+            "READ ME! You appear to be using the RivaTuner Statistics Server (RTSS)!"
+        ]):
+            builder.error("sodium_rtss")
+
+        match = re.search(r"Incompatible mod set found! READ THE BELOW LINES!(.*?$)", self.log._content, re.DOTALL)
+        if not match is None:
             found_crash_cause = True
             ranked_rong_files = []
             ranked_rong_mods = []
             ranked_rong_versions = []
             ranked_anticheat = match.group(1).strip().replace("\t","")
+
+            if self.log.has_pattern("You should delete these from Minecraft.\s*?Process exited with code 1."):
+                builder.error("ranked_fabric_0_15_x").add("fabric_guide_prism" if self.log.is_prism else "fabric_guide_mmc", "downgrade")
+            
             ranked_anticheat_split = ranked_anticheat.split("These Fabric Mods are whitelisted but different version! Make sure to update these!")
             if len(ranked_anticheat_split) > 1:
                 ranked_anticheat, ranked_anticheat_split = ranked_anticheat_split[0], ranked_anticheat_split[1].split("\n")
@@ -659,6 +645,7 @@ class IssueChecker:
                     match = re.search(r"\[(.*?)\]", mod)
                     if match:
                         ranked_rong_versions.append(match.group(1))
+            
             ranked_anticheat_split = ranked_anticheat.split("These Fabric Mods are whitelisted and you seem to be using the correct version but the files do not match. Try downloading these files again!")
             if len(ranked_anticheat_split) > 1:
                 ranked_anticheat, ranked_anticheat_split = ranked_anticheat_split[0], ranked_anticheat_split[1].split("\n")
@@ -666,6 +653,7 @@ class IssueChecker:
                     match = re.search(r"\[(.*?)\]", mod)
                     if match:
                         ranked_rong_files.append(match.group(1))
+            
             ranked_anticheat_split = ranked_anticheat.split("These Fabric Mods are not whitelisted! You should delete these from Minecraft.")
             if len(ranked_anticheat_split) > 1:
                 ranked_anticheat, ranked_anticheat_split = ranked_anticheat_split[0], ranked_anticheat_split[1].split("\n")
@@ -707,6 +695,13 @@ class IssueChecker:
             if self.log.has_mod("z-buffer-fog") and self.log.short_version in [f"1.{14 + i}" for i in range(10)]:
                 builder.error("incompatible_mod", "Optifine", "z-buffer-fog")
                 found_crash_cause = True
+            if self.log.short_version in [f"1.{15 + i}" for i in range(15)]:
+                if is_mcsr_log:
+                    builder.error("use_sodium_not_optifine_mcsr").add("update_mods")
+                elif self.log.mod_loader == ModLoader.FORGE:
+                    builder.error("use_sodium_not_optifine", "Embeddium").add("embeddium_download")
+                else:
+                    builder.error("use_sodium_not_optifine", "Sodium").add("sodium_download")
         
         if self.log.has_mod("esimod"):
             for incompatible_mod in ["serverSideRNG", "SpeedRunIGT", "WorldPreview", "mcsrranked"]:
@@ -732,26 +727,62 @@ class IssueChecker:
         if not found_crash_cause and self.log.has_content("Failed to store chunk") or self.log.has_content("There is not enough space on the disk"):
             builder.error("out_of_disk_space")
         
+        if not found_crash_cause and (len(self.log.mods) == 0 or self.log.has_mod("atum")) and self.log.has_content("java.lang.StackOverflowError: null"):
+            builder.error("stack_overflow_crash")
+            found_crash_cause = True
+        
         if self.log.has_content("Mappings not present!"):
             if not self.log.short_version in [f"1.{14 + i}" for i in range(15)] and self.log.mod_loader == ModLoader.FABRIC:
                 builder.error("legacy_fabric_modpack")
                 found_crash_cause = True
             else:
                 builder.warning("no_mappings", "" if self.log.is_prism else " Instance")
+
+        if not found_crash_cause and self.log.has_content("ERROR]: Mixin apply for mod fabric-networking-api-v1 failed"):
+            builder.error("delete_dot_fabric")
         
         if not found_crash_cause and self.log.has_content("com.google.gson.stream.MalformedJsonException"):
             pattern = r"due to errors, provided by '([\w\-+]+)'"
             match = re.search(pattern, self.log._content)
             if not match is None:
                 mod_name = match.group(1)
-                wrong_mod = [mod for mod in self.log.mods if mod_name.lower() in mod.lower()]
+                wrong_mod = [mod for mod in self.log.whatever_mods if mod_name.lower() in mod.lower()]
                 if len(wrong_mod) > 0: wrong_mod = wrong_mod[0]
                 else: wrong_mod = mod_name
                 builder.error("corrupted_mod_config", wrong_mod)
                 found_crash_cause = True
+        
+        if self.log.has_mod("serversiderng-9"):
+            builder.warning("using_ssrng")
+        elif self.log.has_mod("serversiderng 9"):
+            builder.warning("using_ssrng")
+        
+        if any(self.log.has_mod(f"serversiderng-{i}") for i in range(1, 9)):
+            builder.error("using_old_ssrng")
+        elif any(self.log.has_mod(f"serversiderng {i}") for i in range(1, 9)):
+            builder.error("using_old_ssrng")
+        elif all(self.log.has_content(text) for text in [
+            "net.minecraft.class_148: Feature placement",
+            "java.lang.ArrayIndexOutOfBoundsException",
+            "StarLightInterface"
+        ]):
+            builder.error("starlight_crash")
+        elif not found_crash_cause and self.log.has_content(" -805306369") or self.log.has_content("java.lang.ArithmeticException"):
+            builder.warning("exitcode_805306369")
 
-        if not found_crash_cause and self.log.has_content("ERROR]: Mixin apply for mod fabric-networking-api-v1 failed"):
-            builder.error("delete_dot_fabric")
+        if not found_crash_cause and self.log.has_content(" -1073741819") or self.log.has_content("The instruction at 0x%p referenced memory at 0x%p. The memory could not be %s."):
+            builder.error("exitcode", "-1073741819")
+            builder.add("exitcode_1073741819_1").add("exitcode_1073741819_2")
+            if self.log._content.count("\n") < 500:
+                if self.log.has_mod("sodium") and not self.log.has_mod("sodiummac"): builder.add(f"exitcode_1073741819_3")
+                builder.add(f"exitcode_1073741819_4")
+            builder.add("exitcode_1073741819_5")
+
+        if not found_crash_cause and self.log.has_content(" -1073740791"):
+            builder.error("exitcode", "-1073740791")
+            builder.add("exitcode_1073741819_2")
+            if self.log._content.count("\n") < 500: builder.add("exitcode_1073741819_4")
+            builder.add("exitcode_1073741819_5")
 
         pattern = r"\[Integrated Watchdog/ERROR\]: This crash report has been saved to: (.*\.txt)"
         match = re.search(pattern, self.log._content)
@@ -759,8 +790,8 @@ class IssueChecker:
             builder.info("send_watchdog_report", re.sub(r"C:\\Users\\[^\\]+\\", "C:/Users/********/", match.group(1)))
             found_crash_cause = True
 
-        wrong_mods = []
         if not found_crash_cause:
+            wrong_mods = []
             for pattern in [
                 r"ERROR]: Mixin apply for mod ([\w\-+]+) failed",
                 r"from mod ([\w\-+]+) failed injection check",
@@ -769,23 +800,23 @@ class IssueChecker:
                 match = re.search(pattern, self.log._content)
                 if not match is None:
                     mod_name = match.group(1)
-                    wrong_mod = [mod for mod in self.log.mods if mod_name.lower() in mod.lower()]
+                    wrong_mod = [mod for mod in self.log.whatever_mods if mod_name.lower() in mod.lower()]
                     if len(wrong_mod) > 0: wrong_mods += wrong_mod
                     else: wrong_mods.append(mod_name)
         
-            match = re.search(r"Minecraft has crashed!.*|Failed to start Minecraft:.*|Unable to launch\n.*|Exception caught from launcher\n.*|Shutdown failure!\n.*|---- Minecraft Crash Report ----.*A detailed walkthrough of the error", self.log._content, re.DOTALL)
+            match = re.search(r"Minecraft has crashed!.*|Failed to start Minecraft:.*|Unable to launch\n.*|Exception caught from launcher\n.*|Reported exception thrown!\n.*|Shutdown failure!\n.*|---- Minecraft Crash Report ----.*A detailed walkthrough of the error", self.log._content, re.DOTALL)
             if not match is None:
                 stacktrace = match.group().lower()
                 if not "this is not a error" in stacktrace:
                     pattern = r"(?s)warning: coremods are present:.*?contact their authors before contacting forge"
                     stacktrace = re.sub(pattern, "", stacktrace)
 
-                    if len(self.log.mods) == 0:
+                    if len(self.log.whatever_mods) == 0:
                         for mod in self.mcsr_mods + self.general_mods:
                             if mod.replace("-", "").lower() in stacktrace and not mod in wrong_mods and not mod.lower() in wrong_mods:
                                 wrong_mods.append(mod)
                     else:
-                        for mod in self.log.mods:
+                        for mod in self.log.whatever_mods:
                             mod_name = mod.lower().replace(".jar", "")
                             for c in ["+", "-", "_", "=", ",", " "]: mod_name = mod_name.replace(c, "-")
                             mod_name_parts = mod_name.split("-")
@@ -798,9 +829,40 @@ class IssueChecker:
                                 elif len(part) > 1: mod_name += part0
                             if len(mod_name) > 2 and mod_name in stacktrace:
                                 if not mod in wrong_mods: wrong_mods.append(mod)
+            
             if len(wrong_mods) == 1:
                 builder.error("mod_crash", wrong_mods[0])
             elif len(wrong_mods) > 0 and len(wrong_mods) < 8:
                 builder.error("mods_crash", "; ".join(wrong_mods))
+        
+        
+        if self.link == "message":
+            if self.log.has_pattern(r"-\s*1"):
+                entity_culling_indicators = {
+                    "entit": 2,
+                    "F3": 1,
+                    r"\be\b": 1,
+                    "counter": 1
+                }
+                total = 0
+                for pattern, value in entity_culling_indicators.items():
+                    if self.log.has_pattern(pattern):
+                        total += value
+                if total >= 2: builder.error("entity_culling")
+            
+            if any(self.log.has_content(crash) for crash in [
+                "Process exited with code ",
+                "Process crashed with exitcode ",
+                "Process crashed with exit code ",
+            ]):
+                builder.error("send_full_log")
+            
+            pattern = r"https://minecraft\.fandom\.com/wiki/([A-Za-z0-9_]+)"
+            for match in re.findall(pattern, self.log._content):
+                if match.endswith("_"): match = match[:-1] # if someone uses an _ to make it cursive idk
+                builder.note("fandom_wiki", match)
+
+            if self.log.has_content("water") and self.log.has_content("invisible"):
+                builder.error("chunk_multidraw")
         
         return builder

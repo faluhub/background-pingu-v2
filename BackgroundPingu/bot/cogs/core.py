@@ -23,20 +23,21 @@ class Core(Cog):
         if len(msg.attachments) > 0:
             for attachment in msg.attachments:
                 matches.append(attachment.url.split("?ex=")[0])
-        for match in matches:
-            log = parser.Log.from_link(match)
-            if not log is None:
-                try:
-                    results = issues.IssueChecker(self.bot, log, match).check()
-                    if results.has_values():
-                        messages = results.build()
-                        result["embed"] = await self.build_embed(results, messages, msg)
-                        result["view"] = views.Paginator(messages, results, msg)
-                        found_result = True
-                except Exception as e:
-                    error = "".join(traceback.format_exception(e))
-                    result["text"] = f"```\n{error}\n```\n<@810863994985250836>, <@695658634436411404> :bug:"
+        logs = [(match, parser.Log.from_link(match)) for match in matches]
+        logs = [(match, log) for (match, log) in logs if not log is None]
+        logs.append(("message", parser.Log(msg.content)))
+        for match, log in logs:
+            try:
+                results = issues.IssueChecker(self.bot, log, match).check()
+                if results.has_values():
+                    messages = results.build()
+                    result["embed"] = await self.build_embed(results, messages, msg)
+                    result["view"] = views.Paginator(messages, results, msg)
                     found_result = True
+            except Exception as e:
+                error = "".join(traceback.format_exception(e))
+                result["text"] = f"```\n{error}\n```\n<@810863994985250836>, <@695658634436411404> :bug:"
+                found_result = True
             if found_result: break
         if not found_result and include_content:
             results = issues.IssueChecker(self.bot, parser.Log(msg.content)).check()

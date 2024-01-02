@@ -46,13 +46,31 @@ class Log:
         return mods
     
     @cached_property
+    def fabric_mods(self) -> list[str]:
+        excluded_prefixes = [
+            "java ",
+            "fabricloader ",
+            "minecraft ",
+        ]
+
+        pattern = re.compile(r"\t- ([^\n]+)", re.DOTALL)
+        fabric_mods = [mod for mod in pattern.findall(self._content) if not any(mod.startswith(prefix) for prefix in excluded_prefixes)]
+        return fabric_mods
+    
+    @cached_property
+    def whatever_mods(self) -> list[str]:
+        return self.mods if len(self.mods) > 0 else self.fabric_mods
+
+    @cached_property
     def java_version(self) -> str:
         version_match = re.compile(r"\nJava is version (\S+),").search(self._content) # mmc/prism logs
         if not version_match is None:
             return version_match.group(1)
+        
         version_match = re.compile(r"\n\tJava Version: (\S+),").search(self._content) # crash reports
         if not version_match is None:
             return version_match.group(1)
+        
         return None
     
     @cached_property
@@ -63,6 +81,11 @@ class Log:
                 if not parts[0] == "1": return int(parts[0])
                 return int(parts[1])
             except: pass
+        
+        pattern = re.search(r"\s*- java (\d+)", self._content)
+        if not pattern is None:
+            return int(pattern.group(1))
+
         return None
     
     @cached_property
@@ -88,12 +111,15 @@ class Log:
             version_match = re.compile(r"--version (\S+)\s").search(line)
             if not version_match is None:
                 return version_match.group(1)
+        
         match = re.compile(r"Loading Minecraft (\S+) with Fabric Loader").search(self._content)
         if not match is None:
             return match.group(1)
+        
         match = re.compile(r"Minecraft Version ID: (\S+)").search(self._content)
         if not match is None:
             return match.group(1)
+        
         return None
     
     @cached_property
@@ -108,10 +134,12 @@ class Log:
         try:
             if not match is None: return version.parse(match.group(1))
         except: pass
+
         match = re.compile(r"libraries/net/fabricmc/fabric-loader/\S+/fabric-loader-(\S+).jar").search(self._content)
         try:
             if not match is None: return version.parse(match.group(1))
         except: pass
+
         return None
     
     @cached_property
@@ -139,16 +167,20 @@ class Log:
                 return ModLoader.FORGE
             if "net.minecraft.client.main.Main" in line:
                 return ModLoader.VANILLA
+        
         match = re.search(r"Loading Minecraft \S+ with Fabric Loader",self._content)
         if not match is None:
             return ModLoader.FABRIC
+        
         match = re.search(r"Client brand changed to '(\S+)'",self._content)
         if match:
             for loader in ModLoader:
                 if loader.value.lower() in match.group(1).lower():
                     return loader
+        
         if "client brand is untouched" in self._content:
             return ModLoader.VANILLA
+        
         return None
     
     @cached_property
@@ -156,9 +188,11 @@ class Log:
         match = re.compile(r"Java Arguments:\n(.*?)\n", re.DOTALL).search(self._content)
         if not match is None:
             return match.group(1)
+        
         match = re.compile(r"JVM Flags: \S+ total; (.*(?:\n|$))", re.DOTALL).search(self._content)
         if not match is None:
             return match.group(1)
+        
         return None
 
     @cached_property
@@ -168,10 +202,12 @@ class Log:
             try:
                 if not match is None: return int(match.group(1))
             except ValueError: pass
+            
             match = re.compile(r"-Xmx(\d+)M").search(self.java_arguments)
             try:
                 if not match is None: return int(match.group(1))
             except ValueError: pass
+            
             match = re.compile(r"-Xmx(\d+)G").search(self.java_arguments)
             try:
                 if not match is None: return int(match.group(1))*1024
@@ -185,7 +221,7 @@ class Log:
         return bool(re.compile(pattern, re.IGNORECASE).search(self._lower_content))
     
     def has_mod(self, mod_name: str) -> bool:
-        for mod in self.mods:
+        for mod in self.mods + self.fabric_mods:
             if mod_name.lower() in mod.lower():
                 return True
         return False
@@ -207,4 +243,4 @@ class Log:
             )
     
     def __str__(self) -> str:
-        return f"mods={self.mods}\njava_version={self.java_version}\nmajor_java_version={self.major_java_version}\nminecraft_folder={self.minecraft_folder}\noperating_system={self.operating_system}\nminecraft_version={self.minecraft_version}\nfabric_version={self.fabric_version}\nlauncher={self.launcher}\ncustom_launcher={self.custom_launcher}\nmod_loader={self.mod_loader}\njava_arguments={self.java_arguments}\nmax_allocated={self.max_allocated}"
+        return f"mods={self.mods}\nfabric_mods={self.fabric_mods}\njava_version={self.java_version}\nmajor_java_version={self.major_java_version}\nminecraft_folder={self.minecraft_folder}\noperating_system={self.operating_system}\nminecraft_version={self.minecraft_version}\nfabric_version={self.fabric_version}\nlauncher={self.launcher}\nis_prism={self.is_prism}\nis_multimc_or_fork={self.is_multimc_or_fork}\nmod_loader={self.mod_loader}\njava_arguments={self.java_arguments}\nmax_allocated={self.max_allocated}"
