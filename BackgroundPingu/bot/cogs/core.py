@@ -25,7 +25,7 @@ class Core(Cog):
                 matches.append(attachment.url.split("?ex=")[0])
         logs = [(match, parser.Log.from_link(match)) for match in matches]
         logs = [(match, log) for (match, log) in logs if not log is None]
-        logs.append(("message", parser.Log(msg.content)))
+        # logs.append(("message", parser.Log(msg.content)))
         for match, log in logs:
             try:
                 results = issues.IssueChecker(self.bot, log, match).check()
