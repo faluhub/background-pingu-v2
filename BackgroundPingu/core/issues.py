@@ -811,6 +811,12 @@ class IssueChecker:
                     pattern = r"(?s)warning: coremods are present:.*?contact their authors before contacting forge"
                     stacktrace = re.sub(pattern, "", stacktrace)
 
+                    ignored_words = [
+                        "loading",
+                        "transformationserviceshandler",
+                    ]
+                    for word in ignored_words: stacktrace = stacktrace.replace(word, "")
+
                     if len(self.log.whatever_mods) == 0:
                         for mod in self.mcsr_mods + self.general_mods:
                             if mod.replace("-", "").lower() in stacktrace and not mod in wrong_mods and not mod.lower() in wrong_mods:

@@ -23,6 +23,11 @@ class Tips(Cog):
         text = "Please follow this image in order to send a log[:](https://cdn.discordapp.com/attachments/531598137790562305/575381000398569493/unknown.png)"
         return await ctx.respond(text)
 
+    @commands.slash_command(name="mmclog", description="Shows how to send a log on MultiMC/Prism Launcher.")
+    async def mmclog(self, ctx: discord.ApplicationContext):
+        text = "Please follow this image in order to send a log[:](https://cdn.discordapp.com/attachments/531598137790562305/575381000398569493/unknown.png)"
+        return await ctx.respond(text)
+
     @commands.slash_command(name="rankedfaq", description="Sends a link to the MCSR Ranked Tech Support FAQ document.")
     async def rankedfaq(self, ctx: discord.ApplicationContext):
         text = "You can find MCSR Ranked Tech Support FAQ document here: https://bit.ly/rankedfaq."
@@ -31,7 +36,8 @@ class Tips(Cog):
     @commands.slash_command(name="ahk", description="Gives a guide to rebind keys using AutoHotkey.", aliases=["rebind"])
     async def ahk(self, ctx: discord.ApplicationContext):
         text = """To rebind keys, you can download AutoHotkey (<https://www.autohotkey.com/>, **make sure to get version 1.1**) and create a file with your desired key bindings. For instance, if you want to swap the keys "F3" and "r", you can create a file and name it *something*.ahk with the following content:
-```#IfWinActive Minecraft
+```ahk
+#IfWinActive Minecraft
 *F3::r
 *r::F3```Launch the file, and the input of keys "F3" and "r" will be swapped (which means pressing "r" will open the debug menu). You can customize the key bindings as desired. <https://www.autohotkey.com/docs/v1/KeyList.htm> 
 
@@ -46,7 +52,8 @@ You may remap keys using external programs, but:
     @commands.slash_command(name="rebind", description="Gives a guide to rebind keys using AutoHotkey.", aliases=["rebind"])
     async def rebind(self, ctx: discord.ApplicationContext):
         text = """To rebind keys, you can download AutoHotkey (<https://www.autohotkey.com/>, **make sure to get version 1.1**) and create a file with your desired key bindings. For instance, if you want to swap the keys "F3" and "r", you can create a file and name it *something*.ahk with the following content:
-```#IfWinActive Minecraft
+```ahk
+#IfWinActive Minecraft
 *F3::r
 *r::F3```Launch the file, and the input of keys "F3" and "r" will be swapped (which means pressing "r" will open the debug menu).
 You can customize the key bindings as desired, see this for help: <https://www.autohotkey.com/docs/v1/KeyList.htm> 
@@ -92,6 +99,139 @@ In general, it's a good idea to watch top runs and top runners' streams to get a
     async def prism(self, ctx: discord.ApplicationContext):
         text = "You can download the Prism Launcher here: https://prismlauncher.org/"
         return await ctx.respond(text)
+
+    @commands.slash_command(name="setup", description="Gives a link to a tutorial to setup Minecraft Speedrunning.")
+    async def setup(self, ctx: discord.ApplicationContext):
+        text = "https://youtu.be/VL8Syekw4Q0"
+        return await ctx.respond(text)
+
+    @commands.slash_command(name="fabricapi", description="Explains that Fabric API isn't legal.")
+    async def fabricapi(self, ctx: discord.ApplicationContext):
+        text = """⚠️ Fabric API is banned! __DO NOT USE IT!__ ⚠️ 
+Fabric API is a mod separate from fabric loader, none of the allowed mods require it, and as such it is not allowed. If you have a fabric-api jar in .minecraft/mods you can just delete it, otherwise you're already fine"""
+        return await ctx.respond(text)
+
+    @commands.slash_command(name="1_16_1", description="Explains why using 1.16.1 is standard and recommended for Minecraft speedrunning.")
+    async def one_sixteen_one(self, ctx: discord.ApplicationContext):
+        text = "1.16.1 gives 4x more pearls and 3x more string from piglin barters on average compared to later versions. This, as well as not having piglin brutes, means that using 1.16.1 is standard and recommended for Minecraft speedrunning. You can play later versions if you wish (the category is 1.16+) but it will put you at a severe disadvantage. This only applies for RSG Any%, not SSG (which uses 1.16.5 for the current seed) or other category extensions."
+        return await ctx.respond(text)
+
+    @commands.slash_command(name="mapless", description="Gives links to mapless tutorials.")
+    async def mapless(self, ctx: discord.ApplicationContext):
+        text = """Penney's tutorial (beginner-friendly): <https://youtu.be/_dyD8ZwagDg>
+TalkingMime's tutorial (more in-depth): <https://youtu.be/mes_PPlOJao>
+MoleyG's tutorial (more updated): <https://youtu.be/ho1rwmooHRg>
+pncake's tutorial (advanced): <https://youtu.be/ujZJw95h0nk>
+Watch the 1st video for a rough overview, the 2nd and 3rd for more information and the 4th for a more advanced tutorial"""
+        return await ctx.respond(text)
+
+    @commands.slash_command(name="divine", description="Gives an infographic for nether fossil divine.")
+    async def divine(self, ctx: discord.ApplicationContext):
+        text = "https://cdn.discordapp.com/attachments/433058639956410383/897752137507946496/Screenshot_25.png"
+        return await ctx.respond(text)
+
+    @commands.slash_command(name="preemptivebug", description="Explains the preemptive bug.")
+    async def preemptivebug(self, ctx: discord.ApplicationContext):
+        text = "The pie chart may occasionally bug and give spikes significantly higher than expected. Assuming you're on Windows and your Minecraft is using an NVIDIA GPU, you can fix this by turning off \"Threaded optimization\" in the NVIDIA Control Panel, which you can access by right-clicking your Desktop[:](https://cdn.discordapp.com/attachments/433058639956410383/1166992505296920628/image.png)"
+        return await ctx.respond(text)
+
+    @commands.slash_command(name="julti", description="Gives a link to a Julti tutorial.")
+    async def julti(self, ctx: discord.ApplicationContext):
+        text = "https://youtu.be/QSEkkmwjhW8"
+        return await ctx.respond(text)
+
+    @commands.slash_command(name="modcheck", description="Gives a link to ModCheck.")
+    async def modcheck(self, ctx: discord.ApplicationContext):
+        text = "Application that helps install the allowed mods <https://github.com/RedLime/ModCheck/releases/latest>"
+        return await ctx.respond(text)
+
+    @commands.slash_command(name="1_16mods", description="Gives an explanation of 1.16 mods.")
+    async def one_sixteen_mods(self, ctx: discord.ApplicationContext):
+        text = """The allowed mods can be found and downloaded [**here**](<https://redlime.github.io/MCSRMods/>)
+AntiResourceReload and SetSpawn require Java 17 or newer[.](https://cdn.discordapp.com/attachments/433058639956410383/1184135653680742490/image.png) If you need help updating your Java version, do `/java`."""
+        return await ctx.respond(text)
+
+    @commands.slash_command(name="areessgee", description="Gives a link to AreEssGee.")
+    async def areessgee(self, ctx: discord.ApplicationContext):
+        text = """AreEssGee is a configurable artificial seed generator: <https://github.com/faluhub/AreEssGee>
+Don't forget to check the info in the readme!"""
+        return await ctx.respond(text)
+
+    @commands.slash_command(name="peepopractice", description="Gives a link to PeepoPractice.")
+    async def peepopractice(self, ctx: discord.ApplicationContext):
+        text = """PeepoPractice is a Fabric 1.16.1 mod to practice splits of a Minecraft Any% speedrun. 
+It includes a mapless split, bastion split, fortress split, postblind split, stronghold split, end split and more. 
+Join the discord server linked in the github for updates and more info! 
+Don't forget to check the FAQ in the readme! 
+<https://github.com/faluhub/peepoPractice>"""
+        return await ctx.respond(text)
+
+    @commands.slash_command(name="allowedmods", description="Gives a link to allowed mods.")
+    async def allowedmods(self, ctx: discord.ApplicationContext):
+        text = """If you use Optifine (allowed only in pre-1.15), please read the [**detailed mod rules**](<http://bombch.us/DOOK>).
+The allowed mods can be found and downloaded [**here**](<https://redlime.github.io/MCSRMods/> ).
+All other mods, including Fabric API, are banned[.](https://cdn.discordapp.com/attachments/433058639956410383/1184134775334764648/image.png)"""
+        return await ctx.respond(text)
+
+    @commands.slash_command(name="piedirectory", description="Gives the useful pie directories.")
+    async def piedirectory(self, ctx: discord.ApplicationContext):
+        text = """Common pie-chart directories:
+Mapless / Preemptive: `root.gameRenderer.level.entities`
+Village / Fortress: `root.tick.level.entities.blockEntities`"""
+        return await ctx.respond(text)
+
+    @commands.slash_command(name="modpack_list", description="Gives a list of MCSR modpacks.")
+    async def modpack_list(self, ctx: discord.ApplicationContext):
+        text = """### Modpacks for [PrismLauncher](<https://prismlauncher.org/download/>) / [MultiMC](<https://multimc.org/>) / [ATLauncher](<https://atlauncher.com/>)
+Do `/modpack` for a tutorial on how to import them.
+If the game crashes when it starts up, do `/java`.
+If you're wondering why your settings keep resetting, do `/standardsettings`.
+- **Full RSG 1.16.1 Pack (Includes all RSG mods, __RECOMMENDED__) (Requires Java 17+ (`/java`))**
+  - Download: **[Windows](https://redlime.github.io/MCSRMods/modpacks/v4/MCSR-1.16.1-Windows-RSG.mrpack) | [macOS](https://redlime.github.io/MCSRMods/modpacks/v4/MCSR-1.16.1-OSX-RSG.mrpack) | [Linux](https://redlime.github.io/MCSRMods/modpacks/v4/MCSR-1.16.1-Linux-RSG.mrpack)**
+- **Full SSG 1.16.5 Pack (Includes all SSG mods, __RECOMMENDED__) (Requires Java 17+ (`/java`))**
+  - Download: **[Windows](https://redlime.github.io/MCSRMods/modpacks/v4/MCSR-1.16.5-Windows-SSG.mrpack) | [macOS](https://redlime.github.io/MCSRMods/modpacks/v4/MCSR-1.16.5-OSX-SSG.mrpack) | [Linux](https://redlime.github.io/MCSRMods/modpacks/v4/MCSR-1.16.5-Linux-SSG.mrpack)**
+- **Normal Ranked Pack (Includes basic mods for MCSR Ranked, __RECOMMENDED__)**
+  - Download: **[Windows](https://redlime.github.io/MCSRMods/modpacks/v4/MCSRRanked-Windows-1.16.1.mrpack) | [macOS](https://redlime.github.io/MCSRMods/modpacks/v4/MCSRRanked-OSX-1.16.1.mrpack) | [Linux](https://redlime.github.io/MCSRMods/modpacks/v4/MCSRRanked-Linux-1.16.1.mrpack)**
+- **Full Ranked Pack (Requires __Java 17+__ (`/java`))**
+  - Download: **[Windows](https://redlime.github.io/MCSRMods/modpacks/v4/MCSRRanked-Windows-1.16.1-Pro.mrpack) | [macOS](https://redlime.github.io/MCSRMods/modpacks/v4/MCSRRanked-OSX-1.16.1-Pro.mrpack) | [Linux](https://redlime.github.io/MCSRMods/modpacks/v4/MCSRRanked-Linux-1.16.1-Pro.mrpack)**"""
+        return await ctx.respond(text)
+
+    @commands.slash_command(name="modpack", description="Gives instructions for setting up an RSG modpack instance.")
+    async def modpack(self, ctx: discord.ApplicationContext):
+        text = """Download [**MultiMC**](<https://multimc.org/>), extract it and launch `MultiMC.exe`. Click `Add instance > Import from zip`. Copy the link below that corresponds to your operating system, and paste it into the text field below `Import from zip`:
+- Windows or Linux: <https://redlime.github.io/MCSRMods/modpacks/v4/MCSR-1.16.1-Windows-RSG.mrpack>
+- macOS: <https://redlime.github.io/MCSRMods/modpacks/v4/MCSR-1.16.1-OSX-RSG.mrpack>
+Click `OK` and the instance should be ready.
+Demo: https://discord.com/channels/83066801105145856/405839885509984256/1127597457530945596
+If this is your first time using MultiMC, go to `Settings > Java` and set the `Max memory allocation` to 2048 MB.
+If the game crashes when it starts up, do `/java`. 
+If you want a custom modpack, go [here](<https://redlime.github.io/MCSRMods/?type=modpack>)"""
+        return await ctx.respond(text)
+
+    @commands.slash_command(name="practicemaps", description="Gives a list of practice maps.")
+    async def practicemaps(self, ctx: discord.ApplicationContext):
+        text = """*Consider getting [MapCheck](<https://github.com/cylorun/Map-Check/releases/latest>) to download multiple maps at once.*
+[Bastions](<https://github.com/LlamaPag/bastion>)
+[Blaze practice](<https://github.com/Semperzz/Blaze-Practice>)
+[Buried treasure](<https://github.com/Mescht/BTPractice>)
+[Crafting](<https://github.com/Semperzz/Crafting-Practice-v2>)
+[One cycle / End practice](<https://github.com/ryguy2k4/ryguy2k4endpractice>)
+[Overworld practice](<https://github.com/7rowl/OWPractice>)
+[PeepoPractice, mod for all splits](<https://github.com/faluhub/peepoPractice>)
+[Portals](<https://github.com/Semperzz/Portal-Practice>)
+[Stronghold Trainer](<https://github.com/mjtb49/StrongholdTrainer>)
+[Zero cycle](<https://zerocycle.repl.co/_zero_cycle_practice_astraf_nayoar.zip>)"""
+        return await ctx.respond(text)
+
+    @commands.slash_command(name="mapcheck", description="Gives a link to MapCheck.")
+    async def mapcheck(self, ctx: discord.ApplicationContext):
+        text = "Application that helps downloading minecraft speedrun practice maps: <https://github.com/cylorun/Map-Check/releases/latest>"
+        return await ctx.respond(text)
+
+    # @commands.slash_command(name="", description="")
+    # async def (self, ctx: discord.ApplicationContext):
+    #     text = ""
+    #     return await ctx.respond(text)
 
 def setup(bot: BackgroundPingu):
     bot.add_cog(Tips(bot))
