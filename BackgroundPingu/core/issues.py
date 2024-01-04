@@ -560,7 +560,7 @@ class IssueChecker:
             found_crash_cause = True
         
         if self.log.has_pattern(r"Description: Exception in server tick loop[\s\n]*java\.lang\.IllegalStateException: Lock is no longer valid"):
-            builder.error("wp_3_plus_crash").add("wp_5_download")
+            builder.error("wp_3_plus_crash").add("new_horizons_download")
             found_crash_cause = True
         
         if is_mcsr_log and any(self.log.has_content(log_spam) for log_spam in [
@@ -718,7 +718,6 @@ class IssueChecker:
         
         if self.log.has_mod("continuity") and self.log.has_mod("sodium") and not self.log.has_mod("indium"):
             builder.error("missing_dependency", "continuity", "indium")
-            found_crash_cause = True
         
         if self.log.has_mod("worldpreview") and self.log.has_mod("carpet"):
             builder.error("incompatible_mod", "WorldPreview", "carpet")
@@ -727,7 +726,7 @@ class IssueChecker:
         if not found_crash_cause and self.log.has_content("Failed to store chunk") or self.log.has_content("There is not enough space on the disk"):
             builder.error("out_of_disk_space")
         
-        if not found_crash_cause and (len(self.log.mods) == 0 or self.log.has_mod("atum")) and self.log.has_content("java.lang.StackOverflowError: null"):
+        if not found_crash_cause and (len(self.log.whatever_mods) == 0 or self.log.has_mod("atum")) and self.log.has_content("java.lang.StackOverflowError"):
             builder.error("stack_overflow_crash")
             found_crash_cause = True
         
@@ -761,14 +760,25 @@ class IssueChecker:
             builder.error("using_old_ssrng")
         elif any(self.log.has_mod(f"serversiderng {i}") for i in range(1, 9)):
             builder.error("using_old_ssrng")
-        elif all(self.log.has_content(text) for text in [
+        
+        if all(self.log.has_content(text) for text in [
             "net.minecraft.class_148: Feature placement",
             "java.lang.ArrayIndexOutOfBoundsException",
             "StarLightInterface"
         ]):
             builder.error("starlight_crash")
-        elif not found_crash_cause and self.log.has_content(" -805306369") or self.log.has_content("java.lang.ArithmeticException"):
-            builder.warning("exitcode_805306369")
+        
+        if not found_crash_cause:
+            total = 0
+            maxfps_0_indicators = [
+                "########## GL ERROR ##########",
+                "java.lang.ArithmeticException: / by zero",
+                " -805306369",
+            ]
+
+            for indicator in maxfps_0_indicators:
+                if self.log.has_content(indicator): total += 1
+            if total >= 2: builder.error("exitcode_805306369")
 
         if not found_crash_cause and self.log.has_content(" -1073741819") or self.log.has_content("The instruction at 0x%p referenced memory at 0x%p. The memory could not be %s."):
             builder.error("exitcode", "-1073741819")
@@ -804,37 +814,39 @@ class IssueChecker:
                     if len(wrong_mod) > 0: wrong_mods += wrong_mod
                     else: wrong_mods.append(mod_name)
         
-            match = re.search(r"Minecraft has crashed!.*|Failed to start Minecraft:.*|Unable to launch\n.*|Exception caught from launcher\n.*|Reported exception thrown!\n.*|Shutdown failure!\n.*|---- Minecraft Crash Report ----.*A detailed walkthrough of the error", self.log._content, re.DOTALL)
+
+            pattern = r"(?s)---- Minecraft Crash Report ----.*?This is just a prompt for computer specs to be printed"
+            match = re.search(r"Minecraft has crashed!.*|Failed to start Minecraft:.*|Unable to launch\n.*|Exception caught from launcher\n.*|Reported exception thrown!\n.*|Shutdown failure!\n.*|---- Minecraft Crash Report ----.*A detailed walkthrough of the error",
+                            re.sub(pattern, "", self.log._content),
+                            re.DOTALL)
             if not match is None:
                 stacktrace = match.group().lower()
-                if not "this is not a error" in stacktrace:
-                    pattern = r"(?s)warning: coremods are present:.*?contact their authors before contacting forge"
-                    stacktrace = re.sub(pattern, "", stacktrace)
 
-                    ignored_words = [
-                        "loading",
-                        "transformationserviceshandler",
-                    ]
-                    for word in ignored_words: stacktrace = stacktrace.replace(word, "")
+                ignored_patterns = [
+                    "loading",
+                    "transformationserviceshandler",
+                    r"(?s)warning: coremods are present:.*?contact their authors before contacting forge",
+                ]
+                for pattern in ignored_patterns: stacktrace = re.sub(pattern, "", stacktrace)
 
-                    if len(self.log.whatever_mods) == 0:
-                        for mod in self.mcsr_mods + self.general_mods:
-                            if mod.replace("-", "").lower() in stacktrace and not mod in wrong_mods and not mod.lower() in wrong_mods:
-                                wrong_mods.append(mod)
-                    else:
-                        for mod in self.log.whatever_mods:
-                            mod_name = mod.lower().replace(".jar", "")
-                            for c in ["+", "-", "_", "=", ",", " "]: mod_name = mod_name.replace(c, "-")
-                            mod_name_parts = mod_name.split("-")
-                            mod_name = ""
-                            for part in mod_name_parts:
-                                part0 = part
-                                for c in [".", "fabric", "forge", "quilt", "v", "mc", "mod", "backport", "snapshot", "build", "prism"]: part = part.replace(c, "")
-                                for c in range(10): part = part.replace(str(c), "")
-                                if part == "": break
-                                elif len(part) > 1: mod_name += part0
-                            if len(mod_name) > 2 and mod_name in stacktrace:
-                                if not mod in wrong_mods: wrong_mods.append(mod)
+                if len(self.log.whatever_mods) == 0:
+                    for mod in self.mcsr_mods + self.general_mods:
+                        if mod.replace("-", "").lower() in stacktrace and not mod in wrong_mods and not mod.lower() in wrong_mods:
+                            wrong_mods.append(mod)
+                else:
+                    for mod in self.log.whatever_mods:
+                        mod_name = mod.lower().replace(".jar", "")
+                        for c in ["+", "-", "_", "=", ",", " "]: mod_name = mod_name.replace(c, "-")
+                        mod_name_parts = mod_name.split("-")
+                        mod_name = ""
+                        for part in mod_name_parts:
+                            part0 = part
+                            for c in [".", "fabric", "forge", "quilt", "v", "mc", "mod", "backport", "snapshot", "build", "prism"]: part = part.replace(c, "")
+                            for c in range(10): part = part.replace(str(c), "")
+                            if part == "": break
+                            elif len(part) > 1: mod_name += part0
+                        if len(mod_name) > 2 and mod_name in stacktrace:
+                            if not mod in wrong_mods: wrong_mods.append(mod)
             
             if len(wrong_mods) == 1:
                 builder.error("mod_crash", wrong_mods[0])
