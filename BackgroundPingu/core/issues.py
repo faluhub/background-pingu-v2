@@ -560,7 +560,7 @@ class IssueChecker:
             found_crash_cause = True
         
         if self.log.has_pattern(r"Description: Exception in server tick loop[\s\n]*java\.lang\.IllegalStateException: Lock is no longer valid"):
-            builder.error("wp_3_plus_crash").add("new_horizons_download")
+            builder.error("wp_3_plus_crash").add("wp_3_plus_crash_fix")
             found_crash_cause = True
         
         if is_mcsr_log and any(self.log.has_content(log_spam) for log_spam in [
@@ -794,6 +794,10 @@ class IssueChecker:
             if self.log._content.count("\n") < 500: builder.add("exitcode_1073741819_4")
             builder.add("exitcode_1073741819_5")
 
+        if self.log.has_content("Missing or unsupported mandatory dependencies"):
+            builder.error("forge_missing_dependencies")
+            found_crash_cause = True
+
         pattern = r"\[Integrated Watchdog/ERROR\]: This crash report has been saved to: (.*\.txt)"
         match = re.search(pattern, self.log._content)
         if not match is None:
@@ -825,6 +829,9 @@ class IssueChecker:
                 ignored_patterns = [
                     "loading",
                     "transformationserviceshandler",
+                    "crash",
+                    "evaluatesequential",
+                    "handlemixin",
                     r"(?s)warning: coremods are present:.*?contact their authors before contacting forge",
                 ]
                 for pattern in ignored_patterns: stacktrace = re.sub(pattern, "", stacktrace)
