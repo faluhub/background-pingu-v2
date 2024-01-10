@@ -54,7 +54,13 @@ class Log:
         ]
 
         pattern = re.compile(r"\t- ([^\n]+)", re.DOTALL)
-        fabric_mods = [mod for mod in pattern.findall(self._content) if not any(mod.startswith(prefix) for prefix in excluded_prefixes)]
+
+        fabric_mods = []
+        for mod in pattern.findall(self._content):
+            mod = mod.replace("_", "-")
+            if not any(mod.startswith(prefix) for prefix in excluded_prefixes):
+                fabric_mods.append(mod)
+        
         return fabric_mods
     
     @cached_property
@@ -226,6 +232,12 @@ class Log:
     
     def has_mod(self, mod_name: str) -> bool:
         for mod in self.mods + self.fabric_mods:
+            if mod_name.lower() in mod.lower():
+                return True
+        return False
+    
+    def has_normal_mod(self, mod_name: str) -> bool:
+        for mod in self.mods:
             if mod_name.lower() in mod.lower():
                 return True
         return False

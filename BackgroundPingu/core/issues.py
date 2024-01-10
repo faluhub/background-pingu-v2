@@ -244,7 +244,7 @@ class IssueChecker:
                 if self.log.has_mod(incompatible_mod):
                     builder.error("incompatible_mod", key, incompatible_mod)
         
-        if (self.log.minecraft_version == "1.16.1" and len(self.log.mods) > 0
+        if (self.log.minecraft_version == "1.16.1" and len(self.log.whatever_mods) > 0
         and not any(self.log.has_mod(ssg_mod) for ssg_mod in self.ssg_mods)):
             missing_mods = []
             for recommended_mod in (self.ranked_recommended_mods
@@ -537,7 +537,7 @@ class IssueChecker:
             if mod_name.lower() == "fabric": builder.error("requires_fabric_api")
             else: builder.error("requires_mod", mod_name)
         
-        if self.log.has_mod("fabric-api") and is_mcsr_log:
+        if self.log.has_normal_mod("fabric-api") and is_mcsr_log:
             builder.warning("using_fabric_api")
         
         if self.log.has_content("Couldn't extract native jar"):
