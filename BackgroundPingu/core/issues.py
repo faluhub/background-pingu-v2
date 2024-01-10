@@ -537,7 +537,7 @@ class IssueChecker:
             if mod_name.lower() == "fabric": builder.error("requires_fabric_api")
             else: builder.error("requires_mod", mod_name)
         
-        if self.log.has_normal_mod("fabric-api") and is_mcsr_log:
+        if self.log.has_mod("fabric-api") and is_mcsr_log:
             builder.warning("using_fabric_api")
         
         if self.log.has_content("Couldn't extract native jar"):

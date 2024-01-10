@@ -58,7 +58,7 @@ class Log:
         fabric_mods = []
         for mod in pattern.findall(self._content):
             mod = mod.replace("_", "-")
-            if not any(mod.startswith(prefix) for prefix in excluded_prefixes):
+            if not any(mod.startswith(prefix) for prefix in excluded_prefixes) and not " via " in mod:
                 fabric_mods.append(mod)
         
         return fabric_mods
