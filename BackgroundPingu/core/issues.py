@@ -89,8 +89,7 @@ class IssueChecker:
             "biomethreadlocalfix",
             "forceport",
             "sleepbackground-3.8-1.8.x-1.12.x",
-            "tab-focus",
-            "speedrunigt-14.0"
+            "tab-focus"
         ]
         self.assume_as_legal = [
             "mcsrranked",
@@ -225,7 +224,6 @@ class IssueChecker:
                     else: checked_mods.append(mod_name.lower())
 
                     latest_version = self.get_latest_version(metadata)
-                    
                     if not latest_version is None and not (latest_version["name"] == mod or latest_version["version"] in mod):
                         if all(not weird_mod in mod.lower() for weird_mod in self.assume_as_latest):
                             outdated_mods.append([mod_name, latest_version["page"]])
@@ -317,7 +315,9 @@ class IssueChecker:
             builder.error("32_bit_java_crash").add("java_update_guide")
             found_crash_cause = True
         
-        if self.log.has_content("mcwrap.py"): pass
+        if self.log.has_content("mcwrap.py"):
+            if self.log.launcher is None or self.log.launcher == "MultiMC" or not self.log.has_content("mac-lwjgl-fix"):
+                builder.error("m1_multimc_hack").add("mac_setup_guide")
         
         elif not found_crash_cause and self.log.has_content("You might want to install a 64bit Java version"):
             if not self.log.operating_system is None and self.log.operating_system == OperatingSystem.MACOS:
@@ -339,6 +339,13 @@ class IssueChecker:
         if self.log.has_content("java.awt.AWTError: Assistive Technology not found: org.GNOME.Accessibility.AtkWrapper"):
             builder.error("headless_java")
             found_crash_cause = True
+        
+        if (self.log.mod_loader == ModLoader.FORGE
+            and self.log.launcher == "MultiMC"
+            and self.log.short_version in [f"1.{20 + i}" for i in range(15)]
+            and self.log.has_content("Instance update failed")
+        ):
+            builder.error("multimc_neoforge")
 
         if self.log.has_content("[LWJGL] Failed to load a library. Possible solutions:") and self.log.short_version in [f"1.{20 + i}" for i in range(15)]:
             builder.error("update_mmc")
@@ -560,7 +567,13 @@ class IssueChecker:
             found_crash_cause = True
         
         if self.log.has_pattern(r"Description: Exception in server tick loop[\s\n]*java\.lang\.IllegalStateException: Lock is no longer valid"):
-            builder.error("wp_3_plus_crash").add("new_horizons_download")
+            builder.error("wp_3_plus_crash")
+            found_crash_cause = True
+            metadata = self.get_mod_metadata("worldpreview")
+            if not metadata is None:
+                latest_version = self.get_latest_version(metadata)
+                if not latest_version is None:
+                    builder.add("mod_download", metadata["name"], latest_version["page"])
             found_crash_cause = True
         
         if is_mcsr_log and any(self.log.has_content(log_spam) for log_spam in [
@@ -794,6 +807,10 @@ class IssueChecker:
             if self.log._content.count("\n") < 500: builder.add("exitcode_1073741819_4")
             builder.add("exitcode_1073741819_5")
 
+        if self.log.has_content("Missing or unsupported mandatory dependencies"):
+            builder.error("forge_missing_dependencies")
+            found_crash_cause = True
+
         pattern = r"\[Integrated Watchdog/ERROR\]: This crash report has been saved to: (.*\.txt)"
         match = re.search(pattern, self.log._content)
         if not match is None:
@@ -825,6 +842,9 @@ class IssueChecker:
                 ignored_patterns = [
                     "loading",
                     "transformationserviceshandler",
+                    "crash",
+                    "evaluatesequential",
+                    "handlemixin",
                     r"(?s)warning: coremods are present:.*?contact their authors before contacting forge",
                 ]
                 for pattern in ignored_patterns: stacktrace = re.sub(pattern, "", stacktrace)

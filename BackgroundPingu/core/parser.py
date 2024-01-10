@@ -112,13 +112,14 @@ class Log:
             if not version_match is None:
                 return version_match.group(1)
         
-        match = re.compile(r"Loading Minecraft (\S+) with Fabric Loader").search(self._content)
-        if not match is None:
-            return match.group(1)
-        
-        match = re.compile(r"Minecraft Version ID: (\S+)").search(self._content)
-        if not match is None:
-            return match.group(1)
+        for pattern in [
+            r"Loading Minecraft (\S+) with Fabric Loader",
+            r"Minecraft Version ID: (\S+)",
+            r"/net/minecraftforge/forge/(\S+)-",
+        ]:
+            match = re.compile(pattern).search(self._content)
+            if not match is None:
+                return match.group(1)
         
         return None
     
@@ -180,6 +181,9 @@ class Log:
         
         if "client brand is untouched" in self._content:
             return ModLoader.VANILLA
+
+        if self.has_content("\nhttps://maven.minecraftforge.net") or self.has_content("\nhttps://maven.neoforged.net"):
+            return ModLoader.FORGE
         
         return None
     
