@@ -1,9 +1,11 @@
-import discord, os, json
+import discord, os, json, dotenv
 from datetime import datetime
 from discord import AutoShardedBot as asb
 
 class BackgroundPingu(asb):
     def __init__(self):
+        dotenv.load_dotenv()
+
         self.start_time = datetime.utcnow()
 
         with open("./BackgroundPingu/data/issues.json", "r") as f:
@@ -13,7 +15,8 @@ class BackgroundPingu(asb):
 
         self.cog_blacklist = []
         self.cog_folder_blacklist = ["__pycache__"]
-        self.path = "./BackgroundPingu/bot/cogs"
+        self.cogs_path = "./BackgroundPingu/bot/cogs"
+        self.debug = os.environ.get("DEBUG", False)
 
         self.color = 0xFFFFFF
 
@@ -22,18 +25,18 @@ class BackgroundPingu(asb):
             case_insensitive=True,
             allowed_mentions=discord.AllowedMentions(everyone=False),
             owner_ids=[810863994985250836, 695658634436411404],
-            # debug_guilds=[1018128160962904114]
+            debug_guilds=[1018128160962904114] if self.debug else None
         )
 
         print("\nLoading cogs..."),
         self.load_cogs()
 
     def load_cogs(self, folder=None):
-        if not folder is None: self.path = os.path.join(self.path, folder)
-        formatted_path = self.path.strip("./").replace("/", ".").replace("\\", ".")
+        if not folder is None: self.cogs_path = os.path.join(self.cogs_path, folder)
+        formatted_path = self.cogs_path.strip("./").replace("/", ".").replace("\\", ".")
 
-        for file in os.listdir(self.path):
-            if not os.path.isdir(os.path.join(self.path, file)):
+        for file in os.listdir(self.cogs_path):
+            if not os.path.isdir(os.path.join(self.cogs_path, file)):
                 if not file in self.cog_blacklist:
                     try:
                         self.load_extension(f"{formatted_path}.{file[:-3]}")

@@ -16,7 +16,7 @@ class Tips(Cog):
             "Open the installer, select the Minecraft version you are playing and finish the installation.\n" \
             "Note: You do **NOT **need Fabric API, that is banned and you won't need it!\n" \
             "When you open your Minecraft launcher now it will show Fabric as an option. With that your mods will work."
-        return await ctx.respond(text, ephemeral=True)
+        return await ctx.respond(text)
 
     @commands.slash_command(name="log", description="Shows how to send a log on MultiMC/Prism Launcher.")
     async def log(self, ctx: discord.ApplicationContext):
@@ -92,13 +92,11 @@ In general, it's a good idea to watch top runs and top runners' streams to get a
 
     @commands.slash_command(name="ninjabrainbot", description="Gives a guide to using Ninjabrain Bot.")
     async def ninjabrainbot(self, ctx: discord.ApplicationContext):
-        text = "https://youtu.be/8Z0tk_Z24WA"
-        return await ctx.respond(text)
+        return await ctx.respond("https://youtu.be/8Z0tk_Z24WA")
 
     @commands.slash_command(name="prism", description="Gives a link to download PrismLauncher.")
     async def prism(self, ctx: discord.ApplicationContext):
-        text = "You can download the Prism Launcher here: https://prismlauncher.org/"
-        return await ctx.respond(text)
+        return await ctx.respond("You can download the Prism Launcher here: https://prismlauncher.org/")
 
     @commands.slash_command(name="setup", description="Gives a link to a tutorial to setup Minecraft Speedrunning.")
     async def setup(self, ctx: discord.ApplicationContext):
