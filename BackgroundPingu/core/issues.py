@@ -569,6 +569,9 @@ class IssueChecker:
             builder.error("lithium_crash")
             found_crash_cause = True
         
+        if self.log.has_content("java.lang.NullPointerException: Cannot invoke \"net.minecraft.class_512.method_2623()\" because \"this.field_3098\" is null"):
+            builder.error("recipe_book_crash")
+        
         if self.log.has_pattern(r"Description: Exception in server tick loop[\s\n]*java\.lang\.IllegalStateException: Lock is no longer valid"):
             builder.error("wp_3_plus_crash")
             found_crash_cause = True
