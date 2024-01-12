@@ -350,6 +350,9 @@ class IssueChecker:
         if self.log.has_content("[LWJGL] Failed to load a library. Possible solutions:") and self.log.short_version in [f"1.{20 + i}" for i in range(15)]:
             builder.error("update_mmc")
         
+        if self.log.has_content("[LWJGL] Platform/architecture mismatch detected for module: org.lwjgl"):
+            builder.error("try_changing_lwjgl_version", "" if self.log.is_prism else " Instance")
+        
         if not found_crash_cause and (any(self.log.has_content(broken_java) for broken_java in [
             "Could not start java:\n\n\nCheck your ",
             "Incompatible magic value 0 in class file sun/security/provider/SunEntries",
@@ -543,7 +546,7 @@ class IssueChecker:
         if self.log.has_content("Couldn't extract native jar"):
             builder.error("locked_libs")
         
-        if not re.compile(r"java\.io\.IOException: Directory \'(.+?)\' could not be created").search(self.log._content) is None:
+        if self.log.has_pattern(r"java\.io\.IOException: Directory \'(.+?)\' could not be created"):
             builder.error("try_admin_launch")
         
         if self.log.has_content("java.lang.NullPointerException: Cannot invoke \"net.minecraft.class_2680.method_26213()\" because \"state\" is null"):
