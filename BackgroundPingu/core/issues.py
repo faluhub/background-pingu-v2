@@ -357,7 +357,7 @@ class IssueChecker:
             "Could not start java:\n\n\nCheck your ",
             "Incompatible magic value 0 in class file sun/security/provider/SunEntries",
             "Assertion `version->filename == NULL || ! _dl_name_match_p (version->filename, map)' failed"
-        ]) or not re.compile(r"The java binary \"(.+)\" couldn't be found.").search(self.log._content) is None):
+        ]) or self.log.has_pattern(r"The java binary \"(.+)\" couldn't be found.")):
             builder.error("broken_java").add("java_update_guide")
             found_crash_cause = True
         
@@ -443,7 +443,7 @@ class IssueChecker:
             min_limit_1 = 1200 if has_shenandoah else 1900
             min_limit_2 = 850 if has_shenandoah else 1200
             ram_guide = "allocate_ram_guide_mmc" if self.log.is_multimc_or_fork else "allocate_ram_guide"
-            if (self.log.max_allocated < min_limit_1 and self.log.has_content(" -805306369")) or self.log.has_content("OutOfMemoryError") or self.log.has_content("GL error GL_OUT_OF_MEMORY"):
+            if (self.log.max_allocated < min_limit_1 and self.log.has_content(" -805306369")) or self.log.has_content("java.lang.OutOfMemoryError") or self.log.has_content("GL error GL_OUT_OF_MEMORY"):
                 builder.error("too_little_ram_crash").add(ram_guide)
                 found_crash_cause = True
             elif self.log.max_allocated < min_limit_2:
@@ -460,14 +460,6 @@ class IssueChecker:
         elif self.log.has_content("OutOfMemoryError") or self.log.has_content("GL error GL_OUT_OF_MEMORY"):
             ram_guide = "allocate_ram_guide_mmc" if self.log.is_multimc_or_fork else "allocate_ram_guide"
             builder.error("too_little_ram_crash").add(ram_guide)
-        
-        if not self.log.minecraft_folder is None:
-            if "OneDrive" in self.log.minecraft_folder:
-                builder.note("onedrive")
-            if "C:/Program Files" in self.log.minecraft_folder:
-                builder.note("program_files")
-            if "Rar$" in self.log.minecraft_folder:
-                builder.error("need_to_extract_from_zip", self.log.launcher if not self.log.launcher is None else "the launcher")
         
         if self.log.has_mod("phosphor") and not self.log.minecraft_version == "1.12.2":
             builder.note("starlight_better")
@@ -486,8 +478,11 @@ class IssueChecker:
         if self.log.has_content("NSWindow drag regions should only be invalidated on the Main Thread"):
             builder.error("mac_too_new_java")
         
-        if self.log.has_content("Pixel format not accelerated") or self.log.has_pattern(r"  \[(ig[0-9]+icd[0-9]+\.dll)[+ ](0x[0-9a-f]+)\]"):
-            if self.log.has_mod("speedrunigt"):
+        if self.log.has_content("Pixel format not accelerated"):
+            builder.error("gl_pixel_format")
+        
+        if self.log.has_pattern(r"  \[(ig[0-9]+icd[0-9]+\.dll)[+ ](0x[0-9a-f]+)\]"):
+            if self.log.has_content("speedrunigt"):
                 builder.error("eav_crash").add("eav_crash_srigt")
             else:
                 builder.error("gl_pixel_format")
@@ -504,7 +499,7 @@ class IssueChecker:
                 builder.add("eav_crash_3", "","")
             builder.add("eav_crash_4")
             builder.add("eav_crash_5")
-            if self.log.has_mod("speedrunigt"): builder.add("eav_crash_srigt")
+            if len(self.log.whatever_mods) == 0 or self.log.has_mod("speedrunigt"): builder.add("eav_crash_srigt")
             builder.add("eav_crash_disclaimer")
         
         if self.log.has_content("WGL_ARB_create_context_profile is unavailable"):
@@ -641,10 +636,11 @@ class IssueChecker:
                 builder.error("random_forge_crash_2")
         
         if any(self.log.has_content(sodium_rtss_crash) for sodium_rtss_crash in [
-            "RivaTuner Statistics Server (RTSS) is not compatible with Sodium, see this issue for more details:",
+            "RivaTuner Statistics Server (RTSS) is not compatible with Sodium",
             "READ ME! You appear to be using the RivaTuner Statistics Server (RTSS)!"
         ]):
             builder.error("sodium_rtss")
+            found_crash_cause = True
 
         match = re.search(r"Incompatible mod set found! READ THE BELOW LINES!(.*?$)", self.log._content, re.DOTALL)
         if not match is None:
@@ -742,8 +738,11 @@ class IssueChecker:
             builder.error("incompatible_mod", "WorldPreview", "carpet")
             found_crash_cause = True
 
-        if not found_crash_cause and self.log.has_content("Failed to store chunk") or self.log.has_content("There is not enough space on the disk"):
+        if self.log.has_content("There is not enough space on the disk"):
             builder.error("out_of_disk_space")
+            found_crash_cause = True
+        elif self.log.has_content("Failed to store chunk"):
+            builder.warning("out_of_disk_space")
         
         if not found_crash_cause and (len(self.log.whatever_mods) == 0 or self.log.has_mod("atum")) and self.log.has_content("java.lang.StackOverflowError"):
             builder.error("stack_overflow_crash")
@@ -822,6 +821,15 @@ class IssueChecker:
         if not match is None:
             builder.info("send_watchdog_report", re.sub(r"C:\\Users\\[^\\]+\\", "C:/Users/********/", match.group(1)))
             found_crash_cause = True
+        
+        if not self.log.minecraft_folder is None:
+            if not found_crash_cause and "OneDrive" in self.log.minecraft_folder:
+                builder.note("onedrive")
+            if "C:/Program Files" in self.log.minecraft_folder:
+                builder.note("program_files")
+            if "Rar$" in self.log.minecraft_folder:
+                builder.error("need_to_extract_from_zip", self.log.launcher if not self.log.launcher is None else "the launcher")
+    
 
         if not found_crash_cause:
             wrong_mods = []
@@ -838,19 +846,30 @@ class IssueChecker:
                     else: wrong_mods.append(mod_name)
         
 
-            pattern = r"(?s)---- Minecraft Crash Report ----.*?This is just a prompt for computer specs to be printed"
-            match = re.search(r"Minecraft has crashed!.*|Failed to start Minecraft:.*|Unable to launch\n.*|Exception caught from launcher\n.*|Reported exception thrown!\n.*|Shutdown failure!\n.*|---- Minecraft Crash Report ----.*A detailed walkthrough of the error",
-                            re.sub(pattern, "", self.log._content),
-                            re.DOTALL)
+            ignored_pattern = r"(?s)---- Minecraft Crash Report ----.*?This is just a prompt for computer specs to be printed"
+            crash_patterns = [
+                r"---- Minecraft Crash Report ----.*A detailed walkthrough of the error",
+                r"Failed to start Minecraft:.*",
+                r"Unable to launch\n.*",
+                r"Exception caught from launcher\n.*",
+                r"Reported exception thrown!\n.*",
+                r"Shutdown failure!\n.*",
+                r"Minecraft has crashed!.*",
+            ]
+            for crash_pattern in crash_patterns:
+                match = re.search(crash_pattern,
+                                re.sub(ignored_pattern, "", self.log._content),
+                                re.DOTALL)
+                if not match is None: break
+
             if not match is None:
                 stacktrace = match.group().lower()
 
                 ignored_patterns = [
-                    "loading",
                     "transformationserviceshandler",
-                    "crash",
                     "evaluatesequential",
                     "handlemixin",
+                    "renderer",
                     r"(?s)warning: coremods are present:.*?contact their authors before contacting forge",
                 ]
                 for pattern in ignored_patterns: stacktrace = re.sub(pattern, "", stacktrace)
@@ -871,12 +890,13 @@ class IssueChecker:
                             for c in range(10): part = part.replace(str(c), "")
                             if part == "": break
                             elif len(part) > 1: mod_name += part0
+                        if len(mod_name) < 5: mod_name = f".{mod_name}"
                         if len(mod_name) > 2 and mod_name in stacktrace:
                             if not mod in wrong_mods: wrong_mods.append(mod)
-            
+
             if len(wrong_mods) == 1:
                 builder.error("mod_crash", wrong_mods[0])
-            elif len(wrong_mods) > 0 and len(wrong_mods) < 8:
+            elif len(wrong_mods) > 0 and len(wrong_mods) < 10:
                 builder.error("mods_crash", "; ".join(wrong_mods))
         
         
