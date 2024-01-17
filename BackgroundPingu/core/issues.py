@@ -482,7 +482,7 @@ class IssueChecker:
             builder.error("gl_pixel_format")
         
         if self.log.has_pattern(r"  \[(ig[0-9]+icd[0-9]+\.dll)[+ ](0x[0-9a-f]+)\]"):
-            if self.log.has_content("speedrunigt"):
+            if self.log.has_content("speedrunigt") or self.log.has_mod("mcsrranked"):
                 builder.error("eav_crash").add("eav_crash_srigt")
             else:
                 builder.error("gl_pixel_format")
@@ -501,7 +501,7 @@ class IssueChecker:
                 builder.add("eav_crash_1.3", "","")
             builder.add("eav_crash_2")
             builder.add("eav_crash_3")
-            if len(self.log.whatever_mods) == 0 or self.log.has_mod("speedrunigt"): builder.add("eav_crash_srigt")
+            if len(self.log.whatever_mods) == 0 or self.log.has_mod("speedrunigt") or self.log.has_mod("mcsrranked"): builder.add("eav_crash_srigt")
             builder.add("eav_crash_disclaimer")
         
         if self.log.has_content("WGL_ARB_create_context_profile is unavailable"):
