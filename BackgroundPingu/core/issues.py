@@ -491,14 +491,16 @@ class IssueChecker:
             builder.error("eav_crash")
             if self.log.has_pattern(r"  \[ntdll\.dll\+(0x[0-9a-f]+)\]"):
                 builder.add("eav_crash_1", "**","**")
-                builder.add("eav_crash_2", "**","**")
-                builder.add("eav_crash_3", "**","**")
+                builder.add("eav_crash_1.1", "**","**")
+                builder.add("eav_crash_1.2", "**","**")
+                builder.add("eav_crash_1.3", "**","**")
             else:
                 builder.add("eav_crash_1", "","")
-                builder.add("eav_crash_2", "","")
-                builder.add("eav_crash_3", "","")
-            builder.add("eav_crash_4")
-            builder.add("eav_crash_5")
+                builder.add("eav_crash_1.1", "","")
+                builder.add("eav_crash_1.2", "","")
+                builder.add("eav_crash_1.3", "","")
+            builder.add("eav_crash_2")
+            builder.add("eav_crash_3")
             if len(self.log.whatever_mods) == 0 or self.log.has_mod("speedrunigt"): builder.add("eav_crash_srigt")
             builder.add("eav_crash_disclaimer")
         

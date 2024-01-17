@@ -10,7 +10,6 @@ def get_mods(start: bool=True):
     link = "https://redlime.github.io/MCSRMods/meta/v4/files.json"
     headers = {'Cache-Control': 'no-cache'}
     res = requests.get(link, headers=headers, timeout=10)
-    if res.status_code != 200: print(f"# request ended with status code '{res.status_code}'")
     if res.status_code == 200:
         content = res.text
         for item in ignored: content = content.replace(item, "")
