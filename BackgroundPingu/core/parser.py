@@ -29,7 +29,7 @@ class Log:
     def from_link(link: str):
         paste_ee_match = re.search(r"https://(?:api\.)?paste\.ee/(?:p/|d/)([a-zA-Z0-9]+)", link)
         mclogs_match = re.search(r"https://mclo\.gs/(\w+)", link)
-        if paste_ee_match: link = f"https://api.paste.ee/d/{paste_ee_match.group(1)}/0"
+        if paste_ee_match: link = f"https://paste.ee/d/{paste_ee_match.group(1)}/0"
         elif mclogs_match: link = f"https://api.mclo.gs/1/raw/{mclogs_match.group(1)}"
         elif not link.endswith(".txt") and not link.endswith(".log"): return None
         res = requests.get(link, timeout=5)
@@ -130,6 +130,17 @@ class Log:
         return None
     
     @cached_property
+    def fabric_mc_version(self) -> str:
+        for pattern in [
+            r"libraries/net/fabricmc/intermediary/(\S+)/intermediary-"
+        ]:
+            match = re.compile(pattern).search(self._content)
+            if not match is None:
+                return match.group(1)
+        
+        return None
+    
+    @cached_property
     def short_version(self) -> str:
         if not self.minecraft_version is None:
             return self.minecraft_version[:4]
@@ -204,6 +215,15 @@ class Log:
             return match.group(1)
         
         return None
+    
+    @cached_property
+    def libraries(self):
+        pattern = r"\nLibraries:\n(.*?)\nNative libraries:\n"
+        match = re.search(pattern, self._content, re.DOTALL)
+        if not match is None:
+            return match.group(1)
+        
+        return None
 
     @cached_property
     def max_allocated(self):
@@ -244,6 +264,9 @@ class Log:
     
     def has_java_argument(self, argument: str) -> bool:
         return argument.lower() in self.java_arguments.lower()
+    
+    def has_library(self, content: str) -> bool:
+        return content.lower() in self.libraries.lower()
     
     def upload(self) -> (bool, str):
         api_url = "https://api.mclo.gs/1/log"
