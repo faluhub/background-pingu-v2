@@ -416,8 +416,11 @@ class IssueChecker:
                 builder.note("using_other_loader", self.log.mod_loader.value)
 
         if len(self.log.mods) > 0 and self.log.mod_loader == ModLoader.VANILLA:
-            builder.error("no_loader")
-            if self.log.short_version in [f"1.{14 + i}" for i in range(10)]: builder.add("fabric_guide_prism" if self.log.is_prism else "fabric_guide_mmc", "install")
+            if any(self.log.has_library(loader) for loader in ["forge", "fabric", "quilt"]):
+                builder.error("broken_loader", "" if self.log.is_prism else " Instance")
+            else:
+                builder.error("no_loader")
+                if self.log.short_version in [f"1.{14 + i}" for i in range(10)]: builder.add("fabric_guide_prism" if self.log.is_prism else "fabric_guide_mmc", "install")
         
         if not found_crash_cause:
             has_fabric_mod = any(self.log.has_mod(mcsr_mod) for mcsr_mod in self.mcsr_mods) or self.log.has_mod("fabric")

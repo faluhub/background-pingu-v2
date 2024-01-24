@@ -215,6 +215,15 @@ class Log:
             return match.group(1)
         
         return None
+    
+    @cached_property
+    def libraries(self):
+        pattern = r"\nLibraries:\n(.*?)\nNative libraries:\n"
+        match = re.search(pattern, self._content, re.DOTALL)
+        if not match is None:
+            return match.group(1)
+        
+        return None
 
     @cached_property
     def max_allocated(self):
@@ -255,6 +264,9 @@ class Log:
     
     def has_java_argument(self, argument: str) -> bool:
         return argument.lower() in self.java_arguments.lower()
+    
+    def has_library(self, content: str) -> bool:
+        return content.lower() in self.libraries.lower()
     
     def upload(self) -> (bool, str):
         api_url = "https://api.mclo.gs/1/log"
