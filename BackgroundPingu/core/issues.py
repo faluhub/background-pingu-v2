@@ -486,6 +486,13 @@ class IssueChecker:
                 builder.error("eav_crash").add("eav_crash_srigt")
             else:
                 builder.error("gl_pixel_format")
+            found_crash_cause = True
+        
+        elif (len(self.log.whatever_mods) == 0 and self.log.has_mod("xaero")) and self.log.has_content("Field too big for insn"):
+            wrong_mods = [mod for mod in self.log.whatever_mods if "xaero" in mod.lower()]
+            if len(wrong_mods) == 1: wrong_mods == ["xaero"]
+            builder.error("mods_crash", "; ".join(wrong_mods))
+            found_crash_cause = True
         
         elif self.log.has_content("A fatal error has been detected by the Java Runtime Environment") or self.log.has_content("EXCEPTION_ACCESS_VIOLATION"):
             builder.error("eav_crash")
@@ -503,6 +510,7 @@ class IssueChecker:
             builder.add("eav_crash_3")
             if len(self.log.whatever_mods) == 0 or self.log.has_mod("speedrunigt") or self.log.has_mod("mcsrranked"): builder.add("eav_crash_srigt")
             builder.add("eav_crash_disclaimer")
+            found_crash_cause = True
         
         if self.log.has_content("WGL_ARB_create_context_profile is unavailable"):
             builder.error("intel_hd2000").add("intell_hd2000_info")
@@ -733,8 +741,10 @@ class IssueChecker:
             builder.error("incompatible_mod", "SpeedRunIGT", "Stronghold Trainer")
             found_crash_cause = True
         
-        if self.log.has_mod("continuity") and self.log.has_mod("sodium") and not self.log.has_mod("indium"):
+        if self.log.has_normal_mod("continuity") and self.log.has_mod("sodium") and not self.log.has_mod("indium"):
             builder.error("missing_dependency", "continuity", "indium")
+        elif self.log.has_content("Cannot invoke \"net.fabricmc.fabric.api.renderer.v1.Renderer.meshBuilder()\""):
+            builder.error("missing_dependency_2", "indium")
         
         if self.log.has_mod("worldpreview") and self.log.has_mod("carpet"):
             builder.error("incompatible_mod", "WorldPreview", "carpet")
@@ -757,6 +767,12 @@ class IssueChecker:
             else:
                 builder.warning("no_mappings", "" if self.log.is_prism else " Instance")
 
+        if (not self.log.fabric_mc_version is None
+            and not self.log.minecraft_version is None
+            and self.log.minecraft_version != self.log.fabric_mc_version
+        ):
+            builder.error("minecraft_version_mismatch", "" if self.log.is_prism else " Instance")
+        
         if not found_crash_cause and self.log.has_content("ERROR]: Mixin apply for mod fabric-networking-api-v1 failed"):
             builder.error("delete_dot_fabric")
         
@@ -872,6 +888,7 @@ class IssueChecker:
                     "evaluatesequential",
                     "handlemixin",
                     "renderer",
+                    "nativeconstructoraccessor",
                     r"(?s)warning: coremods are present:.*?contact their authors before contacting forge",
                 ]
                 for pattern in ignored_patterns: stacktrace = re.sub(pattern, "", stacktrace)
