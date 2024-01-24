@@ -922,7 +922,7 @@ class IssueChecker:
                 builder.error("mods_crash", "; ".join(wrong_mods))
         
         
-        '''if self.link == "message":
+        if self.link == "message":
             if self.log.has_pattern(r"-\s*1"):
                 entity_culling_indicators = {
                     "entit": 2,
@@ -949,6 +949,6 @@ class IssueChecker:
                 builder.note("fandom_wiki", match)
 
             if self.log.has_content("water") and self.log.has_content("invisible"):
-                builder.error("chunk_multidraw")'''
+                builder.error("chunk_multidraw")
         
         return builder
