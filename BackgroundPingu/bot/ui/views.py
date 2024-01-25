@@ -1,4 +1,4 @@
-import discord
+import discord, re
 from discord.ui import View, Button
 from BackgroundPingu.core.issues import IssueBuilder
 
@@ -23,7 +23,9 @@ class Paginator(View):
     async def edit_message(self, interaction: discord.Interaction):
         embed = interaction.message.embeds[0]
         embed.description = self._messages[self.page]
-        embed.set_footer(text=f"Page {self.page + 1}/{len(self._messages)}")
+        footer = embed._footer["text"]
+        footer = re.sub(r"Page \d+/\d+", f"Page {self.page + 1}/{len(self._messages)}", footer)
+        embed.set_footer(text=footer)
         return await interaction.response.edit_message(content="" if self.reupload_url is None else f"<{self.reupload_url}>", embeds=[embed], view=self)
 
     @discord.ui.button(emoji="⬅️", custom_id="back", disabled=True)

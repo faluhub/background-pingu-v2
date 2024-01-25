@@ -16,6 +16,7 @@ class IssueBuilder:
         self.log = log
         self.amount = 0
         self._last_added = None
+        self.footer = ""
     
     def _add_to(self, type: str, value: str, add: bool=False):
         self._messages[type].append(value)
@@ -53,6 +54,10 @@ class IssueBuilder:
 
     def has_values(self) -> bool:
         return self.amount > 0
+
+    def set_footer(self, s: str):
+        self.footer = s
+        return self
 
     def build(self) -> list[str]:
         messages = []
@@ -193,6 +198,19 @@ class IssueChecker:
         checked_mods = []
         outdated_mods = []
         all_incompatible_mods = {}
+        footer = ""
+
+        if not self.log.launcher is None: footer += f" {self.log.launcher}"
+        
+        if not self.log.minecraft_version is None: footer += f" {self.log.minecraft_version}"
+
+        if self.log.has_mod("mcsrranked"): footer += " Ranked"
+        else:
+            if any(self.log.has_mod(ssg_mod) for ssg_mod in self.ssg_mods): footer += " SSG"
+            elif is_mcsr_log: footer += " RSG"
+            elif not self.log.mod_loader is None: footer += f" {self.log.mod_loader.value}"
+        
+        builder.set_footer(footer.strip())
 
         if self.log.has_content("(Session ID is token:") and not self.log.has_content("(Session ID is token:<"):
             builder.error("leaked_session_id_token")

@@ -97,7 +97,8 @@ class Log:
     @cached_property
     def minecraft_folder(self) -> str:
         match = re.compile(r"Minecraft folder is:\n(.*)\n").search(self._content)
-        return match.group(1).strip() if not match is None else None
+        if not match is None: return match.group(1).strip()
+        return None
     
     @cached_property
     def operating_system(self) -> OperatingSystem:
@@ -122,6 +123,7 @@ class Log:
             r"Loading Minecraft (\S+) with Fabric Loader",
             r"Minecraft Version ID: (\S+)",
             r"/net/minecraftforge/forge/(\S+)-",
+            r"\n\t- minecraft (\S+)\n",
         ]:
             match = re.compile(pattern).search(self._content)
             if not match is None:
@@ -163,11 +165,20 @@ class Log:
     @cached_property
     def launcher(self) -> str:
         result = self._content.split(" ", 1)[0]
-        return result if result in self.launchers else None
+        if result in self.launchers: return result
+        
+        for result in self.launchers:
+            if self.has_content(f"/{result}/") or self.has_content(f"\\{result}\\"):
+                return result
+        
+        if self.has_content("\\AppData\\Roaming\\.minecraft") or self.has_content("/AppData/Roaming/.minecraft"):
+            return "Official Launcher"
+        
+        return None
 
     @cached_property
     def is_multimc_or_fork(self) -> bool:
-        return not self.launcher is None
+        return not self.launcher is None and self.launcher != "Official Launcher"
 
     @cached_property
     def is_prism(self) -> bool:
@@ -186,20 +197,23 @@ class Log:
             if "net.minecraft.client.main.Main" in line:
                 return ModLoader.VANILLA
         
-        match = re.search(r"Loading Minecraft \S+ with Fabric Loader",self._content)
-        if not match is None:
+        if self.has_pattern(r"Loading Minecraft \S+ with Fabric Loader"):
             return ModLoader.FABRIC
         
-        match = re.search(r"Client brand changed to '(\S+)'",self._content)
+        match = re.search(r"Client brand changed to '(\S+)'", self._content)
         if match:
             for loader in ModLoader:
                 if loader.value.lower() in match.group(1).lower():
                     return loader
         
-        if "client brand is untouched" in self._content:
+        if self.has_content("client brand is untouched"):
             return ModLoader.VANILLA
 
-        if self.has_content("\nhttps://maven.minecraftforge.net") or self.has_content("\nhttps://maven.neoforged.net"):
+        if any(self.has_content(content) for content in [
+            "\nhttps://maven.minecraftforge.net",
+            "\nhttps://maven.neoforged.net",
+            "net.minecraftforge.",
+        ]):
             return ModLoader.FORGE
         
         return None
