@@ -226,6 +226,13 @@ If you want a custom modpack, go [here](<https://redlime.github.io/MCSRMods/?typ
         text = "Application that helps downloading minecraft speedrun practice maps: <https://github.com/cylorun/Map-Check/releases/latest>"
         return await ctx.respond(text)
 
+    @commands.slash_command(name="boateye", description="Gives links to boat measurement guides.")
+    async def boateye(self, ctx: discord.ApplicationContext):
+        text = """[Full boat eye guide](https://docs.google.com/document/d/e/2PACX-1vTEq9UsoVef5Ed4OWCpw2xsvc7jZhWgK6gceCvhjz-i7DlsGj3p9SelEBclgvlsZ12tOQEYn4UC5X5n/pub) 
+[Examples](<https://youtu.be/T2Wmhf4tNj4>)
+Requires [Eye Zoom Macro](https://discord.com/channels/83066801105145856/405839885509984256/1143858381266894918)"""
+        return await ctx.respond(text)
+
     # @commands.slash_command(name="", description="")
     # async def (self, ctx: discord.ApplicationContext):
     #     text = ""
