@@ -171,9 +171,15 @@ class Log:
             if self.has_content(f"/{result}/") or self.has_content(f"\\{result}\\"):
                 return result
         
-        if self.has_content("\\AppData\\Roaming\\.minecraft") or self.has_content("/AppData/Roaming/.minecraft"):
+        if (self.has_content("\\AppData\\Roaming\\.minecraft")
+            or self.has_content("/AppData/Roaming/.minecraft")
+            or self.has_pattern(r"-Xmx(\d+)G")
+        ):
             return "Official Launcher"
         
+        if self.max_allocated == 1024:
+            return "MultiMC"
+
         return None
 
     @cached_property
@@ -219,7 +225,7 @@ class Log:
         return None
     
     @cached_property
-    def java_arguments(self):
+    def java_arguments(self) -> str:
         match = re.compile(r"Java Arguments:\n(.*?)\n", re.DOTALL).search(self._content)
         if not match is None:
             return match.group(1)
@@ -229,18 +235,9 @@ class Log:
             return match.group(1)
         
         return None
-    
-    @cached_property
-    def libraries(self):
-        pattern = r"\nLibraries:\n(.*?)\nNative libraries:\n"
-        match = re.search(pattern, self._content, re.DOTALL)
-        if not match is None:
-            return match.group(1)
-        
-        return None
 
     @cached_property
-    def max_allocated(self):
+    def max_allocated(self) -> int:
         if not self.java_arguments is None:
             match = re.compile(r"-Xmx(\d+)m").search(self.java_arguments)
             try:
@@ -256,6 +253,38 @@ class Log:
             try:
                 if not match is None: return int(match.group(1))*1024
             except ValueError: pass
+        return None
+    
+    @cached_property
+    def libraries(self) -> str:
+        pattern = r"\nLibraries:\n(.*?)\nNative libraries:\n"
+        match = re.search(pattern, self._content, re.DOTALL)
+        if not match is None:
+            return match.group(1)
+        
+        return None
+    
+    @cached_property
+    def stacktrace(self) -> str:
+        ignored_pattern = r"(?s)---- Minecraft Crash Report ----.*?This is just a prompt for computer specs to be printed"
+        log = re.sub(ignored_pattern, "", self._content)
+        
+        crash_patterns = [
+            r"---- Minecraft Crash Report ----.*A detailed walkthrough of the error",
+            r"Failed to start Minecraft:.*",
+            r"Unable to launch\n.*",
+            r"Exception caught from launcher\n.*",
+            r"Reported exception thrown!\n.*",
+            r"Shutdown failure!\n.*",
+            r"Minecraft has crashed!.*",
+        ]
+        for crash_pattern in crash_patterns:
+            match = re.search(crash_pattern, log, re.DOTALL)
+            if not match is None: break
+
+        if not match is None:
+            return match.group().lower()
+        
         return None
     
     def has_content(self, content: str) -> bool:

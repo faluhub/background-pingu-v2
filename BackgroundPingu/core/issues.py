@@ -210,6 +210,10 @@ class IssueChecker:
             elif is_mcsr_log: footer += " RSG"
             elif not self.log.mod_loader is None: footer += f" {self.log.mod_loader.value}"
         
+        if self.log.has_content("---------------  T H R E A D  ---------------"): footer += " hs_err_pid log"
+        elif self.log.stacktrace is None: footer += " log"
+        else: footer += " crash"
+        
         builder.set_footer(footer.strip())
 
         if self.log.has_content("(Session ID is token:") and not self.log.has_content("(Session ID is token:<"):
@@ -883,40 +887,11 @@ class IssueChecker:
                     wrong_mod = [mod for mod in self.log.whatever_mods if mod_name.lower() in mod.lower()]
                     if len(wrong_mod) > 0: wrong_mods += wrong_mod
                     else: wrong_mods.append(mod_name)
-        
 
-            ignored_pattern = r"(?s)---- Minecraft Crash Report ----.*?This is just a prompt for computer specs to be printed"
-            crash_patterns = [
-                r"---- Minecraft Crash Report ----.*A detailed walkthrough of the error",
-                r"Failed to start Minecraft:.*",
-                r"Unable to launch\n.*",
-                r"Exception caught from launcher\n.*",
-                r"Reported exception thrown!\n.*",
-                r"Shutdown failure!\n.*",
-                r"Minecraft has crashed!.*",
-            ]
-            for crash_pattern in crash_patterns:
-                match = re.search(crash_pattern,
-                                re.sub(ignored_pattern, "", self.log._content),
-                                re.DOTALL)
-                if not match is None: break
-
-            if not match is None:
-                stacktrace = match.group().lower()
-
-                ignored_patterns = [
-                    "transformationserviceshandler",
-                    "evaluatesequential",
-                    "handlemixin",
-                    "renderer",
-                    "nativeconstructoraccessor",
-                    r"(?s)warning: coremods are present:.*?contact their authors before contacting forge",
-                ]
-                for pattern in ignored_patterns: stacktrace = re.sub(pattern, "", stacktrace)
-
+            if not self.log.stacktrace is None:
                 if len(self.log.whatever_mods) == 0:
                     for mod in self.mcsr_mods + self.general_mods:
-                        if mod.replace("-", "").lower() in stacktrace and not mod in wrong_mods and not mod.lower() in wrong_mods:
+                        if mod.replace("-", "").lower() in self.log.stacktrace and not mod in wrong_mods and not mod.lower() in wrong_mods:
                             wrong_mods.append(mod)
                 else:
                     for mod in self.log.whatever_mods:
@@ -931,7 +906,7 @@ class IssueChecker:
                             if part == "": break
                             elif len(part) > 1: mod_name += part0
                         if len(mod_name) < 5: mod_name = f".{mod_name}"
-                        if len(mod_name) > 2 and mod_name in stacktrace:
+                        if len(mod_name) > 2 and mod_name in self.log.stacktrace:
                             if not mod in wrong_mods: wrong_mods.append(mod)
 
             if len(wrong_mods) == 1:
