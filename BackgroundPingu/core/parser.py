@@ -88,9 +88,9 @@ class Log:
                 return int(parts[1])
             except: pass
         
-        pattern = re.search(r"\s*- java (\d+)", self._content)
-        if not pattern is None:
-            return int(pattern.group(1))
+        match = re.search(r"\s*- java (\d+)", self._content)
+        if not match is None:
+            return int(match.group(1))
 
         return None
     
