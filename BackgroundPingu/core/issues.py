@@ -409,7 +409,10 @@ class IssueChecker:
                         found_crash_cause = True
                 except: pass
             
-            if self.log.has_content("java.lang.ClassNotFoundException: can't find class com.llamalad7.mixinextras.MixinExtrasBootstrap"):
+            if any(self.log.has_content(crash) for crash in [
+                "java.lang.ClassNotFoundException: can't find class com.llamalad7.mixinextras.MixinExtrasBootstrap",
+                "java.lang.NoClassDefFoundError: com/redlimerl/speedrunigt",
+            ]):
                 builder.error("old_fabric_crash").add("fabric_guide_prism" if self.log.is_prism else "fabric_guide_mmc", "update")
                 found_crash_cause = True
             
@@ -428,13 +431,8 @@ class IssueChecker:
                         if self.log.short_version in [f"1.{14 + i}" for i in range(10)]: builder.add("fabric_guide_prism" if self.log.is_prism else "fabric_guide_mmc", "update")
                 except: pass
         
-        if not self.log.mod_loader in [None, ModLoader.FABRIC, ModLoader.VANILLA]:
-            if is_mcsr_log:
-                builder.error("using_other_loader_mcsr", self.log.mod_loader.value)
-                if self.log.short_version in [f"1.{14 + i}" for i in range(10)]: builder.add("fabric_guide_prism" if self.log.is_prism else "fabric_guide_mmc", "install")
-                found_crash_cause = True
-            else:
-                builder.note("using_other_loader", self.log.mod_loader.value)
+        if len(self.log.mods) == 0 and self.log.has_content(".mrpack\n"):
+            builder.error("using_modpack_as_mod", self.log.launcher if self.log.launcher is not None else "your launcher")
 
         if len(self.log.mods) > 0 and self.log.mod_loader == ModLoader.VANILLA:
             if any(self.log.has_library(loader) for loader in ["forge", "fabric", "quilt"]):
@@ -442,6 +440,14 @@ class IssueChecker:
             else:
                 builder.error("no_loader")
                 if self.log.short_version in [f"1.{14 + i}" for i in range(10)]: builder.add("fabric_guide_prism" if self.log.is_prism else "fabric_guide_mmc", "install")
+        
+        if not self.log.mod_loader in [None, ModLoader.FABRIC, ModLoader.VANILLA]:
+            if is_mcsr_log:
+                builder.error("using_other_loader_mcsr", self.log.mod_loader.value)
+                if self.log.short_version in [f"1.{14 + i}" for i in range(10)]: builder.add("fabric_guide_prism" if self.log.is_prism else "fabric_guide_mmc", "install")
+                found_crash_cause = True
+            else:
+                builder.note("using_other_loader", self.log.mod_loader.value)
         
         if not found_crash_cause:
             has_fabric_mod = any(self.log.has_mod(mcsr_mod) for mcsr_mod in self.mcsr_mods) or self.log.has_mod("fabric")
