@@ -846,8 +846,8 @@ class IssueChecker:
                 if self.log.has_content(indicator): total += 1
             if total >= 2: builder.error("exitcode_805306369")
 
-        if (not found_crash_cause and self.log.stacktrace is None
-            and self.log.has_content(" -1073741819") or self.log.has_content("The instruction at 0x%p referenced memory at 0x%p. The memory could not be %s.")
+        if (not found_crash_cause and self.log.stacktrace is None and self.log.has_content(" -1073741819")
+            or self.log.has_content("The instruction at 0x%p referenced memory at 0x%p. The memory could not be %s.")
         ):
             builder.error("exitcode", "-1073741819")
             builder.add("exitcode_1073741819_1").add("exitcode_1073741819_2")
