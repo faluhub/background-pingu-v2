@@ -205,10 +205,9 @@ class IssueChecker:
         if not self.log.minecraft_version is None: footer += f" {self.log.minecraft_version}"
 
         if self.log.has_mod("mcsrranked"): footer += " Ranked"
-        else:
-            if any(self.log.has_mod(ssg_mod) for ssg_mod in self.ssg_mods): footer += " SSG"
-            elif is_mcsr_log: footer += " RSG"
-            elif not self.log.mod_loader is None: footer += f" {self.log.mod_loader.value}"
+        elif any(self.log.has_mod(ssg_mod) for ssg_mod in self.ssg_mods): footer += " SSG"
+        elif is_mcsr_log: footer += " RSG"
+        elif not self.log.mod_loader is None: footer += f" {self.log.mod_loader.value}"
         
         if self.log.has_content("---------------  T H R E A D  ---------------"): footer += " hs_err_pid log"
         elif self.log.stacktrace is None: footer += " log"
@@ -734,7 +733,7 @@ class IssueChecker:
             elif len(ranked_rong_mods) > 0:
                 builder.error("ranked_rong_mods", f"a mod `{ranked_rong_mods[0]}` that is", "it")
 
-        if self.log.has_content("com.mcsr.projectelo.anticheat.file.verifiers.ResourcePackVerifier"):
+        if self.log.has_content_in_stacktrace("com.mcsr.projectelo.anticheat.file.verifiers.ResourcePackVerifier"):
             builder.error("ranked_resourcepack_crash")
             found_crash_cause = True
         
@@ -841,7 +840,9 @@ class IssueChecker:
                 if self.log.has_content(indicator): total += 1
             if total >= 2: builder.error("exitcode_805306369")
 
-        if not found_crash_cause and self.log.has_content(" -1073741819") or self.log.has_content("The instruction at 0x%p referenced memory at 0x%p. The memory could not be %s."):
+        if (not found_crash_cause and self.log.stacktrace is None
+            and self.log.has_content(" -1073741819") or self.log.has_content("The instruction at 0x%p referenced memory at 0x%p. The memory could not be %s.")
+        ):
             builder.error("exitcode", "-1073741819")
             builder.add("exitcode_1073741819_1").add("exitcode_1073741819_2")
             if self.log._content.count("\n") < 500:
@@ -849,7 +850,7 @@ class IssueChecker:
                 builder.add(f"exitcode_1073741819_4")
             builder.add("exitcode_1073741819_5")
 
-        if not found_crash_cause and self.log.has_content(" -1073740791"):
+        if not found_crash_cause and self.log.stacktrace is None and self.log.has_content(" -1073740791"):
             builder.error("exitcode", "-1073740791")
             builder.add("exitcode_1073741819_2")
             if self.log._content.count("\n") < 500: builder.add("exitcode_1073741819_4")

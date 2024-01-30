@@ -124,6 +124,7 @@ class Log:
             r"Minecraft Version ID: (\S+)",
             r"/net/minecraftforge/forge/(\S+)-",
             r"\n\t- minecraft (\S+)\n",
+            r"--version, (\S+),",
         ]:
             match = re.compile(pattern).search(self._content)
             if not match is None:
@@ -219,6 +220,7 @@ class Log:
             "\nhttps://maven.minecraftforge.net",
             "\nhttps://maven.neoforged.net",
             "net.minecraftforge.",
+            "--fml.forgeVersion, ",
         ]):
             return ModLoader.FORGE
         
@@ -289,6 +291,10 @@ class Log:
     
     def has_content(self, content: str) -> bool:
         return content.lower() in self._lower_content
+    
+    def has_content_in_stacktrace(self, content: str) -> bool:
+        if self.stacktrace is None: return False
+        return content.lower() in self.stacktrace.lower()
 
     def has_pattern(self, pattern: str) -> bool:
         return bool(re.compile(pattern, re.IGNORECASE).search(self._lower_content))
