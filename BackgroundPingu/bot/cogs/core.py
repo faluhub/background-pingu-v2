@@ -18,12 +18,12 @@ class Core(Cog):
             "embed": None,
             "view": None
         }
-        link_pattern = r"https:\/\/(?:api\.)?paste\.ee\/.\/\w+|https:\/\/mclo\.gs\/\w+|https?:\/\/[\w\-_\/.]+\.(?:txt|log)"
+        link_pattern = r"https:\/\/(?:api\.)?paste\.ee\/.\/\w+|https:\/\/mclo\.gs\/\w+|https?:\/\/[\w\-_\/.]+\.(?:txt|log)\?ex=[^&]+&is=[^&]+&hm=[^&]+&|https?:\/\/[\w\-_\/.]+\.(?:txt|log)"
         matches = re.findall(link_pattern, msg.content)
         if len(msg.attachments) > 0:
             for attachment in msg.attachments:
-                matches.append(attachment.url.split("?ex=")[0])
-        logs = [(match, parser.Log.from_link(match)) for match in matches]
+                matches.append(attachment.url)
+        logs = [(match.split("?ex")[0], parser.Log.from_link(match)) for match in matches]
         logs = [(match, log) for (match, log) in logs if not log is None]
         # logs.append(("message", parser.Log(msg.content)))
         for match, log in logs:
