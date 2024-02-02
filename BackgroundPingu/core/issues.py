@@ -210,8 +210,8 @@ class IssueChecker:
         elif not self.log.mod_loader is None: footer += f" {self.log.mod_loader.value}"
         
         if self.log.has_content("---------------  T H R E A D  ---------------"): footer += " hs_err_pid log"
-        elif self.log.stacktrace is None: footer += " log"
-        else: footer += " crash"
+        elif self.log.stacktrace or self.log.exitcode: footer += " crash"
+        else: footer += " log"
         
         builder.set_footer(footer.strip())
 
@@ -846,7 +846,7 @@ class IssueChecker:
                 if self.log.has_content(indicator): total += 1
             if total >= 2: builder.error("exitcode_805306369")
 
-        if (not found_crash_cause and self.log.stacktrace is None and self.log.has_content(" -1073741819")
+        if (not found_crash_cause and self.log.stacktrace is None and self.log.exitcode == -1073741819
             or self.log.has_content("The instruction at 0x%p referenced memory at 0x%p. The memory could not be %s.")
         ):
             builder.error("exitcode", "-1073741819")
@@ -856,7 +856,7 @@ class IssueChecker:
                 builder.add(f"exitcode_1073741819_4")
             builder.add("exitcode_1073741819_5")
 
-        if not found_crash_cause and self.log.stacktrace is None and self.log.has_content(" -1073740791"):
+        if not found_crash_cause and self.log.stacktrace is None and self.log.exitcode == -1073740791:
             builder.error("exitcode", "-1073740791")
             builder.add("exitcode_1073741819_2")
             if self.log._content.count("\n") < 500: builder.add("exitcode_1073741819_4")

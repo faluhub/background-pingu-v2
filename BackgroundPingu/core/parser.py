@@ -86,7 +86,7 @@ class Log:
             try:
                 if not parts[0] == "1": return int(parts[0])
                 return int(parts[1])
-            except: pass
+            except ValueError: pass
         
         match = re.search(r"\s*- java (\d+)", self._content)
         if not match is None:
@@ -282,11 +282,26 @@ class Log:
         ]
         for crash_pattern in crash_patterns:
             match = re.search(crash_pattern, log, re.DOTALL)
-            if not match is None: break
-
-        if not match is None:
-            return match.group().lower()
+            if not match is None:
+                return match.group().lower()
         
+        return None
+    
+    @cached_property
+    def exitcode(self) -> int:
+        patterns = [
+            r"Process crashed with exit code (-?\d+)",
+            r"Process crashed with exitcode (-?\d+)",
+        ]
+        for pattern in patterns:
+            match = re.search(pattern, self._content, re.DOTALL)
+            if not match is None:
+                try: return int(match.group(1))
+                except ValueError: pass
+        
+        for exit_code in [-1073741819, -1073740791, -805306369]:
+            if self.has_content(f" {exit_code}"): return exit_code
+
         return None
     
     def has_content(self, content: str) -> bool:
