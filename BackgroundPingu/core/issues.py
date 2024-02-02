@@ -606,6 +606,15 @@ class IssueChecker:
         
         if self.log.has_content("java.lang.NullPointerException: Cannot invoke \"net.minecraft.class_512.method_2623()\" because \"this.field_3098\" is null"):
             builder.error("recipe_book_crash")
+            found_crash_cause = True
+        
+        if is_mcsr_log and any(self.log.has_content(snowman_crash) for snowman_crash in [
+            "Cannot invoke \"net.minecraft.class_1657.method_7325()\"",
+            "Cannot invoke \"net.minecraft.class_4184.method_19326()\"",
+            "because \"☃\" is null",
+        ]):
+            builder.error("snowman_crash")
+            found_crash_cause = True
         
         if self.log.has_pattern(r"Description: Exception in server tick loop[\s\n]*java\.lang\.IllegalStateException: Lock is no longer valid"):
             builder.error("wp_3_plus_crash")
