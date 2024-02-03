@@ -122,9 +122,9 @@ class Log:
         for pattern in [
             r"Loading Minecraft (\S+) with Fabric Loader",
             r"Minecraft Version ID: (\S+)",
-            r"/net/minecraftforge/forge/(\S+)-",
             r"\n\t- minecraft (\S+)\n",
             r"--version, (\S+),",
+            r"/net/minecraftforge/forge/(\S+?)-",
         ]:
             match = re.compile(pattern).search(self._content)
             if not match is None:
