@@ -233,6 +233,21 @@ If you want a custom modpack, go [here](<https://redlime.github.io/MCSRMods/?typ
 Requires [Eye Zoom Macro](https://discord.com/channels/83066801105145856/405839885509984256/1143858381266894918)"""
         return await ctx.respond(text)
 
+    @commands.slash_command(name="entity_culling", description="Explains how to turn off Entity Culling.")
+    async def entity_culling(self, ctx: discord.ApplicationContext):
+        text = "If your entity counter on F3 is `-1` or there isn't a `blockEntities` slice on the piechart in `root.gameRenderer.level.entities`, turn off `Entity Culling` in `Video Settings`."
+        return await ctx.respond(text)
+
+    @commands.slash_command(name="chunk_multidraw", description="Explains how to turn off Chunk Multidraw.")
+    async def chunk_multidraw(self, ctx: discord.ApplicationContext):
+        text = "If you're experiencing graphics related issues, such as water being invisible or blocks being inside you, try turning off `Chunk Multidraw` in `Video Settings` from the main screen."
+        return await ctx.respond(text)
+
+    @commands.slash_command(name="igpu", description="Gives a guide to get Minecraft to use the high-performance GPU.")
+    async def igpu(self, ctx: discord.ApplicationContext):
+        text = "If you are experiencing bad performance or graphics-related issues, it's possible that Minecraft is using your integrated GPU. To ensure that Minecraft uses your high-performance GPU, please follow this guide: <https://docs.google.com/document/d/1aPF1lyBAfPWyeHIH80F8JJw8rvvy6lRm0WJ2xxSrRh8/edit#heading=h.4oyoeerdwbr2>"
+        return await ctx.respond(text)
+
     # @commands.slash_command(name="", description="")
     # async def (self, ctx: discord.ApplicationContext):
     #     text = ""
