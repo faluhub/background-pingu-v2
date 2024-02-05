@@ -642,13 +642,8 @@ class IssueChecker:
             " to profiler if profiler tick hasn't started - missing "
         ]): builder.info("log_spam")
         
-        if self.log.has_mod("autoreset") or self.log.has_content("the mods atum and autoreset"):
-            builder.error("autoreset_user")
-            metadata = self.get_mod_metadata("atum")
-            if not metadata is None:
-                latest_version = self.get_latest_version(metadata)
-                if not latest_version is None:
-                    builder.add("mod_download", metadata["name"], latest_version["page"])
+        if self.log.has_content("the mods atum and autoreset"):
+            builder.error("autoreset_user").add("update_mods")
             found_crash_cause = True
 
         if self.log.has_content("Launched instance in offline mode") and self.log.has_content("(missing)\n"):
