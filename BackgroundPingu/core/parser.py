@@ -182,6 +182,22 @@ class Log:
             return "MultiMC"
 
         return None
+    
+    @cached_property
+    def type(self) -> str:
+        if any([self._content.startswith(launcher) for launcher in self.launchers]):
+            return "full log"
+
+        if self._content.startswith("---- Minecraft Crash Report ----"):
+            return "crash-report"
+
+        if self.has_content("---------------  T H R E A D  ---------------"):
+            return "hs_err_pid log"
+
+        if self._content.startswith("["):
+            return "latest.log"
+
+        return None
 
     @cached_property
     def is_multimc_or_fork(self) -> bool:

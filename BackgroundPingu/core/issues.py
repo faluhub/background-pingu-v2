@@ -200,6 +200,9 @@ class IssueChecker:
         all_incompatible_mods = {}
         footer = ""
 
+        if self.log.operating_system == OperatingSystem.MACOS: footer += " MacOS"
+        elif self.log.operating_system == OperatingSystem.LINUX: footer += " Linux"
+
         if not self.log.launcher is None: footer += f" {self.log.launcher}"
         
         if not self.log.minecraft_version is None: footer += f" {self.log.minecraft_version}"
@@ -209,7 +212,11 @@ class IssueChecker:
         elif is_mcsr_log: footer += " RSG"
         elif not self.log.mod_loader is None: footer += f" {self.log.mod_loader.value}"
         
-        if self.log.has_content("---------------  T H R E A D  ---------------"): footer += " hs_err_pid log"
+        if self.log.type == "hs_err_pid log": footer += " hs_err_pid log"
+        elif self.log.type == "crash-report": footer += " crash-report"
+        elif self.log.type == "latest.log":
+            footer += " latest.log"
+            if self.log.stacktrace or self.log.exitcode: footer += " crash"
         elif self.log.stacktrace or self.log.exitcode: footer += " crash"
         else: footer += " log"
         
@@ -875,7 +882,7 @@ class IssueChecker:
             builder.error("forge_missing_dependencies")
             found_crash_cause = True
 
-        pattern = r"\[Integrated Watchdog/ERROR\]: This crash report has been saved to: (.*\.txt)"
+        pattern = r"\[Integrated Watchdog/ERROR\]:? This crash report has been saved to: (.*\.txt)"
         match = re.search(pattern, self.log._content)
         if not match is None:
             builder.info("send_watchdog_report", re.sub(r"C:\\Users\\[^\\]+\\", "C:/Users/********/", match.group(1)))
