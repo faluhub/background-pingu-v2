@@ -331,6 +331,7 @@ class IssueChecker:
                 except: pass
             if not needed_java_version is None:
                 builder.error("need_new_java", needed_java_version).add("java_update_guide")
+                if self.log.is_prism: builder.add("prism_java_compat_check")
                 found_crash_cause = True
             elif self.log.has_content("java.lang.UnsupportedClassVersionError: net/minecraft/class_310"):
                 builder.error("need_new_java", 17).add("k4_setup_guide")
@@ -888,6 +889,9 @@ class IssueChecker:
             builder.info("send_watchdog_report", re.sub(r"C:\\Users\\[^\\]+\\", "C:/Users/********/", match.group(1)))
             found_crash_cause = True
         
+        if self.log.is_multimc_or_fork and not self.log.type == "full log":
+            builder.info("send_full_log", self.log.launcher, "" if self.log.is_prism else " Instance")
+        
         if not self.log.minecraft_folder is None:
             if not found_crash_cause and "OneDrive" in self.log.minecraft_folder:
                 builder.note("onedrive")
@@ -957,7 +961,7 @@ class IssueChecker:
                 "Process crashed with exitcode ",
                 "Process crashed with exit code ",
             ]):
-                builder.error("send_full_log")
+                builder.error("send_full_log", "" if self.log.is_prism else " Instance")
             
             pattern = r"https://minecraft\.fandom\.com/wiki/([A-Za-z0-9_]+)"
             for match in re.findall(pattern, self.log._content):

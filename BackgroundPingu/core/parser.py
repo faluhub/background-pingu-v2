@@ -168,9 +168,18 @@ class Log:
         result = self._content.split(" ", 1)[0]
         if result in self.launchers: return result
         
-        for result in self.launchers:
-            if self.has_content(f"/{result}/") or self.has_content(f"\\{result}\\"):
-                return result
+        for launcher in self.launchers:
+            if self.has_content(f"/{launcher}/") or self.has_content(f"\\{launcher}\\"):
+                return launcher
+            if self.has_content(f"org.{launcher}."):
+                return launcher
+        
+        if any(self.has_content(prism) for prism in [
+            "org.prismlauncher.",
+            "/PrismLauncher/",
+            "\\PrismLauncher\\",
+        ]):
+            return "Prism"
         
         if (self.has_content("\\AppData\\Roaming\\.minecraft")
             or self.has_content("/AppData/Roaming/.minecraft")
@@ -205,7 +214,7 @@ class Log:
 
     @cached_property
     def is_prism(self) -> bool:
-        return not self.launcher is None and self.launcher.lower() == "prism"
+        return not self.launcher is None and self.launcher in ["Prism", "PolyMC"]
     
     @cached_property
     def mod_loader(self) -> ModLoader:
