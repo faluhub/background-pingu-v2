@@ -169,15 +169,13 @@ class Log:
         if result in self.launchers: return result
         
         for launcher in self.launchers:
-            if self.has_content(f"/{launcher}/") or self.has_content(f"\\{launcher}\\"):
-                return launcher
-            if self.has_content(f"org.{launcher}."):
+            if self.has_content(f"/{launcher}/") or self.has_content(f"\\{launcher}\\") or self.has_content(f"org.{launcher}."):
                 return launcher
         
         if any(self.has_content(prism) for prism in [
             "org.prismlauncher.",
-            "/PrismLauncher/",
-            "\\PrismLauncher\\",
+            "/PrismLauncher",
+            "\\PrismLauncher",
         ]):
             return "Prism"
         

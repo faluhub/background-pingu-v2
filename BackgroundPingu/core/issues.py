@@ -262,7 +262,7 @@ class IssueChecker:
         if len(illegal_mods) > 0: builder.note("amount_illegal_mods", len(illegal_mods), "s" if len(illegal_mods) > 1 else f" (`{illegal_mods[0]}`)")
         
         if len(outdated_mods) > 5:
-            builder.error("amount_outdated_mods", len(outdated_mods)).add("update_mods")
+            builder.error("amount_outdated_mods", len(outdated_mods), "`, `".join([mod[0] for mod in outdated_mods])).add("update_mods")
         else:
             for outdated_mod in outdated_mods:
                 builder.warning("outdated_mod", outdated_mod[0], outdated_mod[1])
@@ -283,12 +283,12 @@ class IssueChecker:
                     latest_version = self.get_latest_version(metadata)
                     missing_mods.append([recommended_mod, latest_version["page"]])
             if len(missing_mods) > 4:
-                builder.warning("missing_mods", len(missing_mods)).add("update_mods")
+                builder.warning("missing_mods", len(missing_mods), "`, `".join([mod[0] for mod in missing_mods])).add("update_mods")
             else:
                 for missing_mod in missing_mods:
                     builder.warning("missing_mod", missing_mod[0], missing_mod[1])
         
-        if not self.log.operating_system is None and self.log.operating_system == OperatingSystem.MACOS:
+        if self.log.operating_system == OperatingSystem.MACOS:
             if self.log.has_mod("sodium-1.16.1-v1") or self.log.has_mod("sodium-1.16.1-v2"):
                 builder.error("not_using_mac_sodium")
         
@@ -349,13 +349,13 @@ class IssueChecker:
                 builder.error("m1_multimc_hack").add("mac_setup_guide")
         
         elif not found_crash_cause and self.log.has_content("You might want to install a 64bit Java version"):
-            if not self.log.operating_system is None and self.log.operating_system == OperatingSystem.MACOS:
+            if self.log.operating_system == OperatingSystem.MACOS:
                 builder.error("arm_java_multimc").add("mac_setup_guide")
             else:
                 builder.error("32_bit_java").add("java_update_guide")
             found_crash_cause = True
 
-        elif not self.log.launcher is None and self.log.launcher.lower() == "multimc" and not self.log.operating_system is None and self.log.operating_system == OperatingSystem.MACOS:
+        elif self.log.launcher == "MultiMC" and self.log.operating_system == OperatingSystem.MACOS:
             builder.note("use_prism").add("mac_setup_guide")
         
         if self.log.has_content("The java binary \"\" couldn't be found."):
@@ -398,7 +398,7 @@ class IssueChecker:
             builder.error("new_java_old_fabric_crash", mod_loader, mod_loader)
             if self.log.short_version in [f"1.{14 + i}" for i in range(10)]: builder.add("fabric_guide_prism" if self.log.is_prism else "fabric_guide_mmc", "update")
             found_crash_cause = True
-        elif not self.log.mod_loader is None and self.log.mod_loader == ModLoader.FABRIC and not self.log.fabric_version is None:
+        elif self.log.mod_loader == ModLoader.FABRIC and not self.log.fabric_version is None:
             highest_srigt_ver = None
             for mod in self.log.mods:
                 if "speedrunigt" in mod.lower():
@@ -605,7 +605,7 @@ class IssueChecker:
             found_crash_cause = True
         
         pattern = r"Uncaught exception in thread \"Thread-\d+\"\njava\.util\.ConcurrentModificationException: null"
-        if "java.util.ConcurrentModificationException" in re.sub(pattern, "", self.log._content) and not self.log.minecraft_version is None and self.log.short_version == "1.16" and not self.log.has_mod("voyager"):
+        if "java.util.ConcurrentModificationException" in re.sub(pattern, "", self.log._content) and self.log.short_version == "1.16" and not self.log.has_mod("voyager"):
             builder.error("no_voyager_crash")
         
         if self.log.has_content("java.lang.IllegalStateException: Adding Entity listener a second time") and self.log.has_content("me.jellysquid.mods.lithium.common.entity.tracker.nearby"):
@@ -681,7 +681,7 @@ class IssueChecker:
         if self.log.has_content("ClassLoaders$AppClassLoader cannot be cast to class java.net.URLClassLoader"):
             builder.error("forge_too_new_java")
             found_crash_cause = True
-        if not self.log.mod_loader is None and self.log.mod_loader == ModLoader.FORGE and not found_crash_cause:
+        if self.log.mod_loader == ModLoader.FORGE and not found_crash_cause:
             if self.log.has_content("Unable to detect the forge installer!"):
                 builder.error("random_forge_crash_1")
             if self.log.has_content("java.lang.NoClassDefFoundError: cpw/mods/modlauncher/Launcher"):
