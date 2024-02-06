@@ -47,6 +47,8 @@ class Log:
     
     @cached_property
     def fabric_mods(self) -> list[str]:
+        if self.type == "thread dump": return []
+
         excluded_prefixes = [
             "java ",
             "fabricloader ",
@@ -122,6 +124,7 @@ class Log:
         for pattern in [
             r"Loading Minecraft (\S+) with Fabric Loader",
             r"Minecraft Version ID: (\S+)",
+            r"Minecraft Version: (\S+)",
             r"\n\t- minecraft (\S+)\n",
             r"--version, (\S+),",
             r"/net/minecraftforge/forge/(\S+?)-",
@@ -194,6 +197,9 @@ class Log:
     def type(self) -> str:
         if any([self._content.startswith(launcher) for launcher in self.launchers]):
             return "full log"
+
+        if self.has_content("-- Thread Dump --"):
+            return "thread dump"
 
         if self._content.startswith("---- Minecraft Crash Report ----"):
             return "crash-report"

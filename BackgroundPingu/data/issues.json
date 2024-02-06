@@ -141,6 +141,7 @@
     "warning.outdated_mod": "The mod `{}` is not listed as the most recent legal version! Download the latest legal version [**here**]({}).",
     "warning.relatively_old_fabric": "You're using an old version of `Fabric Loader`. You should update it.",
     "warning.too_little_ram": "You likely have too little RAM allocated. It's recommended to allocate 2000-3000 MB.",
+    "warning.too_little_ram_crash": "This crash may be caused by not having enough RAM allocated.",
     "warning.too_much_ram": "You have too much RAM allocated, which can cause lag spikes. It's recommended to allocate 2000-3000 MB.",
     "warning.using_fabric_api": "You're using `Fabric API`, which is not allowed for speedrunning. Remove it from your `.minecraft/mods` folder.",
     "warning.using_ssrng": "You are using the `ServerSideRNG` mod. The server for it is currently down, so the mod is useless and it's recommended to remove it as it could cause issues."

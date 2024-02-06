@@ -214,6 +214,7 @@ class IssueChecker:
         
         if self.log.type == "hs_err_pid log": footer += " hs_err_pid log"
         elif self.log.type == "crash-report": footer += " crash-report"
+        elif self.log.type == "thread dump": footer += " thread dump"
         elif self.log.type == "latest.log":
             footer += " latest.log"
             if self.log.stacktrace or self.log.exitcode: footer += " crash"
@@ -478,11 +479,15 @@ class IssueChecker:
         
         if not self.log.max_allocated is None:
             has_shenandoah = self.log.has_java_argument("shenandoah")
+            min_limit_0 = 2000 if has_shenandoah else 2800
             min_limit_1 = 1200 if has_shenandoah else 1900
             min_limit_2 = 850 if has_shenandoah else 1200
             ram_guide = "allocate_ram_guide_mmc" if self.log.is_multimc_or_fork else "allocate_ram_guide"
             if (self.log.max_allocated < min_limit_1 and self.log.has_content(" -805306369")) or self.log.has_content("java.lang.OutOfMemoryError") or self.log.has_content("GL error GL_OUT_OF_MEMORY"):
                 builder.error("too_little_ram_crash").add(ram_guide)
+                found_crash_cause = True
+            elif self.log.max_allocated < min_limit_0 and self.log.has_content(" -805306369"):
+                builder.warning("too_little_ram_crash").add(ram_guide)
                 found_crash_cause = True
             elif self.log.max_allocated < min_limit_2:
                 builder.warning("too_little_ram").add(ram_guide)
@@ -884,7 +889,7 @@ class IssueChecker:
             builder.info("send_watchdog_report", re.sub(r"C:\\Users\\[^\\]+\\", "C:/Users/********/", match.group(1)))
             found_crash_cause = True
         
-        if self.log.is_multimc_or_fork and not self.log.type == "full log":
+        if not found_crash_cause and self.log.is_multimc_or_fork and self.log.type != "full log":
             builder.info("send_full_log", self.log.launcher, "" if self.log.is_prism else " Instance")
         
         if not self.log.minecraft_folder is None:
