@@ -28,20 +28,35 @@ class IssueBuilder:
     def top_info(self, key: str, *args):
         return self._add_to("top_info", "‼️ **" + self.bot.strings.get(f"top_info.{key}", key).format(*args) + "**")
 
-    def error(self, key: str, *args):
-        return self._add_to("error", "<:dangerkekw:1123554236626636880> " + self.bot.strings.get(f"error.{key}", key).format(*args))
+    def error(self, key: str, *args, experimental: bool=False, bold: bool=False):
+        text = self.bot.strings.get(f"error.{key}", key).format(*args)
+        if bold: text = f"**{text}**"
+        if experimental: text = f"**[warning: experimental]** {text}"
+        return self._add_to("error", "<:dangerkekw:1123554236626636880> " + text)
     
-    def warning(self, key: str, *args):
-        return self._add_to("warning", "<:warningkekw:1123563914454634546> " + self.bot.strings.get(f"warning.{key}", key).format(*args))
+    def warning(self, key: str, *args, experimental: bool=False, bold: bool=False):
+        text = self.bot.strings.get(f"warning.{key}", key).format(*args)
+        if bold: text = f"**{text}**"
+        if experimental: text = f"**[warning: experimental]** {text}"
+        return self._add_to("warning", "<:warningkekw:1123563914454634546> " + text)
     
-    def note(self, key: str, *args):
-        return self._add_to("note", "<:kekw:1123554521738657842> " + self.bot.strings.get(f"note.{key}", key).format(*args))
+    def note(self, key: str, *args, experimental: bool=False, bold: bool=False):
+        text = self.bot.strings.get(f"note.{key}", key).format(*args)
+        if bold: text = f"**{text}**"
+        if experimental: text = f"**[warning: experimental]** {text}"
+        return self._add_to("note", "<:kekw:1123554521738657842> " + text)
 
-    def info(self, key: str, *args):
-        return self._add_to("info", "<:infokekw:1123567743355060344> " + self.bot.strings.get(f"info.{key}", key).format(*args))
+    def info(self, key: str, *args, experimental: bool=False, bold: bool=False):
+        text = self.bot.strings.get(f"info.{key}", key).format(*args)
+        if bold: text = f"**{text}**"
+        if experimental: text = f"**[warning: experimental]** {text}"
+        return self._add_to("info", "<:infokekw:1123567743355060344> " + text)
 
-    def add(self, key: str, *args):
-        return self._add_to(self._last_added, "<:reply:1121924702756143234>*" + self.bot.strings.get(f"add.{key}", key).format(*args) + "*", add=True)
+    def add(self, key: str, *args, experimental: bool=False, bold: bool=False):
+        text = self.bot.strings.get(f"add.{key}", key).format(*args)
+        if bold: text = f"**{text}**"
+        if experimental: text = f"**[warning: experimental]** {text}"
+        return self._add_to(self._last_added, "<:reply:1121924702756143234>*" + text + "*", add=True)
 
     def has(self, type: str, key: str) -> bool:
         key = self.bot.strings.get(f"{type}.{key}", key).replace("*", "")
@@ -273,6 +288,13 @@ class IssueChecker:
                 if self.log.has_mod(incompatible_mod):
                     builder.error("incompatible_mod", key, incompatible_mod)
         
+        if len(self.log.mods) == 0:
+            for mod in self.log.fabric_mods:
+                if any(weird_mod in mod.lower() for weird_mod in self.assume_as_legal): continue
+                metadata = self.get_mod_metadata(mod)
+                if metadata is None: illegal_mods.append(mod)
+            if len(illegal_mods) > 0: builder.note("amount_illegal_mods", len(illegal_mods), "s" if len(illegal_mods) > 1 else f" (`{illegal_mods[0]}`)", experimental=True)
+        
         if (self.log.minecraft_version == "1.16.1" and len(self.log.whatever_mods) > 0
         and not any(self.log.has_mod(ssg_mod) for ssg_mod in self.ssg_mods)):
             missing_mods = []
@@ -439,7 +461,7 @@ class IssueChecker:
                         builder.warning("relatively_old_fabric")
                         if self.log.short_version in [f"1.{14 + i}" for i in range(10)]: builder.add("fabric_guide_prism" if self.log.is_prism else "fabric_guide_mmc", "update")
                     elif self.log.fabric_version < version.parse("0.15.0"):
-                        builder.note("old_fabric").add("fabric_guide_prism" if self.log.is_prism else "fabric_guide_mmc", "update")
+                        builder.note("old_fabric")
                         if self.log.short_version in [f"1.{14 + i}" for i in range(10)]: builder.add("fabric_guide_prism" if self.log.is_prism else "fabric_guide_mmc", "update")
                 except: pass
         
@@ -543,15 +565,15 @@ class IssueChecker:
         elif self.log.has_content("A fatal error has been detected by the Java Runtime Environment") or self.log.has_content("EXCEPTION_ACCESS_VIOLATION"):
             builder.error("eav_crash")
             if self.log.has_pattern(r"  \[ntdll\.dll\+(0x[0-9a-f]+)\]"):
-                builder.add("eav_crash_1", "**","**")
-                builder.add("eav_crash_1.1", "**","**")
-                builder.add("eav_crash_1.2", "**","**")
-                builder.add("eav_crash_1.3", "**","**")
+                builder.add("eav_crash_1", bold=True)
+                builder.add("eav_crash_1.1", bold=True)
+                builder.add("eav_crash_1.2", bold=True)
+                builder.add("eav_crash_1.3", bold=True)
             else:
-                builder.add("eav_crash_1", "","")
-                builder.add("eav_crash_1.1", "","")
-                builder.add("eav_crash_1.2", "","")
-                builder.add("eav_crash_1.3", "","")
+                builder.add("eav_crash_1")
+                builder.add("eav_crash_1.1")
+                builder.add("eav_crash_1.2")
+                builder.add("eav_crash_1.3")
             builder.add("eav_crash_2")
             builder.add("eav_crash_3")
             if len(self.log.whatever_mods) == 0 or self.log.has_mod("speedrunigt") or self.log.has_mod("mcsrranked"): builder.add("eav_crash_srigt")
@@ -562,7 +584,7 @@ class IssueChecker:
             builder.error("intel_hd2000").add("intell_hd2000_info")
 
         if self.log.has_content("org.lwjgl.LWJGLException: Could not choose GLX13 config") or self.log.has_content("GLFW error 65545: GLX: Failed to find a suitable GLXFBConfig"):
-            builder.error("outdated_nvidia_flatpack_driver")
+            builder.error("outdated_nvidia_flatpack_driver", experimental=True)
         
         if self.log.has_content("java.lang.NoSuchMethodError: sun.security.util.ManifestEntryVerifier.<init>(Ljava/util/jar/Manifest;)V"):
             builder.error("forge_java_bug")
