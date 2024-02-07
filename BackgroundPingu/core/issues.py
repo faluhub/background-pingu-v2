@@ -200,6 +200,9 @@ class IssueChecker:
         all_incompatible_mods = {}
         footer = ""
 
+        if self.log.operating_system == OperatingSystem.MACOS: footer += " MacOS"
+        elif self.log.operating_system == OperatingSystem.LINUX: footer += " Linux"
+
         if not self.log.launcher is None: footer += f" {self.log.launcher}"
         
         if not self.log.minecraft_version is None: footer += f" {self.log.minecraft_version}"
@@ -209,9 +212,14 @@ class IssueChecker:
         elif is_mcsr_log: footer += " RSG"
         elif not self.log.mod_loader is None: footer += f" {self.log.mod_loader.value}"
         
-        if self.log.has_content("---------------  T H R E A D  ---------------"): footer += " hs_err_pid log"
-        elif self.log.stacktrace is None: footer += " log"
-        else: footer += " crash"
+        if self.log.type == "hs_err_pid log": footer += " hs_err_pid log"
+        elif self.log.type == "crash-report": footer += " crash-report"
+        elif self.log.type == "thread dump": footer += " thread dump"
+        elif self.log.type == "latest.log":
+            footer += " latest.log"
+            if self.log.stacktrace or self.log.exitcode: footer += " crash"
+        elif self.log.stacktrace or self.log.exitcode: footer += " crash"
+        else: footer += " log"
         
         builder.set_footer(footer.strip())
 
@@ -255,7 +263,7 @@ class IssueChecker:
         if len(illegal_mods) > 0: builder.note("amount_illegal_mods", len(illegal_mods), "s" if len(illegal_mods) > 1 else f" (`{illegal_mods[0]}`)")
         
         if len(outdated_mods) > 5:
-            builder.error("amount_outdated_mods", len(outdated_mods)).add("update_mods")
+            builder.error("amount_outdated_mods", len(outdated_mods), "`, `".join([mod[0] for mod in outdated_mods])).add("update_mods")
         else:
             for outdated_mod in outdated_mods:
                 builder.warning("outdated_mod", outdated_mod[0], outdated_mod[1])
@@ -276,12 +284,12 @@ class IssueChecker:
                     latest_version = self.get_latest_version(metadata)
                     missing_mods.append([recommended_mod, latest_version["page"]])
             if len(missing_mods) > 4:
-                builder.warning("missing_mods", len(missing_mods)).add("update_mods")
+                builder.warning("missing_mods", len(missing_mods), "`, `".join([mod[0] for mod in missing_mods])).add("update_mods")
             else:
                 for missing_mod in missing_mods:
                     builder.warning("missing_mod", missing_mod[0], missing_mod[1])
         
-        if not self.log.operating_system is None and self.log.operating_system == OperatingSystem.MACOS:
+        if self.log.operating_system == OperatingSystem.MACOS:
             if self.log.has_mod("sodium-1.16.1-v1") or self.log.has_mod("sodium-1.16.1-v2"):
                 builder.error("not_using_mac_sodium")
         
@@ -324,6 +332,7 @@ class IssueChecker:
                 except: pass
             if not needed_java_version is None:
                 builder.error("need_new_java", needed_java_version).add("java_update_guide")
+                if self.log.is_prism: builder.add("prism_java_compat_check")
                 found_crash_cause = True
             elif self.log.has_content("java.lang.UnsupportedClassVersionError: net/minecraft/class_310"):
                 builder.error("need_new_java", 17).add("k4_setup_guide")
@@ -341,13 +350,13 @@ class IssueChecker:
                 builder.error("m1_multimc_hack").add("mac_setup_guide")
         
         elif not found_crash_cause and self.log.has_content("You might want to install a 64bit Java version"):
-            if not self.log.operating_system is None and self.log.operating_system == OperatingSystem.MACOS:
+            if self.log.operating_system == OperatingSystem.MACOS:
                 builder.error("arm_java_multimc").add("mac_setup_guide")
             else:
                 builder.error("32_bit_java").add("java_update_guide")
             found_crash_cause = True
 
-        elif not self.log.launcher is None and self.log.launcher.lower() == "multimc" and not self.log.operating_system is None and self.log.operating_system == OperatingSystem.MACOS:
+        elif self.log.launcher == "MultiMC" and self.log.operating_system == OperatingSystem.MACOS:
             builder.note("use_prism").add("mac_setup_guide")
         
         if self.log.has_content("The java binary \"\" couldn't be found."):
@@ -367,6 +376,7 @@ class IssueChecker:
             and self.log.has_content("Instance update failed")
         ):
             builder.error("multimc_neoforge")
+            found_crash_cause = True
 
         if self.log.has_content("[LWJGL] Failed to load a library. Possible solutions:") and self.log.short_version in [f"1.{20 + i}" for i in range(15)]:
             builder.error("update_mmc")
@@ -390,7 +400,15 @@ class IssueChecker:
             builder.error("new_java_old_fabric_crash", mod_loader, mod_loader)
             if self.log.short_version in [f"1.{14 + i}" for i in range(10)]: builder.add("fabric_guide_prism" if self.log.is_prism else "fabric_guide_mmc", "update")
             found_crash_cause = True
-        elif not self.log.mod_loader is None and self.log.mod_loader == ModLoader.FABRIC and not self.log.fabric_version is None:
+            
+        elif any(self.log.has_content(crash) for crash in [
+            "java.lang.ClassNotFoundException: can't find class com.llamalad7.mixinextras.MixinExtrasBootstrap",
+            "java.lang.NoClassDefFoundError: com/redlimerl/speedrunigt",
+        ]):
+            builder.error("old_fabric_crash").add("fabric_guide_prism" if self.log.is_prism else "fabric_guide_mmc", "update")
+            found_crash_cause = True
+        
+        elif self.log.mod_loader == ModLoader.FABRIC and not self.log.fabric_version is None:
             highest_srigt_ver = None
             for mod in self.log.mods:
                 if "speedrunigt" in mod.lower():
@@ -409,25 +427,19 @@ class IssueChecker:
                         found_crash_cause = True
                 except: pass
             
-            if any(self.log.has_content(crash) for crash in [
-                "java.lang.ClassNotFoundException: can't find class com.llamalad7.mixinextras.MixinExtrasBootstrap",
-                "java.lang.NoClassDefFoundError: com/redlimerl/speedrunigt",
-            ]):
-                builder.error("old_fabric_crash").add("fabric_guide_prism" if self.log.is_prism else "fabric_guide_mmc", "update")
-                found_crash_cause = True
-            
             else:
                 try:
-                    if self.log.fabric_version < version.parse("0.13.3"):
+                    if self.log.fabric_version.__str__() in ["0.14.15", "0.14.16"]:
+                        builder.error("broken_fabric")
+                        if self.log.short_version in [f"1.{14 + i}" for i in range(10)]: builder.add("fabric_guide_prism" if self.log.is_prism else "fabric_guide_mmc", "update")
+                    elif self.log.fabric_version < version.parse("0.13.3"):
                         builder.error("really_old_fabric")
                         if self.log.short_version in [f"1.{14 + i}" for i in range(10)]: builder.add("fabric_guide_prism" if self.log.is_prism else "fabric_guide_mmc", "update")
-                    elif self.log.fabric_version < version.parse("0.14.12"):
+                    elif self.log.fabric_version < version.parse("0.14.14"):
                         builder.warning("relatively_old_fabric")
                         if self.log.short_version in [f"1.{14 + i}" for i in range(10)]: builder.add("fabric_guide_prism" if self.log.is_prism else "fabric_guide_mmc", "update")
-                    elif self.log.fabric_version < version.parse("0.14.14"):
+                    elif self.log.fabric_version < version.parse("0.15.0"):
                         builder.note("old_fabric").add("fabric_guide_prism" if self.log.is_prism else "fabric_guide_mmc", "update")
-                    elif self.log.fabric_version.__str__() in ["0.14.15", "0.14.16"]:
-                        builder.error("broken_fabric")
                         if self.log.short_version in [f"1.{14 + i}" for i in range(10)]: builder.add("fabric_guide_prism" if self.log.is_prism else "fabric_guide_mmc", "update")
                 except: pass
         
@@ -470,12 +482,15 @@ class IssueChecker:
         
         if not self.log.max_allocated is None:
             has_shenandoah = self.log.has_java_argument("shenandoah")
+            min_limit_0 = 2000 if has_shenandoah else 2800
             min_limit_1 = 1200 if has_shenandoah else 1900
             min_limit_2 = 850 if has_shenandoah else 1200
             ram_guide = "allocate_ram_guide_mmc" if self.log.is_multimc_or_fork else "allocate_ram_guide"
             if (self.log.max_allocated < min_limit_1 and self.log.has_content(" -805306369")) or self.log.has_content("java.lang.OutOfMemoryError") or self.log.has_content("GL error GL_OUT_OF_MEMORY"):
                 builder.error("too_little_ram_crash").add(ram_guide)
                 found_crash_cause = True
+            elif self.log.max_allocated < min_limit_0 and self.log.has_content(" -805306369"):
+                builder.warning("too_little_ram_crash").add(ram_guide)
             elif self.log.max_allocated < min_limit_2:
                 builder.warning("too_little_ram").add(ram_guide)
             elif self.log.max_allocated < min_limit_1:
@@ -490,6 +505,7 @@ class IssueChecker:
         elif self.log.has_content("OutOfMemoryError") or self.log.has_content("GL error GL_OUT_OF_MEMORY"):
             ram_guide = "allocate_ram_guide_mmc" if self.log.is_multimc_or_fork else "allocate_ram_guide"
             builder.error("too_little_ram_crash").add(ram_guide)
+            found_crash_cause = True
         
         if self.log.has_mod("phosphor") and not self.log.minecraft_version == "1.12.2":
             builder.note("starlight_better")
@@ -580,6 +596,7 @@ class IssueChecker:
         
         if self.log.has_content("Couldn't extract native jar"):
             builder.error("locked_libs")
+            found_crash_cause = True
         
         if self.log.has_pattern(r"java\.io\.IOException: Directory \'(.+?)\' could not be created"):
             builder.error("try_admin_launch")
@@ -597,7 +614,7 @@ class IssueChecker:
             found_crash_cause = True
         
         pattern = r"Uncaught exception in thread \"Thread-\d+\"\njava\.util\.ConcurrentModificationException: null"
-        if "java.util.ConcurrentModificationException" in re.sub(pattern, "", self.log._content) and not self.log.minecraft_version is None and self.log.short_version == "1.16" and not self.log.has_mod("voyager"):
+        if "java.util.ConcurrentModificationException" in re.sub(pattern, "", self.log._content) and self.log.short_version == "1.16" and not self.log.has_mod("voyager"):
             builder.error("no_voyager_crash")
         
         if self.log.has_content("java.lang.IllegalStateException: Adding Entity listener a second time") and self.log.has_content("me.jellysquid.mods.lithium.common.entity.tracker.nearby"):
@@ -606,6 +623,15 @@ class IssueChecker:
         
         if self.log.has_content("java.lang.NullPointerException: Cannot invoke \"net.minecraft.class_512.method_2623()\" because \"this.field_3098\" is null"):
             builder.error("recipe_book_crash")
+            found_crash_cause = True
+        
+        if is_mcsr_log and any(self.log.has_content(snowman_crash) for snowman_crash in [
+            "Cannot invoke \"net.minecraft.class_1657.method_7325()\"",
+            "Cannot invoke \"net.minecraft.class_4184.method_19326()\"",
+            "because \"☃\" is null",
+        ]):
+            builder.error("snowman_crash")
+            found_crash_cause = True
         
         if self.log.has_pattern(r"Description: Exception in server tick loop[\s\n]*java\.lang\.IllegalStateException: Lock is no longer valid"):
             builder.error("wp_3_plus_crash")
@@ -625,13 +651,8 @@ class IssueChecker:
             " to profiler if profiler tick hasn't started - missing "
         ]): builder.info("log_spam")
         
-        if self.log.has_mod("autoreset") or self.log.has_content("the mods atum and autoreset"):
-            builder.error("autoreset_user")
-            metadata = self.get_mod_metadata("atum")
-            if not metadata is None:
-                latest_version = self.get_latest_version(metadata)
-                if not latest_version is None:
-                    builder.add("mod_download", metadata["name"], latest_version["page"])
+        if self.log.has_content("the mods atum and autoreset"):
+            builder.error("autoreset_user").add("update_mods")
             found_crash_cause = True
 
         if self.log.has_content("Launched instance in offline mode") and self.log.has_content("(missing)\n"):
@@ -669,7 +690,7 @@ class IssueChecker:
         if self.log.has_content("ClassLoaders$AppClassLoader cannot be cast to class java.net.URLClassLoader"):
             builder.error("forge_too_new_java")
             found_crash_cause = True
-        if not self.log.mod_loader is None and self.log.mod_loader == ModLoader.FORGE and not found_crash_cause:
+        if self.log.mod_loader == ModLoader.FORGE and not found_crash_cause:
             if self.log.has_content("Unable to detect the forge installer!"):
                 builder.error("random_forge_crash_1")
             if self.log.has_content("java.lang.NoClassDefFoundError: cpw/mods/modlauncher/Launcher"):
@@ -681,6 +702,9 @@ class IssueChecker:
         ]):
             builder.error("sodium_rtss")
             found_crash_cause = True
+        
+        if self.log.has_mod("mcsrranked-1") or self.log.has_mod("mcsrranked-2"):
+            builder.error("old_ranked_version")
 
         match = re.search(r"Incompatible mod set found! READ THE BELOW LINES!(.*?$)", self.log._content, re.DOTALL)
         if not match is None:
@@ -773,8 +797,10 @@ class IssueChecker:
         
         if self.log.has_normal_mod("continuity") and self.log.has_mod("sodium") and not self.log.has_mod("indium"):
             builder.error("missing_dependency", "continuity", "indium")
+            found_crash_cause = True
         elif self.log.has_content("Cannot invoke \"net.fabricmc.fabric.api.renderer.v1.Renderer.meshBuilder()\""):
             builder.error("missing_dependency_2", "indium")
+            found_crash_cause = True
         
         if self.log.has_mod("worldpreview") and self.log.has_mod("carpet"):
             builder.error("incompatible_mod", "WorldPreview", "carpet")
@@ -802,6 +828,7 @@ class IssueChecker:
             and self.log.minecraft_version != self.log.fabric_mc_version
         ):
             builder.error("minecraft_version_mismatch", "" if self.log.is_prism else " Instance")
+            found_crash_cause = True
         
         if not found_crash_cause and self.log.has_content("ERROR]: Mixin apply for mod fabric-networking-api-v1 failed"):
             builder.error("delete_dot_fabric")
@@ -844,9 +871,11 @@ class IssueChecker:
 
             for indicator in maxfps_0_indicators:
                 if self.log.has_content(indicator): total += 1
-            if total >= 2: builder.error("exitcode_805306369")
+            if total >= 2:
+                builder.error("exitcode_805306369")
+                found_crash_cause = True
 
-        if (not found_crash_cause and self.log.stacktrace is None and self.log.has_content(" -1073741819")
+        if (not found_crash_cause and self.log.stacktrace is None and self.log.exitcode == -1073741819
             or self.log.has_content("The instruction at 0x%p referenced memory at 0x%p. The memory could not be %s.")
         ):
             builder.error("exitcode", "-1073741819")
@@ -856,7 +885,7 @@ class IssueChecker:
                 builder.add(f"exitcode_1073741819_4")
             builder.add("exitcode_1073741819_5")
 
-        if not found_crash_cause and self.log.stacktrace is None and self.log.has_content(" -1073740791"):
+        if not found_crash_cause and self.log.stacktrace is None and self.log.exitcode == -1073740791:
             builder.error("exitcode", "-1073740791")
             builder.add("exitcode_1073741819_2")
             if self.log._content.count("\n") < 500: builder.add("exitcode_1073741819_4")
@@ -866,11 +895,14 @@ class IssueChecker:
             builder.error("forge_missing_dependencies")
             found_crash_cause = True
 
-        pattern = r"\[Integrated Watchdog/ERROR\]: This crash report has been saved to: (.*\.txt)"
+        pattern = r"\[Integrated Watchdog/ERROR\]:? This crash report has been saved to: (.*\.txt)"
         match = re.search(pattern, self.log._content)
         if not match is None:
             builder.info("send_watchdog_report", re.sub(r"C:\\Users\\[^\\]+\\", "C:/Users/********/", match.group(1)))
             found_crash_cause = True
+        
+        if not found_crash_cause and self.log.is_multimc_or_fork and self.log.type != "full log":
+            builder.info("send_full_log", self.log.launcher, "" if self.log.is_prism else " Instance")
         
         if not self.log.minecraft_folder is None:
             if not found_crash_cause and "OneDrive" in self.log.minecraft_folder:
@@ -941,7 +973,7 @@ class IssueChecker:
                 "Process crashed with exitcode ",
                 "Process crashed with exit code ",
             ]):
-                builder.error("send_full_log")
+                builder.error("send_full_log", "" if self.log.is_prism else " Instance")
             
             pattern = r"https://minecraft\.fandom\.com/wiki/([A-Za-z0-9_]+)"
             for match in re.findall(pattern, self.log._content):

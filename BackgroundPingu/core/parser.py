@@ -47,6 +47,8 @@ class Log:
     
     @cached_property
     def fabric_mods(self) -> list[str]:
+        if self.type == "thread dump": return []
+
         excluded_prefixes = [
             "java ",
             "fabricloader ",
@@ -86,7 +88,7 @@ class Log:
             try:
                 if not parts[0] == "1": return int(parts[0])
                 return int(parts[1])
-            except: pass
+            except ValueError: pass
         
         match = re.search(r"\s*- java (\d+)", self._content)
         if not match is None:
@@ -102,13 +104,19 @@ class Log:
     
     @cached_property
     def operating_system(self) -> OperatingSystem:
-        if self.minecraft_folder is None:
-            return OperatingSystem.WINDOWS if "-natives-windows.jar" in self._content else None
-        if self.minecraft_folder.startswith("/"):
-            if len(self.minecraft_folder) > 1 and self.minecraft_folder[1].isupper():
-                return OperatingSystem.MACOS
-            return OperatingSystem.LINUX
-        return OperatingSystem.WINDOWS
+        if not self.minecraft_folder is None:
+            if self.minecraft_folder.startswith("/"):
+                if len(self.minecraft_folder) > 1 and self.minecraft_folder[1].isupper():
+                    return OperatingSystem.MACOS
+                return OperatingSystem.LINUX
+            return OperatingSystem.WINDOWS
+        
+        if self.has_content("-natives-windows.jar"): return OperatingSystem.WINDOWS
+        
+        if self.has_content("Operating System: Windows"): return OperatingSystem.WINDOWS
+        if self.has_content("Operating System: Mac OS"): return OperatingSystem.MACOS
+
+        return None
     
     @cached_property
     def minecraft_version(self) -> str:
@@ -122,9 +130,10 @@ class Log:
         for pattern in [
             r"Loading Minecraft (\S+) with Fabric Loader",
             r"Minecraft Version ID: (\S+)",
-            r"/net/minecraftforge/forge/(\S+)-",
+            r"Minecraft Version: (\S+)",
             r"\n\t- minecraft (\S+)\n",
             r"--version, (\S+),",
+            r"/net/minecraftforge/forge/(\S+?)-",
         ]:
             match = re.compile(pattern).search(self._content)
             if not match is None:
@@ -168,9 +177,16 @@ class Log:
         result = self._content.split(" ", 1)[0]
         if result in self.launchers: return result
         
-        for result in self.launchers:
-            if self.has_content(f"/{result}/") or self.has_content(f"\\{result}\\"):
-                return result
+        for launcher in self.launchers:
+            if self.has_content(f"/{launcher}/") or self.has_content(f"\\{launcher}\\") or self.has_content(f"org.{launcher}."):
+                return launcher
+        
+        if any(self.has_content(prism) for prism in [
+            "org.prismlauncher.",
+            "/PrismLauncher",
+            "\\PrismLauncher",
+        ]):
+            return "Prism"
         
         if (self.has_content("\\AppData\\Roaming\\.minecraft")
             or self.has_content("/AppData/Roaming/.minecraft")
@@ -182,6 +198,25 @@ class Log:
             return "MultiMC"
 
         return None
+    
+    @cached_property
+    def type(self) -> str:
+        if any([self._content.startswith(launcher) for launcher in self.launchers]):
+            return "full log"
+
+        if self.has_content("-- Thread Dump --"):
+            return "thread dump"
+
+        if self._content.startswith("---- Minecraft Crash Report ----"):
+            return "crash-report"
+
+        if self.has_content("---------------  T H R E A D  ---------------"):
+            return "hs_err_pid log"
+
+        if self._content.startswith("["):
+            return "latest.log"
+
+        return None
 
     @cached_property
     def is_multimc_or_fork(self) -> bool:
@@ -189,7 +224,7 @@ class Log:
 
     @cached_property
     def is_prism(self) -> bool:
-        return not self.launcher is None and self.launcher.lower() == "prism"
+        return not self.launcher is None and self.launcher in ["Prism", "PolyMC"]
     
     @cached_property
     def mod_loader(self) -> ModLoader:
@@ -282,11 +317,26 @@ class Log:
         ]
         for crash_pattern in crash_patterns:
             match = re.search(crash_pattern, log, re.DOTALL)
-            if not match is None: break
-
-        if not match is None:
-            return match.group().lower()
+            if not match is None:
+                return match.group().lower().replace("fast_reset", "fastreset")
         
+        return None
+    
+    @cached_property
+    def exitcode(self) -> int:
+        patterns = [
+            r"Process crashed with exit code (-?\d+)",
+            r"Process crashed with exitcode (-?\d+)",
+        ]
+        for pattern in patterns:
+            match = re.search(pattern, self._content, re.DOTALL)
+            if not match is None:
+                try: return int(match.group(1))
+                except ValueError: pass
+        
+        for exit_code in [-1073741819, -1073740791, -805306369]:
+            if self.has_content(f" {exit_code}"): return exit_code
+
         return None
     
     def has_content(self, content: str) -> bool:
