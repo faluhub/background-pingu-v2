@@ -65,7 +65,9 @@ class Core(Cog):
     async def on_message(self, msg: discord.Message):
         result = await self.check_log(msg)
         if self.should_reply(result):
-            return await msg.reply(content=result["text"], embed=result["embed"], view=result["view"])
+            try:
+                await msg.reply(content=result["text"], embed=result["embed"], view=result["view"])
+            except discord.errors.Forbidden: pass
     
     @commands.message_command(name="Check Log")
     async def check_log_cmd(self, ctx: discord.ApplicationContext, msg: discord.Message):
