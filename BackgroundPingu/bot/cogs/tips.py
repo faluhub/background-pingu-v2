@@ -178,6 +178,13 @@ Mapless / Preemptive: `root.gameRenderer.level.entities`
 Village / Fortress: `root.tick.level.entities.blockEntities`"""
         return await ctx.respond(text)
 
+    @commands.slash_command(name="standardsettings", description="Explains what StandardSettings is.")
+    async def standardsettings(self, ctx: discord.ApplicationContext):
+        text = """If your settings reset whenever you create a world, you are probably using StandardSettings <https://github.com/KingContaria/StandardSettings>
+If you want to change the values that the settings reset to, click the link above and scroll down for instructions
+If you don't want your settings to reset, remove StandardSettings from your mods folder"""
+        return await ctx.respond(text)
+
     @commands.slash_command(name="modpack_list", description="Gives a list of MCSR modpacks.")
     async def modpack_list(self, ctx: discord.ApplicationContext):
         text = """### Modpacks for [PrismLauncher](<https://prismlauncher.org/download/>) / [MultiMC](<https://multimc.org/>) / [ATLauncher](<https://atlauncher.com/>)
@@ -246,6 +253,11 @@ Requires [Eye Zoom Macro](https://discord.com/channels/83066801105145856/4058398
     @commands.slash_command(name="igpu", description="Gives a guide to get Minecraft to use the high-performance GPU.")
     async def igpu(self, ctx: discord.ApplicationContext):
         text = "If you are experiencing bad performance or graphics-related issues, it's possible that Minecraft is using your integrated GPU. To ensure that Minecraft uses your high-performance GPU, please follow this guide: <https://docs.google.com/document/d/1aPF1lyBAfPWyeHIH80F8JJw8rvvy6lRm0WJ2xxSrRh8/edit#heading=h.4oyoeerdwbr2>"
+        return await ctx.respond(text)
+
+    @commands.slash_command(name="desync", description="Gives a guide to ender eye desync for Minecraft speedruns.")
+    async def desync(self, ctx: discord.ApplicationContext):
+        text = "https://www.youtube.com/watch?v=uBqAeZMlEFQ"
         return await ctx.respond(text)
 
     # @commands.slash_command(name="", description="")
