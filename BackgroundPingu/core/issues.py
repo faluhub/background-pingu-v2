@@ -399,6 +399,14 @@ class IssueChecker:
             builder.error("new_java_old_fabric_crash", mod_loader, mod_loader)
             if self.log.short_version in [f"1.{14 + i}" for i in range(10)]: builder.add("fabric_guide_prism" if self.log.is_prism else "fabric_guide_mmc", "update")
             found_crash_cause = True
+            
+        elif any(self.log.has_content(crash) for crash in [
+            "java.lang.ClassNotFoundException: can't find class com.llamalad7.mixinextras.MixinExtrasBootstrap",
+            "java.lang.NoClassDefFoundError: com/redlimerl/speedrunigt",
+        ]):
+            builder.error("old_fabric_crash").add("fabric_guide_prism" if self.log.is_prism else "fabric_guide_mmc", "update")
+            found_crash_cause = True
+        
         elif self.log.mod_loader == ModLoader.FABRIC and not self.log.fabric_version is None:
             highest_srigt_ver = None
             for mod in self.log.mods:
@@ -418,25 +426,19 @@ class IssueChecker:
                         found_crash_cause = True
                 except: pass
             
-            if any(self.log.has_content(crash) for crash in [
-                "java.lang.ClassNotFoundException: can't find class com.llamalad7.mixinextras.MixinExtrasBootstrap",
-                "java.lang.NoClassDefFoundError: com/redlimerl/speedrunigt",
-            ]):
-                builder.error("old_fabric_crash").add("fabric_guide_prism" if self.log.is_prism else "fabric_guide_mmc", "update")
-                found_crash_cause = True
-            
             else:
                 try:
-                    if self.log.fabric_version < version.parse("0.13.3"):
+                    if self.log.fabric_version.__str__() in ["0.14.15", "0.14.16"]:
+                        builder.error("broken_fabric")
+                        if self.log.short_version in [f"1.{14 + i}" for i in range(10)]: builder.add("fabric_guide_prism" if self.log.is_prism else "fabric_guide_mmc", "update")
+                    elif self.log.fabric_version < version.parse("0.13.3"):
                         builder.error("really_old_fabric")
                         if self.log.short_version in [f"1.{14 + i}" for i in range(10)]: builder.add("fabric_guide_prism" if self.log.is_prism else "fabric_guide_mmc", "update")
-                    elif self.log.fabric_version < version.parse("0.14.12"):
+                    elif self.log.fabric_version < version.parse("0.14.14"):
                         builder.warning("relatively_old_fabric")
                         if self.log.short_version in [f"1.{14 + i}" for i in range(10)]: builder.add("fabric_guide_prism" if self.log.is_prism else "fabric_guide_mmc", "update")
-                    elif self.log.fabric_version < version.parse("0.14.14"):
+                    elif self.log.fabric_version < version.parse("0.15.0"):
                         builder.note("old_fabric").add("fabric_guide_prism" if self.log.is_prism else "fabric_guide_mmc", "update")
-                    elif self.log.fabric_version.__str__() in ["0.14.15", "0.14.16"]:
-                        builder.error("broken_fabric")
                         if self.log.short_version in [f"1.{14 + i}" for i in range(10)]: builder.add("fabric_guide_prism" if self.log.is_prism else "fabric_guide_mmc", "update")
                 except: pass
         
@@ -698,6 +700,9 @@ class IssueChecker:
         ]):
             builder.error("sodium_rtss")
             found_crash_cause = True
+        
+        if self.log.has_mod("mcsrranked-1") or self.log.has_mod("mcsrranked-2"):
+            builder.error("old_ranked_version")
 
         match = re.search(r"Incompatible mod set found! READ THE BELOW LINES!(.*?$)", self.log._content, re.DOTALL)
         if not match is None:
