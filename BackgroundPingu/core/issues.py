@@ -288,6 +288,13 @@ class IssueChecker:
                 if self.log.has_mod(incompatible_mod):
                     builder.error("incompatible_mod", key, incompatible_mod)
         
+        if len(self.log.mods) == 0:
+            for mod in self.log.fabric_mods:
+                if any(weird_mod in mod.lower() for weird_mod in self.assume_as_legal): continue
+                metadata = self.get_mod_metadata(mod)
+                if metadata is None: illegal_mods.append(mod)
+        if len(illegal_mods) > 0: builder.note("amount_illegal_mods", len(illegal_mods), "s" if len(illegal_mods) > 1 else f" (`{illegal_mods[0]}`)", experimental=True)
+        
         if (self.log.minecraft_version == "1.16.1" and len(self.log.whatever_mods) > 0
         and not any(self.log.has_mod(ssg_mod) for ssg_mod in self.ssg_mods)):
             missing_mods = []
