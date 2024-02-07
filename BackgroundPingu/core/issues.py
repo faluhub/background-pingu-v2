@@ -376,6 +376,7 @@ class IssueChecker:
             and self.log.has_content("Instance update failed")
         ):
             builder.error("multimc_neoforge")
+            found_crash_cause = True
 
         if self.log.has_content("[LWJGL] Failed to load a library. Possible solutions:") and self.log.short_version in [f"1.{20 + i}" for i in range(15)]:
             builder.error("update_mmc")
@@ -490,7 +491,6 @@ class IssueChecker:
                 found_crash_cause = True
             elif self.log.max_allocated < min_limit_0 and self.log.has_content(" -805306369"):
                 builder.warning("too_little_ram_crash").add(ram_guide)
-                found_crash_cause = True
             elif self.log.max_allocated < min_limit_2:
                 builder.warning("too_little_ram").add(ram_guide)
             elif self.log.max_allocated < min_limit_1:
@@ -505,6 +505,7 @@ class IssueChecker:
         elif self.log.has_content("OutOfMemoryError") or self.log.has_content("GL error GL_OUT_OF_MEMORY"):
             ram_guide = "allocate_ram_guide_mmc" if self.log.is_multimc_or_fork else "allocate_ram_guide"
             builder.error("too_little_ram_crash").add(ram_guide)
+            found_crash_cause = True
         
         if self.log.has_mod("phosphor") and not self.log.minecraft_version == "1.12.2":
             builder.note("starlight_better")
@@ -595,6 +596,7 @@ class IssueChecker:
         
         if self.log.has_content("Couldn't extract native jar"):
             builder.error("locked_libs")
+            found_crash_cause = True
         
         if self.log.has_pattern(r"java\.io\.IOException: Directory \'(.+?)\' could not be created"):
             builder.error("try_admin_launch")
@@ -795,8 +797,10 @@ class IssueChecker:
         
         if self.log.has_normal_mod("continuity") and self.log.has_mod("sodium") and not self.log.has_mod("indium"):
             builder.error("missing_dependency", "continuity", "indium")
+            found_crash_cause = True
         elif self.log.has_content("Cannot invoke \"net.fabricmc.fabric.api.renderer.v1.Renderer.meshBuilder()\""):
             builder.error("missing_dependency_2", "indium")
+            found_crash_cause = True
         
         if self.log.has_mod("worldpreview") and self.log.has_mod("carpet"):
             builder.error("incompatible_mod", "WorldPreview", "carpet")
@@ -824,6 +828,7 @@ class IssueChecker:
             and self.log.minecraft_version != self.log.fabric_mc_version
         ):
             builder.error("minecraft_version_mismatch", "" if self.log.is_prism else " Instance")
+            found_crash_cause = True
         
         if not found_crash_cause and self.log.has_content("ERROR]: Mixin apply for mod fabric-networking-api-v1 failed"):
             builder.error("delete_dot_fabric")
@@ -866,7 +871,9 @@ class IssueChecker:
 
             for indicator in maxfps_0_indicators:
                 if self.log.has_content(indicator): total += 1
-            if total >= 2: builder.error("exitcode_805306369")
+            if total >= 2:
+                builder.error("exitcode_805306369")
+                found_crash_cause = True
 
         if (not found_crash_cause and self.log.stacktrace is None and self.log.exitcode == -1073741819
             or self.log.has_content("The instruction at 0x%p referenced memory at 0x%p. The memory could not be %s.")

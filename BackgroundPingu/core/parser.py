@@ -104,13 +104,19 @@ class Log:
     
     @cached_property
     def operating_system(self) -> OperatingSystem:
-        if self.minecraft_folder is None:
-            return OperatingSystem.WINDOWS if "-natives-windows.jar" in self._content else None
-        if self.minecraft_folder.startswith("/"):
-            if len(self.minecraft_folder) > 1 and self.minecraft_folder[1].isupper():
-                return OperatingSystem.MACOS
-            return OperatingSystem.LINUX
-        return OperatingSystem.WINDOWS
+        if not self.minecraft_folder is None:
+            if self.minecraft_folder.startswith("/"):
+                if len(self.minecraft_folder) > 1 and self.minecraft_folder[1].isupper():
+                    return OperatingSystem.MACOS
+                return OperatingSystem.LINUX
+            return OperatingSystem.WINDOWS
+        
+        if self.has_content("-natives-windows.jar"): return OperatingSystem.WINDOWS
+        
+        if self.has_content("Operating System: Windows"): return OperatingSystem.WINDOWS
+        if self.has_content("Operating System: Mac OS"): return OperatingSystem.MACOS
+
+        return None
     
     @cached_property
     def minecraft_version(self) -> str:
@@ -312,7 +318,7 @@ class Log:
         for crash_pattern in crash_patterns:
             match = re.search(crash_pattern, log, re.DOTALL)
             if not match is None:
-                return match.group().lower()
+                return match.group().lower().replace("fast_reset", "fast-reset")
         
         return None
     
