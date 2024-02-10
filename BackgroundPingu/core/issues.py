@@ -408,7 +408,7 @@ class IssueChecker:
             builder.error("update_mmc")
         
         if self.log.has_content("[LWJGL] Platform/architecture mismatch detected for module: org.lwjgl"):
-            builder.error("try_changing_lwjgl_version", "" if self.log.is_prism else " Instance")
+            builder.error("try_changing_lwjgl_version", self.log.edit_instance)
         
         if not found_crash_cause and (any(self.log.has_content(broken_java) for broken_java in [
             "Could not start java:\n\n\nCheck your ",
@@ -474,7 +474,7 @@ class IssueChecker:
 
         if len(self.log.mods) > 0 and self.log.mod_loader == ModLoader.VANILLA:
             if any(self.log.has_library(loader) for loader in ["forge", "fabric", "quilt"]):
-                builder.error("broken_loader", "" if self.log.is_prism else " Instance")
+                builder.error("broken_loader", self.log.edit_instance)
             else:
                 builder.error("no_loader")
                 if self.log.short_version in [f"1.{14 + i}" for i in range(10)]: builder.add("fabric_guide_prism" if self.log.is_prism else "fabric_guide_mmc", "install")
@@ -511,26 +511,24 @@ class IssueChecker:
             min_limit_0 = 2000 if has_shenandoah else 2800
             min_limit_1 = 1200 if has_shenandoah else 1900
             min_limit_2 = 850 if has_shenandoah else 1200
-            ram_guide = "allocate_ram_guide_mmc" if self.log.is_multimc_or_fork else "allocate_ram_guide"
             if (self.log.max_allocated < min_limit_1 and self.log.has_content(" -805306369")) or self.log.has_content("java.lang.OutOfMemoryError") or self.log.has_content("GL error GL_OUT_OF_MEMORY"):
-                builder.error("too_little_ram_crash").add(ram_guide)
+                builder.error("too_little_ram_crash").add(self.log.ram_guide)
                 found_crash_cause = True
             elif self.log.max_allocated < min_limit_0 and self.log.has_content(" -805306369"):
-                builder.warning("too_little_ram_crash").add(ram_guide)
+                builder.warning("too_little_ram_crash").add(self.log.ram_guide)
             elif self.log.max_allocated < min_limit_2:
-                builder.warning("too_little_ram").add(ram_guide)
+                builder.warning("too_little_ram").add(self.log.ram_guide)
             elif self.log.max_allocated < min_limit_1:
-                builder.note("too_little_ram").add(ram_guide)
+                builder.note("too_little_ram").add(self.log.ram_guide)
             if is_mcsr_log and not self.log.short_version in [f"1.{18 + i}" for i in range(10)]:
                 if self.log.max_allocated > 10000:
-                    builder.error("too_much_ram").add(ram_guide)
+                    builder.error("too_much_ram").add(self.log.ram_guide)
                 elif self.log.max_allocated > 4800:
-                    builder.warning("too_much_ram").add(ram_guide)
+                    builder.warning("too_much_ram").add(self.log.ram_guide)
                 elif self.log.max_allocated > 3500:
-                    builder.note("too_much_ram").add(ram_guide)
+                    builder.note("too_much_ram").add(self.log.ram_guide)
         elif self.log.has_content("OutOfMemoryError") or self.log.has_content("GL error GL_OUT_OF_MEMORY"):
-            ram_guide = "allocate_ram_guide_mmc" if self.log.is_multimc_or_fork else "allocate_ram_guide"
-            builder.error("too_little_ram_crash").add(ram_guide)
+            builder.error("too_little_ram_crash").add(self.log.ram_guide)
             found_crash_cause = True
         
         if self.log.has_mod("phosphor") and not self.log.minecraft_version == "1.12.2":
@@ -682,7 +680,7 @@ class IssueChecker:
             found_crash_cause = True
 
         if self.log.has_content("Launched instance in offline mode") and self.log.has_content("(missing)\n"):
-            builder.error("online_launch_required", "" if self.log.is_prism else " Instance")
+            builder.error("online_launch_required", self.log.edit_instance)
             found_crash_cause = True
         
         pattern = r"This instance is not compatible with Java version (\d+)\.\nPlease switch to one of the following Java versions for this instance:\nJava version (\d+)"
@@ -847,13 +845,13 @@ class IssueChecker:
                 builder.error("legacy_fabric_modpack")
                 found_crash_cause = True
             else:
-                builder.warning("no_mappings", "" if self.log.is_prism else " Instance")
+                builder.warning("no_mappings", self.log.edit_instance)
 
         if (not self.log.fabric_mc_version is None
             and not self.log.minecraft_version is None
             and self.log.minecraft_version != self.log.fabric_mc_version
         ):
-            builder.error("minecraft_version_mismatch", "" if self.log.is_prism else " Instance")
+            builder.error("minecraft_version_mismatch", self.log.edit_instance)
             found_crash_cause = True
         
         if not found_crash_cause and self.log.has_content("ERROR]: Mixin apply for mod fabric-networking-api-v1 failed"):
@@ -928,7 +926,7 @@ class IssueChecker:
             found_crash_cause = True
         
         if not found_crash_cause and self.log.is_multimc_or_fork and self.log.type != "full log":
-            builder.info("send_full_log", self.log.launcher, "" if self.log.is_prism else " Instance")
+            builder.info("send_full_log", self.log.launcher, self.log.edit_instance)
         
         if not self.log.minecraft_folder is None:
             if not found_crash_cause and "OneDrive" in self.log.minecraft_folder:
@@ -999,7 +997,7 @@ class IssueChecker:
                 "Process crashed with exitcode ",
                 "Process crashed with exit code ",
             ]):
-                builder.error("send_full_log", "" if self.log.is_prism else " Instance")
+                builder.error("send_full_log", self.log.edit_instance)
             
             pattern = r"https://minecraft\.fandom\.com/wiki/([A-Za-z0-9_]+)"
             for match in re.findall(pattern, self.log._content):

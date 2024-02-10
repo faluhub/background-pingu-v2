@@ -224,7 +224,15 @@ class Log:
 
     @cached_property
     def is_prism(self) -> bool:
-        return not self.launcher is None and self.launcher in ["Prism", "PolyMC"]
+        return self.launcher in ["Prism", "PolyMC"]
+
+    @cached_property
+    def edit_instance(self) -> bool:
+        return "" if self.is_prism else " Instance"
+
+    @cached_property
+    def ram_guide(self) -> bool:
+        return "allocate_ram_guide_mmc" if self.is_multimc_or_fork else "allocate_ram_guide"
     
     @cached_property
     def mod_loader(self) -> ModLoader:
