@@ -398,13 +398,13 @@ class IssueChecker:
         
         if (self.log.mod_loader == ModLoader.FORGE
             and self.log.launcher == "MultiMC"
-            and self.log.short_version in [f"1.{20 + i}" for i in range(15)]
+            and self.log.is_newer_than("1.20")
             and self.log.has_content("Instance update failed")
         ):
             builder.error("multimc_neoforge")
             found_crash_cause = True
 
-        if self.log.has_content("[LWJGL] Failed to load a library. Possible solutions:") and self.log.short_version in [f"1.{20 + i}" for i in range(15)]:
+        if self.log.has_content("[LWJGL] Failed to load a library. Possible solutions:") and self.log.is_newer_than("1.20"):
             builder.error("update_mmc")
         
         if self.log.has_content("[LWJGL] Platform/architecture mismatch detected for module: org.lwjgl"):
@@ -424,7 +424,7 @@ class IssueChecker:
         ]):
             mod_loader = self.log.mod_loader.value if self.log.mod_loader.value is not None else "mod"
             builder.error("new_java_old_fabric_crash", mod_loader, mod_loader)
-            if self.log.short_version in [f"1.{14 + i}" for i in range(10)]: builder.add("fabric_guide_prism" if self.log.is_prism else "fabric_guide_mmc", "update")
+            if self.log.is_newer_than("1.14"): builder.add("fabric_guide_prism" if self.log.is_prism else "fabric_guide_mmc", "update")
             found_crash_cause = True
             
         elif any(self.log.has_content(crash) for crash in [
@@ -444,30 +444,24 @@ class IssueChecker:
                         except: pass
                         if highest_srigt_ver is None or ver > highest_srigt_ver:
                             highest_srigt_ver = ver
-            if not highest_srigt_ver is None:
-                try:
-                    if highest_srigt_ver < version.parse("13.3") and self.log.fabric_version > version.parse("0.14.14"):
-                        builder.error("incompatible_srigt")
-                        if not self.log.minecraft_version == "1.16.1":
-                            builder.add("incompatible_srigt_alternative")
-                        found_crash_cause = True
-                except: pass
+            if not highest_srigt_ver is None and highest_srigt_ver < version.parse("13.3") and self.log.fabric_version > version.parse("0.14.14"):
+                    builder.error("incompatible_srigt")
+                    if not self.log.minecraft_version == "1.16.1":
+                        builder.add("incompatible_srigt_alternative")
+                    found_crash_cause = True
             
-            else:
-                try:
-                    if self.log.fabric_version.__str__() in ["0.14.15", "0.14.16"]:
-                        builder.error("broken_fabric")
-                        if self.log.short_version in [f"1.{14 + i}" for i in range(10)]: builder.add("fabric_guide_prism" if self.log.is_prism else "fabric_guide_mmc", "update")
-                    elif self.log.fabric_version < version.parse("0.13.3"):
-                        builder.error("really_old_fabric")
-                        if self.log.short_version in [f"1.{14 + i}" for i in range(10)]: builder.add("fabric_guide_prism" if self.log.is_prism else "fabric_guide_mmc", "update")
-                    elif self.log.fabric_version < version.parse("0.14.14"):
-                        builder.warning("relatively_old_fabric")
-                        if self.log.short_version in [f"1.{14 + i}" for i in range(10)]: builder.add("fabric_guide_prism" if self.log.is_prism else "fabric_guide_mmc", "update")
-                    elif self.log.fabric_version < version.parse("0.15.0"):
-                        builder.note("old_fabric")
-                        if self.log.short_version in [f"1.{14 + i}" for i in range(10)]: builder.add("fabric_guide_prism" if self.log.is_prism else "fabric_guide_mmc", "update")
-                except: pass
+            if self.log.fabric_version.__str__() in ["0.14.15", "0.14.16"]:
+                builder.error("broken_fabric")
+                if self.log.is_newer_than("1.14"): builder.add("fabric_guide_prism" if self.log.is_prism else "fabric_guide_mmc", "update")
+            elif self.log.fabric_version < version.parse("0.13.3"):
+                builder.error("really_old_fabric")
+                if self.log.is_newer_than("1.14"): builder.add("fabric_guide_prism" if self.log.is_prism else "fabric_guide_mmc", "update")
+            elif self.log.fabric_version < version.parse("0.14.14"):
+                builder.warning("relatively_old_fabric")
+                if self.log.is_newer_than("1.14"): builder.add("fabric_guide_prism" if self.log.is_prism else "fabric_guide_mmc", "update")
+            elif self.log.fabric_version < version.parse("0.15.0"):
+                builder.note("old_fabric")
+                if self.log.is_newer_than("1.14"): builder.add("fabric_guide_prism" if self.log.is_prism else "fabric_guide_mmc", "update")
         
         if len(self.log.mods) == 0 and self.log.has_content(".mrpack\n"):
             builder.error("using_modpack_as_mod", self.log.launcher if self.log.launcher is not None else "your launcher")
@@ -477,12 +471,12 @@ class IssueChecker:
                 builder.error("broken_loader", self.log.edit_instance)
             else:
                 builder.error("no_loader")
-                if self.log.short_version in [f"1.{14 + i}" for i in range(10)]: builder.add("fabric_guide_prism" if self.log.is_prism else "fabric_guide_mmc", "install")
+                if self.log.is_newer_than("1.14"): builder.add("fabric_guide_prism" if self.log.is_prism else "fabric_guide_mmc", "install")
         
         if not self.log.mod_loader in [None, ModLoader.FABRIC, ModLoader.VANILLA]:
             if is_mcsr_log:
                 builder.error("using_other_loader_mcsr", self.log.mod_loader.value)
-                if self.log.short_version in [f"1.{14 + i}" for i in range(10)]: builder.add("fabric_guide_prism" if self.log.is_prism else "fabric_guide_mmc", "install")
+                if self.log.is_newer_than("1.14"): builder.add("fabric_guide_prism" if self.log.is_prism else "fabric_guide_mmc", "install")
                 found_crash_cause = True
             else:
                 builder.note("using_other_loader", self.log.mod_loader.value)
@@ -520,7 +514,7 @@ class IssueChecker:
                 builder.warning("too_little_ram").add(self.log.ram_guide)
             elif self.log.max_allocated < min_limit_1:
                 builder.note("too_little_ram").add(self.log.ram_guide)
-            if is_mcsr_log and not self.log.short_version in [f"1.{18 + i}" for i in range(10)]:
+            if is_mcsr_log and not self.log.is_newer_than("1.18"):
                 if self.log.max_allocated > 10000:
                     builder.error("too_much_ram").add(self.log.ram_guide)
                 elif self.log.max_allocated > 4800:
@@ -687,7 +681,7 @@ class IssueChecker:
         match = re.search(pattern, self.log._content)
         if not match is None:
             switch_java = False
-            if self.log.short_version in [f"1.{17 + i}" for i in range(10)]:
+            if self.log.is_newer_than("1.17"):
                 try:
                     current_version = int(match.group(1))
                     switch_java = (current_version < 17)
@@ -795,10 +789,10 @@ class IssueChecker:
             if self.log.has_mod("worldpreview"):
                 builder.error("incompatible_mod", "Optifine", "WorldPreview")
                 found_crash_cause = True
-            if self.log.has_mod("z-buffer-fog") and self.log.short_version in [f"1.{14 + i}" for i in range(10)]:
+            if self.log.has_mod("z-buffer-fog") and self.log.is_newer_than("1.14"):
                 builder.error("incompatible_mod", "Optifine", "z-buffer-fog")
                 found_crash_cause = True
-            if self.log.short_version in [f"1.{15 + i}" for i in range(15)]:
+            if self.log.is_newer_than("1.15"):
                 if is_mcsr_log:
                     builder.error("use_sodium_not_optifine_mcsr").add("update_mods")
                 elif self.log.mod_loader == ModLoader.FORGE:
@@ -841,7 +835,7 @@ class IssueChecker:
             found_crash_cause = True
         
         if self.log.has_content("Mappings not present!"):
-            if not self.log.short_version in [f"1.{14 + i}" for i in range(15)] and self.log.mod_loader == ModLoader.FABRIC:
+            if not self.log.is_newer_than("1.14") and self.log.mod_loader == ModLoader.FABRIC:
                 builder.error("legacy_fabric_modpack")
                 found_crash_cause = True
             else:

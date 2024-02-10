@@ -142,6 +142,14 @@ class Log:
         return None
     
     @cached_property
+    def parsed_mc_version(self) -> version.Version:
+        if self.minecraft_version is None: return None
+        
+        try:
+            return version.parse(self.minecraft_version)
+        except version.InvalidVersion: return None
+    
+    @cached_property
     def fabric_mc_version(self) -> str:
         for pattern in [
             r"libraries/net/fabricmc/intermediary/(\S+)/intermediary-"
@@ -160,15 +168,14 @@ class Log:
     
     @cached_property
     def fabric_version(self) -> version.Version:
-        match = re.compile(r"Loading Minecraft \S+ with Fabric Loader (\S+)").search(self._content)
-        try:
-            if not match is None: return version.parse(match.group(1))
-        except: pass
-
-        match = re.compile(r"libraries/net/fabricmc/fabric-loader/\S+/fabric-loader-(\S+).jar").search(self._content)
-        try:
-            if not match is None: return version.parse(match.group(1))
-        except: pass
+        for pattern in [
+            r"Loading Minecraft \S+ with Fabric Loader (\S+)",
+            r"libraries/net/fabricmc/fabric-loader/\S+/fabric-loader-(\S+).jar",
+        ]:
+            match = re.compile(pattern).search(self._content)
+            try:
+                if not match is None: return version.parse(match.group(1))
+            except version.InvalidVersion: pass
 
         return None
     
@@ -346,6 +353,11 @@ class Log:
             if self.has_content(f" {exit_code}"): return exit_code
 
         return None
+    
+    def is_newer_than(self, compared_version: str) -> bool:
+        if self.parsed_mc_version is None: return False
+
+        return self.parsed_mc_version >= version.parse(compared_version)
     
     def has_content(self, content: str) -> bool:
         return content.lower() in self._lower_content
