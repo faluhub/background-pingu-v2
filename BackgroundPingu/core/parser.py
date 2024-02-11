@@ -120,20 +120,13 @@ class Log:
     
     @cached_property
     def minecraft_version(self) -> str:
-        match = re.compile(r"Params:\n(.*?)\n", re.DOTALL).search(self._content)
-        if not match is None:
-            line = match.group(1)
-            version_match = re.compile(r"--version (\S+)\s").search(line)
-            if not version_match is None:
-                return version_match.group(1)
-        
         for pattern in [
             r"Loading Minecraft (\S+) with Fabric Loader",
             r"Minecraft Version ID: (\S+)",
             r"Minecraft Version: (\S+)",
             r"\n\t- minecraft (\S+)\n",
-            r"--version, (\S+),",
             r"/net/minecraftforge/forge/(\S+?)-",
+            r"--version, (\S+),",
         ]:
             match = re.compile(pattern).search(self._content)
             if not match is None:
@@ -236,10 +229,6 @@ class Log:
     @cached_property
     def edit_instance(self) -> bool:
         return "" if self.is_prism else " Instance"
-
-    @cached_property
-    def ram_guide(self) -> bool:
-        return "allocate_ram_guide_mmc" if self.is_multimc_or_fork else "allocate_ram_guide"
     
     @cached_property
     def mod_loader(self) -> ModLoader:
@@ -306,6 +295,84 @@ class Log:
                 if not match is None: return int(match.group(1))*1024
             except ValueError: pass
         return None
+    
+    @cached_property
+    def recommended_min_allocated(self) -> tuple[int, int, int]:
+        min_limit_0, min_limit_1, min_limit_2 = 0, 0, 0
+
+        if self.is_newer_than("1.18"):
+            min_limit_0 += 5000
+            min_limit_1 += 3400
+            min_limit_2 += 1300
+        elif self.is_newer_than("1.14"):
+            min_limit_0 += 2800
+            min_limit_1 += 1800
+            min_limit_2 += 1200
+        else:
+            min_limit_0 += 2000
+            min_limit_1 += 1500
+            min_limit_2 += 700
+        
+        mod_cnt = len(self.whatever_mods)
+        if self.mod_loader == ModLoader.FORGE:
+            min_limit_0 += min(mod_cnt * 100, 5000)
+            min_limit_1 += min(mod_cnt * 100, 1000)
+            min_limit_2 += min(mod_cnt * 50, 200)
+        
+        if self.has_java_argument("shenandoah"):
+            min_limit_0 *= 0.7
+            min_limit_1 *= 0.7
+            min_limit_2 *= 0.7
+        
+        if self.has_java_argument("zgc"):
+            min_limit_0 *= 1.7
+            min_limit_1 *= 1.3
+            min_limit_2 *= 1.3
+        
+        return (min_limit_0, min_limit_1, min_limit_2)
+    
+    @cached_property
+    def recommended_max_allocated(self) -> tuple[int, int, int]:
+        max_limit_0, max_limit_1, max_limit_2 = 0, 0, 0
+
+        if self.is_newer_than("1.18"):
+            max_limit_0 += 15000
+            max_limit_1 += 8000
+            max_limit_2 += 6300
+        elif self.is_newer_than("1.14"):
+            max_limit_0 += 10000
+            max_limit_1 += 4500
+            max_limit_2 += 3200
+        else:
+            max_limit_0 += 8000
+            max_limit_1 += 3200
+            max_limit_2 += 2200
+        
+        mod_cnt = len(self.whatever_mods)
+        if self.mod_loader == ModLoader.FORGE:
+            max_limit_0 += min(mod_cnt * 400, 4000)
+            max_limit_1 += max(min(mod_cnt * 200, 1500), 9000)
+            max_limit_2 += max(min(mod_cnt * 100, 800), 8000)
+        
+        if self.has_java_argument("shenandoah"):
+            max_limit_0 *= 0.7
+            max_limit_1 *= 0.7
+            max_limit_2 *= 0.7
+        
+        if self.has_java_argument("zgc"):
+            max_limit_0 *= 1.3
+            max_limit_1 *= 1.3
+            max_limit_2 *= 1.3
+        
+        return (max_limit_0, max_limit_1, max_limit_2)
+
+    @cached_property
+    def ram_guide(self) -> tuple[str, int, int]:
+        return (
+            "allocate_ram_guide_mmc" if self.is_multimc_or_fork else "allocate_ram_guide",
+            self.recommended_min_allocated[1],
+            self.recommended_max_allocated[2]
+        )
     
     @cached_property
     def libraries(self) -> str:
@@ -387,7 +454,7 @@ class Log:
     def has_library(self, content: str) -> bool:
         return content.lower() in self.libraries.lower()
     
-    def upload(self) -> (bool, str):
+    def upload(self) -> tuple[bool, str]:
         api_url = "https://api.mclo.gs/1/log"
         payload = {
             "content": self._content

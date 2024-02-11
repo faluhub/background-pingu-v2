@@ -501,28 +501,26 @@ class IssueChecker:
                 found_crash_cause = True
         
         if not self.log.max_allocated is None:
-            has_shenandoah = self.log.has_java_argument("shenandoah")
-            min_limit_0 = 2000 if has_shenandoah else 2800
-            min_limit_1 = 1200 if has_shenandoah else 1900
-            min_limit_2 = 850 if has_shenandoah else 1200
+            min_limit_0, min_limit_1, min_limit_2 = self.log.recommended_min_allocated
             if (self.log.max_allocated < min_limit_1 and self.log.has_content(" -805306369")) or self.log.has_content("java.lang.OutOfMemoryError") or self.log.has_content("GL error GL_OUT_OF_MEMORY"):
-                builder.error("too_little_ram_crash").add(self.log.ram_guide)
+                builder.error("too_little_ram_crash").add(*self.log.ram_guide)
                 found_crash_cause = True
             elif self.log.max_allocated < min_limit_0 and self.log.has_content(" -805306369"):
-                builder.warning("too_little_ram_crash").add(self.log.ram_guide)
+                builder.warning("too_little_ram_crash").add(*self.log.ram_guide)
             elif self.log.max_allocated < min_limit_2:
-                builder.warning("too_little_ram").add(self.log.ram_guide)
+                builder.warning("too_little_ram").add(*self.log.ram_guide)
             elif self.log.max_allocated < min_limit_1:
-                builder.note("too_little_ram").add(self.log.ram_guide)
+                builder.note("too_little_ram").add(*self.log.ram_guide)
             if is_mcsr_log and not self.log.is_newer_than("1.18"):
-                if self.log.max_allocated > 10000:
-                    builder.error("too_much_ram").add(self.log.ram_guide)
-                elif self.log.max_allocated > 4800:
-                    builder.warning("too_much_ram").add(self.log.ram_guide)
-                elif self.log.max_allocated > 3500:
-                    builder.note("too_much_ram").add(self.log.ram_guide)
+                max_limit_0, max_limit_1, max_limit_2 = self.log.recommended_max_allocated
+                if self.log.max_allocated > max_limit_0:
+                    builder.error("too_much_ram").add(*self.log.ram_guide)
+                elif self.log.max_allocated > max_limit_1:
+                    builder.warning("too_much_ram").add(*self.log.ram_guide)
+                elif self.log.max_allocated > max_limit_2:
+                    builder.note("too_much_ram").add(*self.log.ram_guide)
         elif self.log.has_content("OutOfMemoryError") or self.log.has_content("GL error GL_OUT_OF_MEMORY"):
-            builder.error("too_little_ram_crash").add(self.log.ram_guide)
+            builder.error("too_little_ram_crash").add(*self.log.ram_guide)
             found_crash_cause = True
         
         if self.log.has_mod("phosphor") and not self.log.minecraft_version == "1.12.2":
