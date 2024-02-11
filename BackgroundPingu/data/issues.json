@@ -131,7 +131,7 @@
     "note.starlight_better": "You're using `Phosphor`. `Starlight` is much better than `Phosphor`, you should use it instead.",
     "note.too_little_ram": "You may have too little RAM allocated.",
     "note.too_much_ram": "You likely have too much RAM allocated, which [can cause lag spikes](https://vazkii.notion.site/A-semi-technical-explanation-of-why-you-shouldn-t-allocate-too-much-RAM-to-Minecraft-78e7bd41ba6646de8d1c55c033674bce).",
-    "note.use_prism": "If you use `M1` or `M2`, it is recommended to use `Prism Launcher` with `ARM Java` instead of `MultiMC` for better performance since `Prism` has native `ARM` support.",
+    "note.use_prism": "If you use an `M1` or `M2` chip, it is recommended to use `Prism Launcher` with `ARM Java` instead of `MultiMC` for better performance since `Prism` has native `ARM` support.",
     "note.using_other_loader": "Note that using `{} Loader` is not allowed for speedrunning.",
     "top_info.uploaded_log": "The log has been uploaded to {}.",
     "top_info.uploaded_log_2": "The log has been uploaded to {}. (Note that `mclo.gs` censors sensitive information)",
