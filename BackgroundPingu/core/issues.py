@@ -249,7 +249,7 @@ class IssueChecker:
         if any(self.link.endswith(file_extension) for file_extension in [".log", ".txt"]) and self.log.has_content("minecraft"):
             builder.info("upload_log_attachment")
 
-        for mod in self.log.mods:
+        '''for mod in self.log.mods:
             metadata = self.get_mod_metadata(mod)
             if not metadata is None:
                 if is_mcsr_log:
@@ -297,7 +297,7 @@ class IssueChecker:
                 "amount_illegal_mods",
                 len(illegal_mods), "s" if len(illegal_mods) > 1 else f" (`{illegal_mods[0]}`)",
                 experimental = (self.log.minecraft_version != "1.16.1")
-            )
+            )'''
         
         if (self.log.minecraft_version == "1.16.1" and len(self.log.whatever_mods) > 0
         and not any(self.log.has_mod(ssg_mod) for ssg_mod in self.ssg_mods)):
