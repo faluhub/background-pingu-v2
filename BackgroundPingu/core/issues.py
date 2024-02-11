@@ -637,9 +637,9 @@ class IssueChecker:
             builder.error("lithium_crash")
             found_crash_cause = True
         
-        if self.log.has_content("java.lang.NullPointerException: Cannot invoke \"net.minecraft.class_512.method_2623()\" because \"this.field_3098\" is null"):
-            builder.error("recipe_book_crash")
-            found_crash_cause = True
+        if any(self.log.has_content_in_stacktrace(f"at net.minecraft.class_{i}") for i in ["507", "513"]):
+            builder.error("recipe_book_crash", experimental=True)
+            # found_crash_cause = True
         
         if is_mcsr_log and any(self.log.has_content(snowman_crash) for snowman_crash in [
             "Cannot invoke \"net.minecraft.class_1657.method_7325()\"",
