@@ -860,6 +860,11 @@ class IssueChecker:
                 builder.error("corrupted_mod_config", wrong_mod)
                 found_crash_cause = True
         
+        pattern = r"Error analyzing \[(.*?)\]: java\.util\.zip\.ZipException: zip END header not found"
+        match = re.search(pattern, self.log._content)
+        if not match is None:
+            builder.error("corrupted_file", re.sub(r"/(Users|home)/([^/]+)/", "/Users/********/", match.group(1)))
+        
         if self.log.has_mod("serversiderng-9"):
             builder.warning("using_ssrng")
         elif self.log.has_mod("serversiderng 9"):
@@ -914,7 +919,7 @@ class IssueChecker:
         pattern = r"\[Integrated Watchdog/ERROR\]:? This crash report has been saved to: (.*\.txt)"
         match = re.search(pattern, self.log._content)
         if not match is None:
-            builder.info("send_watchdog_report", re.sub(r"C:\\Users\\[^\\]+\\", "C:/Users/********/", match.group(1)))
+            builder.info("send_watchdog_report", re.sub(r"\\(Users|home)\\[^\\]+\\", "/Users/********/", match.group(1)))
             found_crash_cause = True
         
         if not found_crash_cause and self.log.is_multimc_or_fork and self.log.type != "full log":
