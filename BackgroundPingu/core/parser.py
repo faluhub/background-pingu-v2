@@ -406,15 +406,11 @@ class Log:
     
     @cached_property
     def exitcode(self) -> int:
-        patterns = [
-            r"Process crashed with exit code (-?\d+)",
-            r"Process crashed with exitcode (-?\d+)",
-        ]
-        for pattern in patterns:
-            match = re.search(pattern, self._content, re.DOTALL)
-            if not match is None:
-                try: return int(match.group(1))
-                except ValueError: pass
+        pattern = r"Process (crashed|exited) with exit ?code (-?\d+)"
+        match = re.search(pattern, self._content, re.DOTALL)
+        if not match is None:
+            try: return int(match.group(2))
+            except ValueError: pass
         
         for exit_code in [-1073741819, -1073740791, -805306369]:
             if self.has_content(f" {exit_code}"): return exit_code
