@@ -14,7 +14,7 @@ class Tips(Cog):
             "- For MultiMC and Prism Launcher, see the image how to do that[.](https://media.discordapp.net/attachments/433058639956410383/1099537217409531985/image.png)\n" \
             "- For official Minecraft Launcher, get the installer here: <https://fabricmc.net/use/installer/>\n" \
             "Open the installer, select the Minecraft version you are playing and finish the installation.\n" \
-            "Note: You do **NOT **need Fabric API, that is banned and you won't need it!\n" \
+            "Note: You do **NOT** need Fabric API, that is banned and you won't need it!\n" \
             "When you open your Minecraft launcher now it will show Fabric as an option. With that your mods will work."
         return await ctx.respond(text)
 
