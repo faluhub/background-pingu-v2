@@ -181,8 +181,9 @@ class IssueChecker:
             mod_name = original_name.replace(" ", "").replace("-", "").replace("_", "")
             mod_name = "zbufferfog" if mod_name == "legacyplanarfog" else mod_name
             mod_name = "dynamicmenufps" if mod_name == "dynamicfps" else mod_name
-            mod_name = "setspawn" if mod_name == "setspawnmod" else mod_name
-            if mod_name in filename: return mod
+            if mod_name.endswith("mod"): mod_name = mod_name[:-3]
+            if mod_name in filename:
+                return mod
         return None
     
     def get_latest_version(self, metadata: dict) -> bool:
@@ -249,7 +250,7 @@ class IssueChecker:
         if any(self.link.endswith(file_extension) for file_extension in [".log", ".txt"]) and self.log.has_content("minecraft"):
             builder.info("upload_log_attachment")
 
-        '''for mod in self.log.mods:
+        for mod in self.log.mods:
             metadata = self.get_mod_metadata(mod)
             if not metadata is None:
                 if is_mcsr_log:
@@ -275,7 +276,15 @@ class IssueChecker:
                     elif latest_version is None: continue
             elif all(not weird_mod in mod.lower() for weird_mod in self.assume_as_legal): illegal_mods.append(mod)
         
-        if len(illegal_mods) > 0: builder.note("amount_illegal_mods", len(illegal_mods), "s" if len(illegal_mods) > 1 else f" (`{illegal_mods[0]}`)")
+        if len(illegal_mods) > 0:
+            if len(illegal_mods) > 6: temp = "s"
+            elif len(illegal_mods) > 1: temp = f"s (`{', '.join(illegal_mods)}`)"
+            else: temp = f" (`{illegal_mods[0]}`)"
+            builder.note(
+                "amount_illegal_mods",
+                len(illegal_mods),
+                temp
+            )
         
         if len(outdated_mods) > 5:
             builder.error("amount_outdated_mods", len(outdated_mods), "`, `".join([mod[0] for mod in outdated_mods])).add("update_mods")
@@ -293,11 +302,16 @@ class IssueChecker:
                 if any(weird_mod in mod.lower() for weird_mod in self.assume_as_legal): continue
                 metadata = self.get_mod_metadata(mod)
                 if metadata is None: illegal_mods.append(mod)
-            if len(illegal_mods) > 0: builder.note(
-                "amount_illegal_mods",
-                len(illegal_mods), "s" if len(illegal_mods) > 1 else f" (`{illegal_mods[0]}`)",
-                experimental = (self.log.minecraft_version != "1.16.1")
-            )
+            if len(illegal_mods) > 0:
+                if len(illegal_mods) > 6: temp = "s"
+                elif len(illegal_mods) > 1: temp = f"s (`{', '.join(illegal_mods)}`)"
+                else: temp = f" (`{illegal_mods[0]}`)"
+                builder.note(
+                    "amount_illegal_mods",
+                    len(illegal_mods),
+                    temp,
+                    experimental = (self.log.minecraft_version != "1.16.1")
+                )
         
         if (self.log.minecraft_version == "1.16.1" and len(self.log.whatever_mods) > 0
         and not any(self.log.has_mod(ssg_mod) for ssg_mod in self.ssg_mods)):
@@ -313,7 +327,7 @@ class IssueChecker:
                 builder.warning("missing_mods", len(missing_mods), "`, `".join([mod[0] for mod in missing_mods])).add("update_mods")
             else:
                 for missing_mod in missing_mods:
-                    builder.warning("missing_mod", missing_mod[0], missing_mod[1])'''
+                    builder.warning("missing_mod", missing_mod[0], missing_mod[1])
         
         if self.log.operating_system == OperatingSystem.MACOS:
             if self.log.has_mod("sodium-1.16.1-v1") or self.log.has_mod("sodium-1.16.1-v2"):
