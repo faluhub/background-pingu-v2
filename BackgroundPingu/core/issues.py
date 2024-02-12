@@ -107,9 +107,9 @@ class IssueChecker:
             "optifine",
             "sodium-extra",
             "biomethreadlocalfix",
-            "forceport",
             "sleepbackground-3.8-1.8.x-1.12.x",
-            "tab-focus"
+            "tab-focus",
+            "voyager"
         ]
         self.assume_as_legal = [
             "mcsrranked",
@@ -135,7 +135,8 @@ class IssueChecker:
             "sodium",
             "lithium",
             "starlight",
-            "voyager"
+            "voyager",
+            "state-output"
         ]
         self.ssg_mods = [
             "setspawn",
@@ -181,8 +182,9 @@ class IssueChecker:
             mod_name = original_name.replace(" ", "").replace("-", "").replace("_", "")
             mod_name = "zbufferfog" if mod_name == "legacyplanarfog" else mod_name
             mod_name = "dynamicmenufps" if mod_name == "dynamicfps" else mod_name
-            mod_name = "setspawn" if mod_name == "setspawnmod" else mod_name
-            if mod_name in filename: return mod
+            if mod_name.endswith("mod"): mod_name = mod_name[:-3]
+            if mod_name in filename:
+                return mod
         return None
     
     def get_latest_version(self, metadata: dict) -> bool:
@@ -210,8 +212,8 @@ class IssueChecker:
         is_mcsr_log = any(self.log.has_mod(mcsr_mod) for mcsr_mod in self.mcsr_mods) or self.log.minecraft_version == "1.16.1"
         found_crash_cause = False
         illegal_mods = []
-        checked_mods = []
-        outdated_mods = []
+        checked_mods = {}
+        outdated_mods = {}
         all_incompatible_mods = {}
         footer = ""
 
@@ -246,13 +248,10 @@ class IssueChecker:
             builder.info("leaked_username").add("upload_log_leaked_username")
         match = None
 
-        if any(self.link.endswith(file_extension) for file_extension in [".log", ".txt"]) and self.log.has_content("minecraft"):
-            builder.info("upload_log_attachment")
-
-        '''for mod in self.log.mods:
-            metadata = self.get_mod_metadata(mod)
-            if not metadata is None:
-                if is_mcsr_log:
+        if is_mcsr_log:
+            for mod in self.log.mods:
+                metadata = self.get_mod_metadata(mod)
+                if not metadata is None:
                     mod_name = metadata["name"]
 
                     try:
@@ -264,24 +263,29 @@ class IssueChecker:
                     except KeyError: pass
 
                     if mod_name.lower() in checked_mods and not mod_name.lower() == "optifabric":
-                        builder.note("duplicate_mod", mod_name.lower())
-                    else: checked_mods.append(mod_name.lower())
-
+                        if checked_mods[mod_name.lower()]: outdated_mods.pop(mod_name)
+                        else: builder.note("duplicate_mod", mod_name.lower())
+                        continue
+                    
                     latest_version = self.get_latest_version(metadata)
-                    if not latest_version is None and not (latest_version["name"] == mod or latest_version["version"] in mod):
+                    if not latest_version is None and not (latest_version["name"] == mod or latest_version["version"].replace("+","").replace(" ","") in mod.replace("+","").replace(" ","")):
                         if all(not weird_mod in mod.lower() for weird_mod in self.assume_as_latest):
-                            outdated_mods.append([mod_name, latest_version["page"]])
-                            continue
-                    elif latest_version is None: continue
-            elif all(not weird_mod in mod.lower() for weird_mod in self.assume_as_legal): illegal_mods.append(mod)
+                            outdated_mods[mod_name] = latest_version["page"]
+                            checked_mods[mod_name.lower()] = True
+                    else: checked_mods[mod_name.lower()] = False
+                elif all(not weird_mod in mod.lower() for weird_mod in self.assume_as_legal): illegal_mods.append(mod)
         
-        if len(illegal_mods) > 0: builder.note("amount_illegal_mods", len(illegal_mods), "s" if len(illegal_mods) > 1 else f" (`{illegal_mods[0]}`)")
+        if len(illegal_mods) > 0:
+            if len(illegal_mods) > 6: temp = "s"
+            elif len(illegal_mods) > 1: temp = f"s (`{', '.join(illegal_mods)}`)"
+            else: temp = f" (`{illegal_mods[0]}`)"
+            builder.note("amount_illegal_mods", len(illegal_mods), temp)
         
         if len(outdated_mods) > 5:
-            builder.error("amount_outdated_mods", len(outdated_mods), "`, `".join([mod[0] for mod in outdated_mods])).add("update_mods")
+            builder.error("amount_outdated_mods", len(outdated_mods), "`, `".join([mod for mod in outdated_mods.keys()])).add("update_mods")
         else:
-            for outdated_mod in outdated_mods:
-                builder.warning("outdated_mod", outdated_mod[0], outdated_mod[1])
+            for mod_name, link in outdated_mods.items():
+                builder.warning("outdated_mod", mod_name, link)
 
         for key, value in all_incompatible_mods.items():
             for incompatible_mod in value:
@@ -293,11 +297,16 @@ class IssueChecker:
                 if any(weird_mod in mod.lower() for weird_mod in self.assume_as_legal): continue
                 metadata = self.get_mod_metadata(mod)
                 if metadata is None: illegal_mods.append(mod)
-            if len(illegal_mods) > 0: builder.note(
-                "amount_illegal_mods",
-                len(illegal_mods), "s" if len(illegal_mods) > 1 else f" (`{illegal_mods[0]}`)",
-                experimental = (self.log.minecraft_version != "1.16.1")
-            )
+            if len(illegal_mods) > 0:
+                if len(illegal_mods) > 6: temp = "s"
+                elif len(illegal_mods) > 1: temp = f"s (`{', '.join(illegal_mods)}`)"
+                else: temp = f" (`{illegal_mods[0]}`)"
+                builder.note(
+                    "amount_illegal_mods",
+                    len(illegal_mods),
+                    temp,
+                    experimental = (self.log.minecraft_version != "1.16.1")
+                )
         
         if (self.log.minecraft_version == "1.16.1" and len(self.log.whatever_mods) > 0
         and not any(self.log.has_mod(ssg_mod) for ssg_mod in self.ssg_mods)):
@@ -313,7 +322,7 @@ class IssueChecker:
                 builder.warning("missing_mods", len(missing_mods), "`, `".join([mod[0] for mod in missing_mods])).add("update_mods")
             else:
                 for missing_mod in missing_mods:
-                    builder.warning("missing_mod", missing_mod[0], missing_mod[1])'''
+                    builder.warning("missing_mod", missing_mod[0], missing_mod[1])
         
         if self.log.operating_system == OperatingSystem.MACOS:
             if self.log.has_mod("sodium-1.16.1-v1") or self.log.has_mod("sodium-1.16.1-v2"):
@@ -548,7 +557,7 @@ class IssueChecker:
                 builder.error("eav_crash").add("eav_crash_srigt")
             else:
                 builder.error("gl_pixel_format")
-            found_crash_cause = True
+            if self.log.stacktrace is None: found_crash_cause = True
         
         elif (len(self.log.whatever_mods) == 0 and self.log.has_mod("xaero")) and self.log.has_content("Field too big for insn"):
             wrong_mods = [mod for mod in self.log.whatever_mods if "xaero" in mod.lower()]
@@ -556,7 +565,7 @@ class IssueChecker:
             builder.error("mods_crash", "; ".join(wrong_mods))
             found_crash_cause = True
         
-        elif self.log.has_content("A fatal error has been detected by the Java Runtime Environment") or self.log.has_content("EXCEPTION_ACCESS_VIOLATION"):
+        elif (self.log.has_content("A fatal error has been detected by the Java Runtime Environment") or self.log.has_content("EXCEPTION_ACCESS_VIOLATION")):
             builder.error("eav_crash")
             if self.log.has_pattern(r"  \[ntdll\.dll\+(0x[0-9a-f]+)\]"):
                 builder.add("eav_crash_1", bold=True)
@@ -572,7 +581,7 @@ class IssueChecker:
             builder.add("eav_crash_3")
             if len(self.log.whatever_mods) == 0 or self.log.has_mod("speedrunigt") or self.log.has_mod("mcsrranked"): builder.add("eav_crash_srigt")
             builder.add("eav_crash_disclaimer")
-            found_crash_cause = True
+            if self.log.stacktrace is None: found_crash_cause = True
         
         if self.log.has_content("WGL_ARB_create_context_profile is unavailable"):
             builder.error("intel_hd2000").add("intell_hd2000_info")
@@ -821,6 +830,10 @@ class IssueChecker:
         if self.log.has_mod("worldpreview") and self.log.has_mod("carpet"):
             builder.error("incompatible_mod", "WorldPreview", "carpet")
             found_crash_cause = True
+        
+        if self.log.has_content("java.lang.ClassNotFoundException: dev.tildejustin.stateoutput.State"):
+            builder.error("old_wp_with_stateoutput")
+            found_crash_cause = True
 
         if self.log.has_content("There is not enough space on the disk"):
             builder.error("out_of_disk_space")
@@ -911,19 +924,6 @@ class IssueChecker:
             builder.add("exitcode_1073741819_2")
             if self.log._content.count("\n") < 500: builder.add("exitcode_1073741819_4")
             builder.add("exitcode_1073741819_5")
-
-        if self.log.has_content("Missing or unsupported mandatory dependencies"):
-            builder.error("forge_missing_dependencies")
-            found_crash_cause = True
-
-        pattern = r"\[Integrated Watchdog/ERROR\]:? This crash report has been saved to: (.*\.txt)"
-        match = re.search(pattern, self.log._content)
-        if not match is None:
-            builder.info("send_watchdog_report", re.sub(r"\\(Users|home)\\[^\\]+\\", "/Users/********/", match.group(1)))
-            found_crash_cause = True
-        
-        if not found_crash_cause and self.log.is_multimc_or_fork and self.log.type != "full log":
-            builder.info("send_full_log", self.log.launcher, self.log.edit_instance)
         
         if not self.log.minecraft_folder is None:
             if not found_crash_cause and "OneDrive" in self.log.minecraft_folder:
@@ -932,6 +932,26 @@ class IssueChecker:
                 builder.note("program_files")
             if "Rar$" in self.log.minecraft_folder:
                 builder.error("need_to_extract_from_zip", self.log.launcher if not self.log.launcher is None else "the launcher")
+
+
+        if (not found_crash_cause
+            and any(self.link.endswith(file_extension) for file_extension in [".log", ".txt"])
+            and self.log.has_content("minecraft")
+        ):
+            builder.info("upload_log_attachment")
+
+        if self.log.has_content("Missing or unsupported mandatory dependencies"):
+            builder.error("forge_missing_dependencies")
+            found_crash_cause = True
+        
+        if not found_crash_cause and self.log.is_multimc_or_fork and self.log.type != "full log":
+            builder.info("send_full_log", self.log.launcher, self.log.edit_instance)
+
+        pattern = r"\[Integrated Watchdog/ERROR\]:? This crash report has been saved to: (.*\.txt)"
+        match = re.search(pattern, self.log._content)
+        if not match is None:
+            builder.info("send_watchdog_report", re.sub(r"\\(Users|home)\\[^\\]+\\", "/Users/********/", match.group(1)))
+            found_crash_cause = True
     
 
         if not found_crash_cause:
