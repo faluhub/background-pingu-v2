@@ -282,7 +282,7 @@ class IssueChecker:
             builder.note("amount_illegal_mods", len(illegal_mods), temp)
         
         if len(outdated_mods) > 5:
-            builder.error("amount_outdated_mods", len(outdated_mods), "`, `".join([mod[0] for mod in outdated_mods.keys()])).add("update_mods")
+            builder.error("amount_outdated_mods", len(outdated_mods), "`, `".join([mod for mod in outdated_mods.keys()])).add("update_mods")
         else:
             for mod_name, link in outdated_mods.items():
                 builder.warning("outdated_mod", mod_name, link)
@@ -557,7 +557,7 @@ class IssueChecker:
                 builder.error("eav_crash").add("eav_crash_srigt")
             else:
                 builder.error("gl_pixel_format")
-            found_crash_cause = True
+            if self.log.stacktrace is None: found_crash_cause = True
         
         elif (len(self.log.whatever_mods) == 0 and self.log.has_mod("xaero")) and self.log.has_content("Field too big for insn"):
             wrong_mods = [mod for mod in self.log.whatever_mods if "xaero" in mod.lower()]
@@ -565,7 +565,7 @@ class IssueChecker:
             builder.error("mods_crash", "; ".join(wrong_mods))
             found_crash_cause = True
         
-        elif self.log.has_content("A fatal error has been detected by the Java Runtime Environment") or self.log.has_content("EXCEPTION_ACCESS_VIOLATION"):
+        elif (self.log.has_content("A fatal error has been detected by the Java Runtime Environment") or self.log.has_content("EXCEPTION_ACCESS_VIOLATION")):
             builder.error("eav_crash")
             if self.log.has_pattern(r"  \[ntdll\.dll\+(0x[0-9a-f]+)\]"):
                 builder.add("eav_crash_1", bold=True)
@@ -581,7 +581,7 @@ class IssueChecker:
             builder.add("eav_crash_3")
             if len(self.log.whatever_mods) == 0 or self.log.has_mod("speedrunigt") or self.log.has_mod("mcsrranked"): builder.add("eav_crash_srigt")
             builder.add("eav_crash_disclaimer")
-            found_crash_cause = True
+            if self.log.stacktrace is None: found_crash_cause = True
         
         if self.log.has_content("WGL_ARB_create_context_profile is unavailable"):
             builder.error("intel_hd2000").add("intell_hd2000_info")
@@ -939,7 +939,7 @@ class IssueChecker:
             and self.log.has_content("minecraft")
         ):
             builder.info("upload_log_attachment")
-        
+
         if self.log.has_content("Missing or unsupported mandatory dependencies"):
             builder.error("forge_missing_dependencies")
             found_crash_cause = True
