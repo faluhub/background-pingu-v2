@@ -107,9 +107,9 @@ class IssueChecker:
             "optifine",
             "sodium-extra",
             "biomethreadlocalfix",
-            "forceport",
             "sleepbackground-3.8-1.8.x-1.12.x",
-            "tab-focus"
+            "tab-focus",
+            "voyager"
         ]
         self.assume_as_legal = [
             "mcsrranked",
