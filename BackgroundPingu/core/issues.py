@@ -135,7 +135,8 @@ class IssueChecker:
             "sodium",
             "lithium",
             "starlight",
-            "voyager"
+            "voyager",
+            "state-output"
         ]
         self.ssg_mods = [
             "setspawn",
