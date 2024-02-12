@@ -248,9 +248,6 @@ class IssueChecker:
             builder.info("leaked_username").add("upload_log_leaked_username")
         match = None
 
-        if any(self.link.endswith(file_extension) for file_extension in [".log", ".txt"]) and self.log.has_content("minecraft"):
-            builder.info("upload_log_attachment")
-
         if is_mcsr_log:
             for mod in self.log.mods:
                 metadata = self.get_mod_metadata(mod)
@@ -927,19 +924,6 @@ class IssueChecker:
             builder.add("exitcode_1073741819_2")
             if self.log._content.count("\n") < 500: builder.add("exitcode_1073741819_4")
             builder.add("exitcode_1073741819_5")
-
-        if self.log.has_content("Missing or unsupported mandatory dependencies"):
-            builder.error("forge_missing_dependencies")
-            found_crash_cause = True
-
-        pattern = r"\[Integrated Watchdog/ERROR\]:? This crash report has been saved to: (.*\.txt)"
-        match = re.search(pattern, self.log._content)
-        if not match is None:
-            builder.info("send_watchdog_report", re.sub(r"\\(Users|home)\\[^\\]+\\", "/Users/********/", match.group(1)))
-            found_crash_cause = True
-        
-        if not found_crash_cause and self.log.is_multimc_or_fork and self.log.type != "full log":
-            builder.info("send_full_log", self.log.launcher, self.log.edit_instance)
         
         if not self.log.minecraft_folder is None:
             if not found_crash_cause and "OneDrive" in self.log.minecraft_folder:
@@ -948,6 +932,26 @@ class IssueChecker:
                 builder.note("program_files")
             if "Rar$" in self.log.minecraft_folder:
                 builder.error("need_to_extract_from_zip", self.log.launcher if not self.log.launcher is None else "the launcher")
+
+
+        if (not found_crash_cause
+            and any(self.link.endswith(file_extension) for file_extension in [".log", ".txt"])
+            and self.log.has_content("minecraft")
+        ):
+            builder.info("upload_log_attachment")
+        
+        if self.log.has_content("Missing or unsupported mandatory dependencies"):
+            builder.error("forge_missing_dependencies")
+            found_crash_cause = True
+        
+        if not found_crash_cause and self.log.is_multimc_or_fork and self.log.type != "full log":
+            builder.info("send_full_log", self.log.launcher, self.log.edit_instance)
+
+        pattern = r"\[Integrated Watchdog/ERROR\]:? This crash report has been saved to: (.*\.txt)"
+        match = re.search(pattern, self.log._content)
+        if not match is None:
+            builder.info("send_watchdog_report", re.sub(r"\\(Users|home)\\[^\\]+\\", "/Users/********/", match.group(1)))
+            found_crash_cause = True
     
 
         if not found_crash_cause:
