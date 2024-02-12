@@ -268,7 +268,7 @@ class IssueChecker:
                         continue
                     
                     latest_version = self.get_latest_version(metadata)
-                    if not latest_version is None and not (latest_version["name"] == mod or latest_version["version"] in mod):
+                    if not latest_version is None and not (latest_version["name"] == mod or latest_version["version"].replace("+","").replace(" ","") in mod.replace("+","").replace(" ","")):
                         if all(not weird_mod in mod.lower() for weird_mod in self.assume_as_latest):
                             outdated_mods[mod_name] = latest_version["page"]
                             checked_mods[mod_name.lower()] = True
