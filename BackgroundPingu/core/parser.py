@@ -125,6 +125,7 @@ class Log:
             r"Minecraft Version ID: (\S+)",
             r"Minecraft Version: (\S+)",
             r"\n\t- minecraft (\S+)\n",
+            r"/com/mojang/minecraft/(\S+?)/",
             r"/net/minecraftforge/forge/(\S+?)-",
             r"--version, (\S+),",
         ]:
