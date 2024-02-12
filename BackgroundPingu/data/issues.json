@@ -85,6 +85,7 @@
     "error.old_fabric_crash": "This crash seems to be caused by using an outdated version of `Fabric Loader`. You should update it.",
     "error.old_ranked_version": "You're using an old `MCSR Ranked` mod version. You need to update it, you can download the latest version [**here**](https://modrinth.com/mod/mcsr-ranked/versions).",
     "error.old_sodium_crash": "This crash is caused by using an old version of `Sodium`.",
+    "error.old_wp_with_stateoutput": "This crash is caused by using `State Output` with an old `WorldPreview` version. You should update `WorldPreview`.",
     "error.online_launch_required": "Either launch your instance **not** in `offline mode` or do `Edit{} > Version > Download All` so that your launcher can download assets.",
     "error.out_of_disk_space": "It looks like you ran out of disk space. If that's the case, you should free up some space on it.",
     "error.outdated_nvidia_flatpack_driver": "Update the Nvidia driver for flatpak by running `flatpak update`. If the issue persists, wait for the driver to be added to Flathub and try again.",

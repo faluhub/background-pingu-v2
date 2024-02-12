@@ -836,6 +836,10 @@ class IssueChecker:
         if self.log.has_mod("worldpreview") and self.log.has_mod("carpet"):
             builder.error("incompatible_mod", "WorldPreview", "carpet")
             found_crash_cause = True
+        
+        if self.log.has_content("java.lang.ClassNotFoundException: dev.tildejustin.stateoutput.State"):
+            builder.error("old_wp_with_stateoutput")
+            found_crash_cause = True
 
         if self.log.has_content("There is not enough space on the disk"):
             builder.error("out_of_disk_space")
