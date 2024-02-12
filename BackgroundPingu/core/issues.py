@@ -212,8 +212,8 @@ class IssueChecker:
         is_mcsr_log = any(self.log.has_mod(mcsr_mod) for mcsr_mod in self.mcsr_mods) or self.log.minecraft_version == "1.16.1"
         found_crash_cause = False
         illegal_mods = []
-        checked_mods = []
-        outdated_mods = []
+        checked_mods = {}
+        outdated_mods = {}
         all_incompatible_mods = {}
         footer = ""
 
@@ -251,10 +251,10 @@ class IssueChecker:
         if any(self.link.endswith(file_extension) for file_extension in [".log", ".txt"]) and self.log.has_content("minecraft"):
             builder.info("upload_log_attachment")
 
-        for mod in self.log.mods:
-            metadata = self.get_mod_metadata(mod)
-            if not metadata is None:
-                if is_mcsr_log:
+        if is_mcsr_log:
+            for mod in self.log.mods:
+                metadata = self.get_mod_metadata(mod)
+                if not metadata is None:
                     mod_name = metadata["name"]
 
                     try:
@@ -266,32 +266,29 @@ class IssueChecker:
                     except KeyError: pass
 
                     if mod_name.lower() in checked_mods and not mod_name.lower() == "optifabric":
-                        builder.note("duplicate_mod", mod_name.lower())
-                    else: checked_mods.append(mod_name.lower())
-
+                        if checked_mods[mod_name.lower()]: outdated_mods.pop(mod_name)
+                        else: builder.note("duplicate_mod", mod_name.lower())
+                        continue
+                    
                     latest_version = self.get_latest_version(metadata)
                     if not latest_version is None and not (latest_version["name"] == mod or latest_version["version"] in mod):
                         if all(not weird_mod in mod.lower() for weird_mod in self.assume_as_latest):
-                            outdated_mods.append([mod_name, latest_version["page"]])
-                            continue
-                    elif latest_version is None: continue
-            elif all(not weird_mod in mod.lower() for weird_mod in self.assume_as_legal): illegal_mods.append(mod)
+                            outdated_mods[mod_name] = latest_version["page"]
+                            checked_mods[mod_name.lower()] = True
+                    else: checked_mods[mod_name.lower()] = False
+                elif all(not weird_mod in mod.lower() for weird_mod in self.assume_as_legal): illegal_mods.append(mod)
         
         if len(illegal_mods) > 0:
             if len(illegal_mods) > 6: temp = "s"
             elif len(illegal_mods) > 1: temp = f"s (`{', '.join(illegal_mods)}`)"
             else: temp = f" (`{illegal_mods[0]}`)"
-            builder.note(
-                "amount_illegal_mods",
-                len(illegal_mods),
-                temp
-            )
+            builder.note("amount_illegal_mods", len(illegal_mods), temp)
         
         if len(outdated_mods) > 5:
-            builder.error("amount_outdated_mods", len(outdated_mods), "`, `".join([mod[0] for mod in outdated_mods])).add("update_mods")
+            builder.error("amount_outdated_mods", len(outdated_mods), "`, `".join([mod[0] for mod in outdated_mods.keys()])).add("update_mods")
         else:
-            for outdated_mod in outdated_mods:
-                builder.warning("outdated_mod", outdated_mod[0], outdated_mod[1])
+            for mod_name, link in outdated_mods.items():
+                builder.warning("outdated_mod", mod_name, link)
 
         for key, value in all_incompatible_mods.items():
             for incompatible_mod in value:
