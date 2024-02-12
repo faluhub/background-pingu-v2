@@ -420,7 +420,6 @@ class Log:
     
     def is_newer_than(self, compared_version: str) -> bool:
         if self.parsed_mc_version is None: return False
-
         return self.parsed_mc_version >= version.parse(compared_version)
     
     def has_content(self, content: str) -> bool:
@@ -446,9 +445,11 @@ class Log:
         return False
     
     def has_java_argument(self, argument: str) -> bool:
+        if self.java_arguments is None: return None
         return argument.lower() in self.java_arguments.lower()
     
     def has_library(self, content: str) -> bool:
+        if self.libraries is None: return False
         return content.lower() in self.libraries.lower()
     
     def upload(self) -> tuple[bool, str]:
