@@ -140,12 +140,12 @@ Watch the 1st video for a rough overview, the 2nd and 3rd for more information a
 
     @commands.slash_command(name="modcheck", description="Gives a link to ModCheck.")
     async def modcheck(self, ctx: discord.ApplicationContext):
-        text = "Application that helps install the allowed mods <https://github.com/RedLime/ModCheck/releases/latest>"
+        text = "Application that helps install the allowed mods <https://github.com/tildejustin/modcheck/releases/latest>"
         return await ctx.respond(text)
 
     @commands.slash_command(name="1_16mods", description="Gives an explanation of 1.16 mods.")
     async def one_sixteen_mods(self, ctx: discord.ApplicationContext):
-        text = """The allowed mods can be found and downloaded [**here**](<https://redlime.github.io/MCSRMods/>)
+        text = """The allowed mods can be found and downloaded [**here**](<https://mods.tildejustin.dev/>)
 AntiResourceReload and SetSpawn require Java 17 or newer[.](https://cdn.discordapp.com/attachments/433058639956410383/1184135653680742490/image.png) If you need help updating your Java version, do `/java`."""
         return await ctx.respond(text)
 
@@ -167,7 +167,7 @@ Don't forget to check the FAQ in the readme!
     @commands.slash_command(name="allowedmods", description="Gives a link to allowed mods.")
     async def allowedmods(self, ctx: discord.ApplicationContext):
         text = """If you use Optifine (allowed only in pre-1.15), please read the [**detailed mod rules**](<http://bombch.us/DOOK>).
-The allowed mods can be found and downloaded [**here**](<https://redlime.github.io/MCSRMods/> ).
+The allowed mods can be found and downloaded [**here**](<https://mods.tildejustin.dev/> ).
 All other mods, including Fabric API, are banned[.](https://cdn.discordapp.com/attachments/433058639956410383/1184134775334764648/image.png)"""
         return await ctx.respond(text)
 
@@ -185,33 +185,33 @@ If you want to change the values that the settings reset to, click the link abov
 If you don't want your settings to reset, remove StandardSettings from your mods folder"""
         return await ctx.respond(text)
 
-    @commands.slash_command(name="modpack_list", description="Gives a list of MCSR modpacks.")
+    '''@commands.slash_command(name="modpack_list", description="Gives a list of MCSR modpacks.")
     async def modpack_list(self, ctx: discord.ApplicationContext):
         text = """### Modpacks for [PrismLauncher](<https://prismlauncher.org/download/>) / [MultiMC](<https://multimc.org/>) / [ATLauncher](<https://atlauncher.com/>)
 Do `/modpack` for a tutorial on how to import them.
 If the game crashes when it starts up, do `/java`.
 If you're wondering why your settings keep resetting, do `/standardsettings`.
 - **Full RSG 1.16.1 Pack (Includes all RSG mods, __RECOMMENDED__) (Requires Java 17+ (`/java`))**
-  - Download: **[Windows](https://redlime.github.io/MCSRMods/modpacks/v4/MCSR-1.16.1-Windows-RSG.mrpack) | [macOS](https://redlime.github.io/MCSRMods/modpacks/v4/MCSR-1.16.1-OSX-RSG.mrpack) | [Linux](https://redlime.github.io/MCSRMods/modpacks/v4/MCSR-1.16.1-Linux-RSG.mrpack)**
+  - Download: **[Windows](https://mods.tildejustin.dev/modpacks/v4/MCSR-1.16.1-Windows-RSG.mrpack) | [macOS](https://mods.tildejustin.dev/modpacks/v4/MCSR-1.16.1-OSX-RSG.mrpack) | [Linux](https://mods.tildejustin.dev/modpacks/v4/MCSR-1.16.1-Linux-RSG.mrpack)**
 - **Full SSG 1.16.5 Pack (Includes all SSG mods, __RECOMMENDED__) (Requires Java 17+ (`/java`))**
-  - Download: **[Windows](https://redlime.github.io/MCSRMods/modpacks/v4/MCSR-1.16.5-Windows-SSG.mrpack) | [macOS](https://redlime.github.io/MCSRMods/modpacks/v4/MCSR-1.16.5-OSX-SSG.mrpack) | [Linux](https://redlime.github.io/MCSRMods/modpacks/v4/MCSR-1.16.5-Linux-SSG.mrpack)**
+  - Download: **[Windows](https://mods.tildejustin.dev/modpacks/v4/MCSR-1.16.5-Windows-SSG.mrpack) | [macOS](https://mods.tildejustin.dev/modpacks/v4/MCSR-1.16.5-OSX-SSG.mrpack) | [Linux](https://mods.tildejustin.dev/modpacks/v4/MCSR-1.16.5-Linux-SSG.mrpack)**
 - **Normal Ranked Pack (Includes basic mods for MCSR Ranked, __RECOMMENDED__)**
-  - Download: **[Windows](https://redlime.github.io/MCSRMods/modpacks/v4/MCSRRanked-Windows-1.16.1.mrpack) | [macOS](https://redlime.github.io/MCSRMods/modpacks/v4/MCSRRanked-OSX-1.16.1.mrpack) | [Linux](https://redlime.github.io/MCSRMods/modpacks/v4/MCSRRanked-Linux-1.16.1.mrpack)**
+  - Download: **[Windows](https://mods.tildejustin.dev/modpacks/v4/MCSRRanked-Windows-1.16.1.mrpack) | [macOS](https://mods.tildejustin.dev/modpacks/v4/MCSRRanked-OSX-1.16.1.mrpack) | [Linux](https://mods.tildejustin.dev/modpacks/v4/MCSRRanked-Linux-1.16.1.mrpack)**
 - **Full Ranked Pack (Requires __Java 17+__ (`/java`))**
-  - Download: **[Windows](https://redlime.github.io/MCSRMods/modpacks/v4/MCSRRanked-Windows-1.16.1-Pro.mrpack) | [macOS](https://redlime.github.io/MCSRMods/modpacks/v4/MCSRRanked-OSX-1.16.1-Pro.mrpack) | [Linux](https://redlime.github.io/MCSRMods/modpacks/v4/MCSRRanked-Linux-1.16.1-Pro.mrpack)**"""
+  - Download: **[Windows](https://mods.tildejustin.dev/modpacks/v4/MCSRRanked-Windows-1.16.1-Pro.mrpack) | [macOS](https://mods.tildejustin.dev/modpacks/v4/MCSRRanked-OSX-1.16.1-Pro.mrpack) | [Linux](https://mods.tildejustin.dev/modpacks/v4/MCSRRanked-Linux-1.16.1-Pro.mrpack)**"""
         return await ctx.respond(text)
 
     @commands.slash_command(name="modpack", description="Gives instructions for setting up an RSG modpack instance.")
     async def modpack(self, ctx: discord.ApplicationContext):
         text = """Download [**MultiMC**](<https://multimc.org/>), extract it and launch `MultiMC.exe`. Click `Add instance > Import from zip`. Copy the link below that corresponds to your operating system, and paste it into the text field below `Import from zip`:
-- Windows or Linux: <https://redlime.github.io/MCSRMods/modpacks/v4/MCSR-1.16.1-Windows-RSG.mrpack>
-- macOS: <https://redlime.github.io/MCSRMods/modpacks/v4/MCSR-1.16.1-OSX-RSG.mrpack>
+- Windows or Linux: <https://mods.tildejustin.dev/modpacks/v4/MCSR-1.16.1-Windows-RSG.mrpack>
+- macOS: <https://mods.tildejustin.dev/modpacks/v4/MCSR-1.16.1-OSX-RSG.mrpack>
 Click `OK` and the instance should be ready.
 Demo: https://discord.com/channels/83066801105145856/405839885509984256/1127597457530945596
 If this is your first time using MultiMC, go to `Settings > Java` and set the `Max memory allocation` to 2048 MB.
 If the game crashes when it starts up, do `/java`. 
-If you want a custom modpack, go [here](<https://redlime.github.io/MCSRMods/?type=modpack>)"""
-        return await ctx.respond(text)
+If you want a custom modpack, go [here](<https://mods.tildejustin.dev/?type=modpack>)"""
+        return await ctx.respond(text)'''
 
     @commands.slash_command(name="practicemaps", description="Gives a list of practice maps.")
     async def practicemaps(self, ctx: discord.ApplicationContext):

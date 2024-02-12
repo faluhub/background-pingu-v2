@@ -297,7 +297,7 @@ class IssueChecker:
                 "amount_illegal_mods",
                 len(illegal_mods), "s" if len(illegal_mods) > 1 else f" (`{illegal_mods[0]}`)",
                 experimental = (self.log.minecraft_version != "1.16.1")
-            )'''
+            )
         
         if (self.log.minecraft_version == "1.16.1" and len(self.log.whatever_mods) > 0
         and not any(self.log.has_mod(ssg_mod) for ssg_mod in self.ssg_mods)):
@@ -313,7 +313,7 @@ class IssueChecker:
                 builder.warning("missing_mods", len(missing_mods), "`, `".join([mod[0] for mod in missing_mods])).add("update_mods")
             else:
                 for missing_mod in missing_mods:
-                    builder.warning("missing_mod", missing_mod[0], missing_mod[1])
+                    builder.warning("missing_mod", missing_mod[0], missing_mod[1])'''
         
         if self.log.operating_system == OperatingSystem.MACOS:
             if self.log.has_mod("sodium-1.16.1-v1") or self.log.has_mod("sodium-1.16.1-v2"):
