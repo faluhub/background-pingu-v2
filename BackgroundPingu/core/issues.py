@@ -215,6 +215,7 @@ class IssueChecker:
         checked_mods = {}
         outdated_mods = {}
         all_incompatible_mods = {}
+        duplicate_mods = []
         footer = ""
 
         if self.log.operating_system == OperatingSystem.MACOS: footer += " MacOS"
@@ -261,11 +262,13 @@ class IssueChecker:
                             else:
                                 all_incompatible_mods[mod_name].append(incompatible_mod)
                     except KeyError: pass
-
+                    
                     if mod_name.lower() in checked_mods and not mod_name.lower() == "optifabric":
-                        if checked_mods[mod_name.lower()]: outdated_mods.pop(mod_name)
-                        else: builder.note("duplicate_mod", mod_name.lower())
-                        continue
+                        duplicate_mods.append(mod_name)
+                        if checked_mods[mod_name.lower()] and mod_name in outdated_mods:
+                            outdated_mods.pop(mod_name)
+                        else:
+                            continue
                     
                     latest_version = self.get_latest_version(metadata)
                     if not latest_version is None and not (latest_version["name"] == mod or latest_version["version"].replace("+","").replace(" ","") in mod.replace("+","").replace(" ","")):
@@ -292,6 +295,9 @@ class IssueChecker:
                 if self.log.has_mod(incompatible_mod):
                     builder.error("incompatible_mod", key, incompatible_mod)
         
+        if len(duplicate_mods) > 0:
+            builder.note("duplicate_mod", ", ".join(set(duplicate_mods)))
+
         if len(self.log.mods) == 0:
             for mod in self.log.fabric_mods:
                 if any(weird_mod in mod.lower() for weird_mod in self.assume_as_legal): continue
@@ -565,7 +571,7 @@ class IssueChecker:
             builder.error("mods_crash", "; ".join(wrong_mods))
             found_crash_cause = True
         
-        elif (self.log.has_content("A fatal error has been detected by the Java Runtime Environment") or self.log.has_content("EXCEPTION_ACCESS_VIOLATION")):
+        elif self.log.has_content("A fatal error has been detected by the Java Runtime Environment") or self.log.has_content("EXCEPTION_ACCESS_VIOLATION"):
             builder.error("eav_crash")
             if self.log.has_pattern(r"  \[ntdll\.dll\+(0x[0-9a-f]+)\]"):
                 builder.add("eav_crash_1", bold=True)
@@ -739,7 +745,7 @@ class IssueChecker:
             ranked_rong_versions = []
             ranked_anticheat = match.group(1).strip().replace("\t","")
 
-            if self.log.has_pattern("You should delete these from Minecraft.\s*?Process exited with code 1."):
+            if self.log.has_pattern(r"You should delete these from Minecraft.\s*?Process exited with code 1."):
                 builder.error("ranked_fabric_0_15_x").add("fabric_guide_prism" if self.log.is_prism else "fabric_guide_mmc", "downgrade")
             
             ranked_anticheat_split = ranked_anticheat.split("These Fabric Mods are whitelisted but different version! Make sure to update these!")
