@@ -285,7 +285,7 @@ class IssueChecker:
             builder.note("amount_illegal_mods", len(illegal_mods), temp)
         
         if len(outdated_mods) > 5:
-            builder.error("amount_outdated_mods", len(outdated_mods), "`, `".join([mod for mod in outdated_mods.keys()])).add("update_mods")
+            builder.error("amount_outdated_mods", len(outdated_mods), "`, `".join([mod for mod in outdated_mods.keys()])).add("update_mods").add("modcheck_v1_warning")
         else:
             for mod_name, link in outdated_mods.items():
                 builder.warning("outdated_mod", mod_name, link)
@@ -325,7 +325,7 @@ class IssueChecker:
                     latest_version = self.get_latest_version(metadata)
                     missing_mods.append([recommended_mod, latest_version["page"]])
             if len(missing_mods) > 4:
-                builder.warning("missing_mods", len(missing_mods), "`, `".join([mod[0] for mod in missing_mods])).add("update_mods")
+                builder.warning("missing_mods", len(missing_mods), "`, `".join([mod[0] for mod in missing_mods])).add("update_mods").add("modcheck_v1_warning")
             else:
                 for missing_mod in missing_mods:
                     builder.warning("missing_mod", missing_mod[0], missing_mod[1])
@@ -683,7 +683,7 @@ class IssueChecker:
         ]): builder.info("log_spam")
         
         if self.log.has_content("the mods atum and autoreset"):
-            builder.error("autoreset_user").add("update_mods")
+            builder.error("autoreset_user").add("update_mods").add("modcheck_v1_warning")
             found_crash_cause = True
 
         if self.log.has_content("Launched instance in offline mode") and self.log.has_content("(missing)\n"):
@@ -774,18 +774,18 @@ class IssueChecker:
                         ranked_rong_mods.append("Fabric API" if match == "fabric" else match)
 
             if len(ranked_rong_versions) > 5:
-                builder.error("ranked_rong_versions", f"`{len(ranked_rong_versions)}` mods (`{ranked_rong_versions[0]}, {ranked_rong_versions[1]}, ...`) that are", "them").add("update_mods_ranked")
+                builder.error("ranked_rong_versions", f"`{len(ranked_rong_versions)}` mods (`{ranked_rong_versions[0]}, {ranked_rong_versions[1]}, ...`) that are", "them").add("update_mods_ranked").add("modcheck_v1_warning")
             elif len(ranked_rong_versions) > 1:
-                builder.error("ranked_rong_versions", f"`{len(ranked_rong_versions)}` mods (`{', '.join(ranked_rong_versions)}`) that are", "them").add("update_mods_ranked")
+                builder.error("ranked_rong_versions", f"`{len(ranked_rong_versions)}` mods (`{', '.join(ranked_rong_versions)}`) that are", "them").add("update_mods_ranked").add("modcheck_v1_warning")
             elif len(ranked_rong_versions) > 0:
-                builder.error("ranked_rong_versions", f"a mod `{ranked_rong_versions[0]}` that is", "it").add("update_mods_ranked")
+                builder.error("ranked_rong_versions", f"a mod `{ranked_rong_versions[0]}` that is", "it").add("update_mods_ranked").add("modcheck_v1_warning")
 
             if len(ranked_rong_files) > 5:
-                builder.error("ranked_rong_files", f"`{len(ranked_rong_files)}` mods (`{ranked_rong_files[0]}, {ranked_rong_files[1]}, ...`) that seem", "them").add("update_mods_ranked")
+                builder.error("ranked_rong_files", f"`{len(ranked_rong_files)}` mods (`{ranked_rong_files[0]}, {ranked_rong_files[1]}, ...`) that seem", "them").add("update_mods_ranked").add("modcheck_v1_warning")
             elif len(ranked_rong_files) > 1:
-                builder.error("ranked_rong_files", f"`{len(ranked_rong_files)}` mods (`{', '.join(ranked_rong_files)}`) that seem", "them").add("update_mods_ranked")
+                builder.error("ranked_rong_files", f"`{len(ranked_rong_files)}` mods (`{', '.join(ranked_rong_files)}`) that seem", "them").add("update_mods_ranked").add("modcheck_v1_warning")
             elif len(ranked_rong_files) > 0:
-                builder.error("ranked_rong_files", f"a mod `{ranked_rong_files[0]}` that seems", "it").add("update_mods_ranked")
+                builder.error("ranked_rong_files", f"a mod `{ranked_rong_files[0]}` that seems", "it").add("update_mods_ranked").add("modcheck_v1_warning")
 
             if len(ranked_rong_mods) > 5:
                 builder.error("ranked_rong_mods", f"`{len(ranked_rong_mods)}` mods (`{ranked_rong_mods[0]}, {ranked_rong_mods[1]}, ...`) that are", "them")
@@ -807,7 +807,7 @@ class IssueChecker:
                 found_crash_cause = True
             if self.log.is_newer_than("1.15"):
                 if is_mcsr_log:
-                    builder.error("use_sodium_not_optifine_mcsr").add("update_mods")
+                    builder.error("use_sodium_not_optifine_mcsr").add("update_mods").add("modcheck_v1_warning")
                 elif self.log.mod_loader == ModLoader.FORGE:
                     builder.error("use_sodium_not_optifine", "Embeddium").add("embeddium_download")
                 else:
