@@ -369,10 +369,16 @@ class Log:
 
     @cached_property
     def ram_guide(self) -> tuple[str, int, int]:
+        min_recomm = self.recommended_min_allocated[1]
+        max_recomm = self.recommended_max_allocated[2]
+        diff = max_recomm - min_recomm
+        min_recomm = int(round(min_recomm + diff / 7, 2))
+        max_recomm = int(round(max_recomm - diff / 7, 2))
+
         return (
             "allocate_ram_guide_mmc" if self.is_multimc_or_fork else "allocate_ram_guide",
-            self.recommended_min_allocated[1],
-            self.recommended_max_allocated[2]
+            min_recomm,
+            max_recomm
         )
     
     @cached_property
