@@ -215,6 +215,7 @@ class IssueChecker:
         checked_mods = {}
         outdated_mods = {}
         all_incompatible_mods = {}
+        duplicate_mods = []
         footer = ""
 
         if self.log.operating_system == OperatingSystem.MACOS: footer += " MacOS"
@@ -261,11 +262,13 @@ class IssueChecker:
                             else:
                                 all_incompatible_mods[mod_name].append(incompatible_mod)
                     except KeyError: pass
-
+                    
                     if mod_name.lower() in checked_mods and not mod_name.lower() == "optifabric":
-                        if checked_mods[mod_name.lower()]: outdated_mods.pop(mod_name)
-                        else: builder.note("duplicate_mod", mod_name.lower())
-                        continue
+                        duplicate_mods.append(mod_name)
+                        if checked_mods[mod_name.lower()] and mod_name in outdated_mods:
+                            outdated_mods.pop(mod_name)
+                        else:
+                            continue
                     
                     latest_version = self.get_latest_version(metadata)
                     if not latest_version is None and not (latest_version["name"] == mod or latest_version["version"].replace("+","").replace(" ","") in mod.replace("+","").replace(" ","")):
@@ -282,7 +285,7 @@ class IssueChecker:
             builder.note("amount_illegal_mods", len(illegal_mods), temp)
         
         if len(outdated_mods) > 5:
-            builder.error("amount_outdated_mods", len(outdated_mods), "`, `".join([mod for mod in outdated_mods.keys()])).add("update_mods")
+            builder.error("amount_outdated_mods", len(outdated_mods), "`, `".join([mod for mod in outdated_mods.keys()])).add("update_mods").add("modcheck_v1_warning")
         else:
             for mod_name, link in outdated_mods.items():
                 builder.warning("outdated_mod", mod_name, link)
@@ -292,6 +295,9 @@ class IssueChecker:
                 if self.log.has_mod(incompatible_mod):
                     builder.error("incompatible_mod", key, incompatible_mod)
         
+        if len(duplicate_mods) > 0:
+            builder.note("duplicate_mod", ", ".join(set(duplicate_mods)))
+
         if len(self.log.mods) == 0:
             for mod in self.log.fabric_mods:
                 if any(weird_mod in mod.lower() for weird_mod in self.assume_as_legal): continue
@@ -319,7 +325,7 @@ class IssueChecker:
                     latest_version = self.get_latest_version(metadata)
                     missing_mods.append([recommended_mod, latest_version["page"]])
             if len(missing_mods) > 4:
-                builder.warning("missing_mods", len(missing_mods), "`, `".join([mod[0] for mod in missing_mods])).add("update_mods")
+                builder.warning("missing_mods", len(missing_mods), "`, `".join([mod[0] for mod in missing_mods])).add("update_mods").add("modcheck_v1_warning")
             else:
                 for missing_mod in missing_mods:
                     builder.warning("missing_mod", missing_mod[0], missing_mod[1])
@@ -565,7 +571,7 @@ class IssueChecker:
             builder.error("mods_crash", "; ".join(wrong_mods))
             found_crash_cause = True
         
-        elif (self.log.has_content("A fatal error has been detected by the Java Runtime Environment") or self.log.has_content("EXCEPTION_ACCESS_VIOLATION")):
+        elif self.log.has_content("A fatal error has been detected by the Java Runtime Environment") or self.log.has_content("EXCEPTION_ACCESS_VIOLATION"):
             builder.error("eav_crash")
             if self.log.has_pattern(r"  \[ntdll\.dll\+(0x[0-9a-f]+)\]"):
                 builder.add("eav_crash_1", bold=True)
@@ -677,7 +683,7 @@ class IssueChecker:
         ]): builder.info("log_spam")
         
         if self.log.has_content("the mods atum and autoreset"):
-            builder.error("autoreset_user").add("update_mods")
+            builder.error("autoreset_user").add("update_mods").add("modcheck_v1_warning")
             found_crash_cause = True
 
         if self.log.has_content("Launched instance in offline mode") and self.log.has_content("(missing)\n"):
@@ -739,7 +745,7 @@ class IssueChecker:
             ranked_rong_versions = []
             ranked_anticheat = match.group(1).strip().replace("\t","")
 
-            if self.log.has_pattern("You should delete these from Minecraft.\s*?Process exited with code 1."):
+            if self.log.has_pattern(r"You should delete these from Minecraft.\s*?Process exited with code 1."):
                 builder.error("ranked_fabric_0_15_x").add("fabric_guide_prism" if self.log.is_prism else "fabric_guide_mmc", "downgrade")
             
             ranked_anticheat_split = ranked_anticheat.split("These Fabric Mods are whitelisted but different version! Make sure to update these!")
@@ -768,18 +774,18 @@ class IssueChecker:
                         ranked_rong_mods.append("Fabric API" if match == "fabric" else match)
 
             if len(ranked_rong_versions) > 5:
-                builder.error("ranked_rong_versions", f"`{len(ranked_rong_versions)}` mods (`{ranked_rong_versions[0]}, {ranked_rong_versions[1]}, ...`) that are", "them").add("update_mods_ranked")
+                builder.error("ranked_rong_versions", f"`{len(ranked_rong_versions)}` mods (`{ranked_rong_versions[0]}, {ranked_rong_versions[1]}, ...`) that are", "them").add("update_mods_ranked").add("modcheck_v1_warning")
             elif len(ranked_rong_versions) > 1:
-                builder.error("ranked_rong_versions", f"`{len(ranked_rong_versions)}` mods (`{', '.join(ranked_rong_versions)}`) that are", "them").add("update_mods_ranked")
+                builder.error("ranked_rong_versions", f"`{len(ranked_rong_versions)}` mods (`{', '.join(ranked_rong_versions)}`) that are", "them").add("update_mods_ranked").add("modcheck_v1_warning")
             elif len(ranked_rong_versions) > 0:
-                builder.error("ranked_rong_versions", f"a mod `{ranked_rong_versions[0]}` that is", "it").add("update_mods_ranked")
+                builder.error("ranked_rong_versions", f"a mod `{ranked_rong_versions[0]}` that is", "it").add("update_mods_ranked").add("modcheck_v1_warning")
 
             if len(ranked_rong_files) > 5:
-                builder.error("ranked_rong_files", f"`{len(ranked_rong_files)}` mods (`{ranked_rong_files[0]}, {ranked_rong_files[1]}, ...`) that seem", "them").add("update_mods_ranked")
+                builder.error("ranked_rong_files", f"`{len(ranked_rong_files)}` mods (`{ranked_rong_files[0]}, {ranked_rong_files[1]}, ...`) that seem", "them").add("update_mods_ranked").add("modcheck_v1_warning")
             elif len(ranked_rong_files) > 1:
-                builder.error("ranked_rong_files", f"`{len(ranked_rong_files)}` mods (`{', '.join(ranked_rong_files)}`) that seem", "them").add("update_mods_ranked")
+                builder.error("ranked_rong_files", f"`{len(ranked_rong_files)}` mods (`{', '.join(ranked_rong_files)}`) that seem", "them").add("update_mods_ranked").add("modcheck_v1_warning")
             elif len(ranked_rong_files) > 0:
-                builder.error("ranked_rong_files", f"a mod `{ranked_rong_files[0]}` that seems", "it").add("update_mods_ranked")
+                builder.error("ranked_rong_files", f"a mod `{ranked_rong_files[0]}` that seems", "it").add("update_mods_ranked").add("modcheck_v1_warning")
 
             if len(ranked_rong_mods) > 5:
                 builder.error("ranked_rong_mods", f"`{len(ranked_rong_mods)}` mods (`{ranked_rong_mods[0]}, {ranked_rong_mods[1]}, ...`) that are", "them")
@@ -801,7 +807,7 @@ class IssueChecker:
                 found_crash_cause = True
             if self.log.is_newer_than("1.15"):
                 if is_mcsr_log:
-                    builder.error("use_sodium_not_optifine_mcsr").add("update_mods")
+                    builder.error("use_sodium_not_optifine_mcsr").add("update_mods").add("modcheck_v1_warning")
                 elif self.log.mod_loader == ModLoader.FORGE:
                     builder.error("use_sodium_not_optifine", "Embeddium").add("embeddium_download")
                 else:
@@ -944,7 +950,9 @@ class IssueChecker:
             builder.error("forge_missing_dependencies")
             found_crash_cause = True
         
-        if not found_crash_cause and self.log.is_multimc_or_fork and self.log.type != "full log":
+        if (not found_crash_cause and self.log.is_multimc_or_fork
+            and not self.log.type in ["full log", "thread dump"]
+        ):
             builder.info("send_full_log", self.log.launcher, self.log.edit_instance)
 
         pattern = r"\[Integrated Watchdog/ERROR\]:? This crash report has been saved to: (.*\.txt)"
