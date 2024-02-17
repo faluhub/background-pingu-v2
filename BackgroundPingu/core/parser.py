@@ -205,7 +205,10 @@ class Log:
         if any([self._content.startswith(launcher) for launcher in self.launchers]):
             return "full log"
 
-        if self.has_content("-- Thread Dump --"):
+        if any(self.has_content(thread_dump) for thread_dump in [
+            "-- Thread Dump --",
+            "\nFull thread dump"
+        ]):
             return "thread dump"
 
         if self._content.startswith("---- Minecraft Crash Report ----"):

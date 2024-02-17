@@ -950,7 +950,9 @@ class IssueChecker:
             builder.error("forge_missing_dependencies")
             found_crash_cause = True
         
-        if not found_crash_cause and self.log.is_multimc_or_fork and self.log.type != "full log":
+        if (not found_crash_cause and self.log.is_multimc_or_fork
+            and not self.log.type in ["full log", "thread dump"]
+        ):
             builder.info("send_full_log", self.log.launcher, self.log.edit_instance)
 
         pattern = r"\[Integrated Watchdog/ERROR\]:? This crash report has been saved to: (.*\.txt)"
