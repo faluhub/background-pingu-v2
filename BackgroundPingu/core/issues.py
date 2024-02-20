@@ -734,7 +734,7 @@ class IssueChecker:
             builder.error("sodium_rtss")
             found_crash_cause = True
         
-        if self.log.has_mod("mcsrranked-1") or self.log.has_mod("mcsrranked-2"):
+        if self.log.has_mod("mcsrranked-1") or self.log.has_mod("mcsrranked-2") or self.log.has_mod("mcsrranked-3.1.jar"):
             builder.error("old_ranked_version")
 
         match = re.search(r"Incompatible mod set found! READ THE BELOW LINES!(.*?$)", self.log._content, re.DOTALL)
@@ -886,12 +886,8 @@ class IssueChecker:
         
         if self.log.has_mod("serversiderng-9"):
             builder.warning("using_ssrng")
-        elif self.log.has_mod("serversiderng 9"):
-            builder.warning("using_ssrng")
         
         if any(self.log.has_mod(f"serversiderng-{i}") for i in range(1, 9)):
-            builder.error("using_old_ssrng")
-        elif any(self.log.has_mod(f"serversiderng {i}") for i in range(1, 9)):
             builder.error("using_old_ssrng")
         
         if all(self.log.has_content(text) for text in [

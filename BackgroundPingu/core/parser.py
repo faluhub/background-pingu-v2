@@ -442,8 +442,9 @@ class Log:
         return bool(re.compile(pattern, re.IGNORECASE).search(self._lower_content))
     
     def has_mod(self, mod_name: str) -> bool:
+        mod_name = mod_name.lower().replace(" ", "-")
         for mod in self.mods + self.fabric_mods:
-            if mod_name.lower() in mod.lower():
+            if mod_name in mod.lower().replace(" ", "-"):
                 return True
         return False
     
