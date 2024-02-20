@@ -989,7 +989,7 @@ class IssueChecker:
                             for c in range(10): part = part.replace(str(c), "")
                             if part == "": break
                             elif len(part) > 1: mod_name += part0
-                        if len(mod_name) < 5: mod_name = f".{mod_name}"
+                        if len(mod_name) < 5 and mod_name != "atum": mod_name = f".{mod_name}"
                         if len(mod_name) > 2 and mod_name in self.log.stacktrace:
                             if not mod in wrong_mods: wrong_mods.append(mod)
 
