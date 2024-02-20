@@ -128,6 +128,7 @@
     "note.builtin_lib_recommendation": "You seem to be using your system's `{}`. This can cause the instance to crash if not properly setup. In case of a crash, make sure this isn't the cause of it.",
     "note.duplicate_mod": "You have several versions of `{}` installed. You should delete the older ones.",
     "note.fandom_wiki": "The Minecraft Wiki [**has recently moved**](https://minecraft.wiki/w/Minecraft_Wiki:Moving_from_Fandom) from `Fandom` to `minecraft.wiki`. Please use this link instead: **https://minecraft.wiki/w/{}**.",
+    "note.not_using_java_17": "You're using `Java {}`. It is recommended to use `Java 17+` instead for better performance.",
     "note.old_fabric": "You're using a somewhat old version of `Fabric Loader`, you might want to update it.",
     "note.onedrive": "Your launcher folder is located in `OneDrive`. `OneDrive` can mess with your game files to save space, and this can lead to crashes. You should move it to a different folder.",
     "note.program_files": "Your game files are in `Program Files`. It is generally not recommended, and could cause some issues. Consider moving it to a different location.",
