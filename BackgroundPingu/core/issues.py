@@ -557,9 +557,6 @@ class IssueChecker:
         if self.log.has_content("Failed to download the assets index"):
             builder.error("assets_index_fail")
         
-        if self.log.has_content("Invalid id 4096 - maximum id range exceeded"):
-            builder.error("exceeded_id_limit")
-        
         if self.log.has_content("NSWindow drag regions should only be invalidated on the Main Thread"):
             builder.error("mac_too_new_java")
         
@@ -801,10 +798,6 @@ class IssueChecker:
                 builder.error("ranked_rong_mods", f"`{len(ranked_rong_mods)}` mods (`{', '.join(ranked_rong_mods)}`) that are", "them")
             elif len(ranked_rong_mods) > 0:
                 builder.error("ranked_rong_mods", f"a mod `{ranked_rong_mods[0]}` that is", "it")
-
-        if self.log.has_content_in_stacktrace("com.mcsr.projectelo.anticheat.file.verifiers.ResourcePackVerifier"):
-            builder.error("ranked_resourcepack_crash")
-            found_crash_cause = True
         
         if self.log.has_mod("optifine"):
             if self.log.has_mod("worldpreview"):
