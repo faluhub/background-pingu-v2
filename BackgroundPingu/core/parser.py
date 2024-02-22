@@ -342,7 +342,7 @@ class Log:
         if self.is_newer_than("1.18"):
             max_limit_0 += 15000
             max_limit_1 += 8000
-            max_limit_2 += 6300
+            max_limit_2 += 6000
         elif self.is_newer_than("1.14"):
             max_limit_0 += 10000
             max_limit_1 += 4500
