@@ -92,9 +92,8 @@ class IssueChecker:
         self.log = log
         self.link = link
         self.java_17_mods = [
-            "antiresourcereload",
+            "antiresourcereload-1.16.1-4.0.0",
             "serversiderng",
-            "setspawnmod",
             "peepopractice",
             "areessgee"
         ]
@@ -334,7 +333,7 @@ class IssueChecker:
             if self.log.has_mod("sodium-1.16.1-v1") or self.log.has_mod("sodium-1.16.1-v2"):
                 builder.error("not_using_mac_sodium")
         
-        if not self.log.major_java_version is None and self.log.major_java_version < 17 and not self.log.short_version == "1.12":
+        if not self.log.major_java_version is None and self.log.major_java_version < 17:
             wrong_mods = []
             for mod in self.java_17_mods:
                 for installed_mod in self.log.whatever_mods:
