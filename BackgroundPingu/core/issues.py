@@ -384,6 +384,7 @@ class IssueChecker:
             "Invalid maximum heap size: "
         ]):
             builder.error("32_bit_java_crash").add("java_update_guide")
+            if self.log.is_prism: builder.add("prism_java_compat_check")
             found_crash_cause = True
         
         if self.log.has_content("mcwrap.py"):
@@ -396,20 +397,35 @@ class IssueChecker:
             else:
                 builder.error("32_bit_java").add("java_update_guide")
             found_crash_cause = True
-
-        elif self.log.launcher == "MultiMC" and self.log.operating_system == OperatingSystem.MACOS:
-            builder.note("use_prism").add("mac_setup_guide")
+        
+        if not found_crash_cause and (any(self.log.has_content(broken_java) for broken_java in [
+            "Could not start java:\n\n\nCheck your ",
+            "Incompatible magic value 0 in class file sun/security/provider/SunEntries",
+            "Assertion `version->filename == NULL || ! _dl_name_match_p (version->filename, map)' failed"
+        ]) or self.log.has_pattern(r"The java binary \"(.+)\" couldn't be found.")):
+            builder.error("broken_java").add("java_update_guide")
+            if self.log.is_prism: builder.add("prism_java_compat_check")
+            found_crash_cause = True
         
         if self.log.has_content("The java binary \"\" couldn't be found."):
             if self.log.has_content("Please set up java in the settings."): # java isn't selected globally & no override
                 builder.error("no_java").add("java_update_guide")
+                if self.log.is_prism: builder.add("prism_java_compat_check")
             else: # java isn't selected in instance settings
                 builder.error("no_java").add("java_update_guide").add("java_override_warning")
+                if self.log.is_prism: builder.add("prism_java_compat_check")
             found_crash_cause = True
         
         if self.log.has_content("java.awt.AWTError: Assistive Technology not found: org.GNOME.Accessibility.AtkWrapper"):
             builder.error("headless_java")
             found_crash_cause = True
+        
+        if not found_crash_cause and is_mcsr_log and not self.log.major_java_version is None and self.log.major_java_version < 17:
+            builder.note("not_using_java_17", self.log.major_java_version).add("java_update_guide")
+            if self.log.is_prism: builder.add("prism_java_compat_check")
+
+        elif self.log.launcher == "MultiMC" and self.log.operating_system == OperatingSystem.MACOS:
+            builder.note("use_prism").add("mac_setup_guide")
         
         if (self.log.mod_loader == ModLoader.FORGE
             and self.log.launcher == "MultiMC"
@@ -424,14 +440,6 @@ class IssueChecker:
         
         if self.log.has_content("[LWJGL] Platform/architecture mismatch detected for module: org.lwjgl"):
             builder.error("try_changing_lwjgl_version", self.log.edit_instance)
-        
-        if not found_crash_cause and (any(self.log.has_content(broken_java) for broken_java in [
-            "Could not start java:\n\n\nCheck your ",
-            "Incompatible magic value 0 in class file sun/security/provider/SunEntries",
-            "Assertion `version->filename == NULL || ! _dl_name_match_p (version->filename, map)' failed"
-        ]) or self.log.has_pattern(r"The java binary \"(.+)\" couldn't be found.")):
-            builder.error("broken_java").add("java_update_guide")
-            found_crash_cause = True
         
         if any(self.log.has_content(new_java_old_fabric) for new_java_old_fabric in [
             "java.lang.IllegalArgumentException: Unsupported class file major version ",
@@ -548,9 +556,6 @@ class IssueChecker:
         
         if self.log.has_content("Failed to download the assets index"):
             builder.error("assets_index_fail")
-        
-        if self.log.has_content("Invalid id 4096 - maximum id range exceeded"):
-            builder.error("exceeded_id_limit")
         
         if self.log.has_content("NSWindow drag regions should only be invalidated on the Main Thread"):
             builder.error("mac_too_new_java")
@@ -734,7 +739,7 @@ class IssueChecker:
             builder.error("sodium_rtss")
             found_crash_cause = True
         
-        if self.log.has_mod("mcsrranked-1") or self.log.has_mod("mcsrranked-2"):
+        if self.log.has_mod("mcsrranked-1") or self.log.has_mod("mcsrranked-2") or self.log.has_mod("mcsrranked-3.1.jar"):
             builder.error("old_ranked_version")
 
         match = re.search(r"Incompatible mod set found! READ THE BELOW LINES!(.*?$)", self.log._content, re.DOTALL)
@@ -793,10 +798,6 @@ class IssueChecker:
                 builder.error("ranked_rong_mods", f"`{len(ranked_rong_mods)}` mods (`{', '.join(ranked_rong_mods)}`) that are", "them")
             elif len(ranked_rong_mods) > 0:
                 builder.error("ranked_rong_mods", f"a mod `{ranked_rong_mods[0]}` that is", "it")
-
-        if self.log.has_content_in_stacktrace("com.mcsr.projectelo.anticheat.file.verifiers.ResourcePackVerifier"):
-            builder.error("ranked_resourcepack_crash")
-            found_crash_cause = True
         
         if self.log.has_mod("optifine"):
             if self.log.has_mod("worldpreview"):
@@ -886,12 +887,8 @@ class IssueChecker:
         
         if self.log.has_mod("serversiderng-9"):
             builder.warning("using_ssrng")
-        elif self.log.has_mod("serversiderng 9"):
-            builder.warning("using_ssrng")
         
         if any(self.log.has_mod(f"serversiderng-{i}") for i in range(1, 9)):
-            builder.error("using_old_ssrng")
-        elif any(self.log.has_mod(f"serversiderng {i}") for i in range(1, 9)):
             builder.error("using_old_ssrng")
         
         if all(self.log.has_content(text) for text in [
@@ -993,7 +990,7 @@ class IssueChecker:
                             for c in range(10): part = part.replace(str(c), "")
                             if part == "": break
                             elif len(part) > 1: mod_name += part0
-                        if len(mod_name) < 5: mod_name = f".{mod_name}"
+                        if len(mod_name) < 5 and mod_name != "atum": mod_name = f".{mod_name}"
                         if len(mod_name) > 2 and mod_name in self.log.stacktrace:
                             if not mod in wrong_mods: wrong_mods.append(mod)
 

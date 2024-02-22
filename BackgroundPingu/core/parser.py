@@ -375,8 +375,8 @@ class Log:
         min_recomm = self.recommended_min_allocated[1]
         max_recomm = self.recommended_max_allocated[2]
         diff = max_recomm - min_recomm
-        min_recomm = int(round(min_recomm + diff / 7, 2))
-        max_recomm = int(round(max_recomm - diff / 7, 2))
+        min_recomm = int(round(min_recomm + diff / 7, -2))
+        max_recomm = int(round(max_recomm - diff / 7, -2))
 
         return (
             "allocate_ram_guide_mmc" if self.is_multimc_or_fork else "allocate_ram_guide",
@@ -442,8 +442,9 @@ class Log:
         return bool(re.compile(pattern, re.IGNORECASE).search(self._lower_content))
     
     def has_mod(self, mod_name: str) -> bool:
+        mod_name = mod_name.lower().replace(" ", "-")
         for mod in self.mods + self.fabric_mods:
-            if mod_name.lower() in mod.lower():
+            if mod_name in mod.lower().replace(" ", "-"):
                 return True
         return False
     
