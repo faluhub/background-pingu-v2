@@ -323,6 +323,11 @@ class Log:
             min_limit_1 += min(mod_cnt * 100, 1000)
             min_limit_2 += min(mod_cnt * 50, 200)
         
+        if self.is_ssg_log:
+            min_limit_0 *= 0.7
+            min_limit_1 *= 0.7
+            min_limit_2 *= 0.7
+        
         if self.has_java_argument("shenandoah"):
             min_limit_0 *= 0.7
             min_limit_1 *= 0.7
@@ -357,6 +362,11 @@ class Log:
             max_limit_0 += min(mod_cnt * 400, 4000)
             max_limit_1 += max(min(mod_cnt * 200, 1500), 9000)
             max_limit_2 += max(min(mod_cnt * 100, 800), 8000)
+        
+        if self.is_ssg_log:
+            max_limit_0 *= 0.7
+            max_limit_1 *= 0.7
+            max_limit_2 *= 0.7
         
         if self.has_java_argument("shenandoah"):
             max_limit_0 *= 0.7
