@@ -383,6 +383,13 @@ class Log:
             min_recomm,
             max_recomm
         )
+
+    @cached_property
+    def java_update_guide(self) -> str:
+        if self.launcher == "Official Launcher":
+            return "k4_setup_guide"
+
+        return "java_update_guide"
     
     @cached_property
     def libraries(self) -> str:
@@ -426,6 +433,53 @@ class Log:
             if self.has_content(f" {exit_code}"): return exit_code
 
         return None
+
+    @cached_property
+    def is_ssg_log(self) -> bool:
+        for ssg_mod in [
+            "setspawn",
+            "chunkcacher"
+        ]:
+            if self.has_mod(ssg_mod): return True
+        
+        return False
+    
+    @cached_property
+    def is_not_wall_log(self) -> bool:
+        if not self.minecraft_folder.split("/.minecraft")[0][-1].isdigit():
+            return True
+        
+        return False
+    
+    @cached_property
+    def recommended_mods(self) -> list[str]:
+        if self.minecraft_version != "1.16.1": return []
+        
+        mods = [
+            "sodium",
+            "lithium",
+            "starlight",
+            "lazystronghold",
+        ]
+
+        if self.launcher != "Official Launcher":
+            mods.append("voyager")
+
+        if not self.has_mod("mcsrranked") and not self.has_mod("peepopractice"):
+            mods += [
+                "antigone",
+                "worldpreview",
+                "SpeedRunIGT",
+                "lazystronghold",
+                "antiresourcereload",
+                "fast-reset",
+                "atum",
+                "state-output",
+            ]
+            if not self.is_not_wall_log:
+                mods.append("sleepbackground")
+        
+        return mods
     
     def is_newer_than(self, compared_version: str) -> bool:
         if self.parsed_mc_version is None: return False
