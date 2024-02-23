@@ -475,7 +475,14 @@ class Log:
         if self.launcher != "Official Launcher":
             mods.append("voyager")
 
-        if not self.has_mod("mcsrranked") and not self.has_mod("peepopractice"):
+        if self.is_ssg_log:
+            mods += [
+                "setspawn",
+                "chunkcacher",
+                "SpeedRunIGT",
+                "antiresourcereload",
+            ]
+        elif not self.has_mod("mcsrranked") and not self.has_mod("peepopractice"):
             mods += [
                 "antigone",
                 "worldpreview",
@@ -484,10 +491,12 @@ class Log:
                 "antiresourcereload",
                 "fast-reset",
                 "atum",
-                "state-output",
             ]
             if not self.is_not_wall_log:
-                mods.append("sleepbackground")
+                mods += [
+                    "sleepbackground",
+                    "state-output",
+                ]
         
         return mods
     
