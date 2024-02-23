@@ -92,15 +92,13 @@ class IssueChecker:
         self.log = log
         self.link = link
         self.java_17_mods = [
-            "antiresourcereload",
+            "antiresourcereload-1.16.1-4.0.0",
             "serversiderng",
-            "setspawnmod",
             "peepopractice",
             "areessgee"
         ]
         self.assume_as_latest = [
             "sodiummac",
-            "serversiderng",
             "lazystronghold",
             "krypton",
             "sodium-fabric-mc1.16.5-0.2.0+build.4",
@@ -113,34 +111,7 @@ class IssueChecker:
         ]
         self.assume_as_legal = [
             "mcsrranked",
-            "mangodfps",
-            "serversiderng"
-        ]
-        self.ranked_recommended_mods = [
-            "lazystronghold",
-            "sodium",
-            "lithium",
-            "starlight",
-            "voyager"
-        ]
-        self.rsg_recommended_mods = [
-            "antigone",
-            "worldpreview",
-            "sleepbackground",
-            "SpeedRunIGT",
-            "lazystronghold",
-            "antiresourcereload",
-            "fast-reset",
-            "atum",
-            "sodium",
-            "lithium",
-            "starlight",
-            "voyager",
-            "state-output"
-        ]
-        self.ssg_mods = [
-            "setspawn",
-            "chunkcacher"
+            "mangodfps"
         ]
         self.mcsr_mods = [
             "worldpreview",
@@ -226,7 +197,7 @@ class IssueChecker:
         if not self.log.minecraft_version is None: footer += f" {self.log.minecraft_version}"
 
         if self.log.has_mod("mcsrranked"): footer += " Ranked"
-        elif any(self.log.has_mod(ssg_mod) for ssg_mod in self.ssg_mods): footer += " SSG"
+        elif self.log.is_ssg_log: footer += " SSG"
         elif is_mcsr_log: footer += " RSG"
         elif not self.log.mod_loader is None: footer += f" {self.log.mod_loader.value}"
         
@@ -314,12 +285,9 @@ class IssueChecker:
                     experimental = (self.log.minecraft_version != "1.16.1")
                 )
         
-        if (self.log.minecraft_version == "1.16.1" and len(self.log.whatever_mods) > 0
-        and not any(self.log.has_mod(ssg_mod) for ssg_mod in self.ssg_mods)):
+        if len(self.log.whatever_mods) > 0:
             missing_mods = []
-            for recommended_mod in (self.ranked_recommended_mods
-                                    if self.log.has_mod("mcsrranked") or self.log.has_mod("peepopractice")
-                                    else self.rsg_recommended_mods):
+            for recommended_mod in self.log.recommended_mods:
                 if not self.log.has_mod(recommended_mod):
                     metadata = self.get_mod_metadata(recommended_mod)
                     latest_version = self.get_latest_version(metadata)
@@ -334,7 +302,7 @@ class IssueChecker:
             if self.log.has_mod("sodium-1.16.1-v1") or self.log.has_mod("sodium-1.16.1-v2"):
                 builder.error("not_using_mac_sodium")
         
-        if not self.log.major_java_version is None and self.log.major_java_version < 17 and not self.log.short_version == "1.12":
+        if not self.log.major_java_version is None and self.log.major_java_version < 17:
             wrong_mods = []
             for mod in self.java_17_mods:
                 for installed_mod in self.log.whatever_mods:
@@ -350,7 +318,7 @@ class IssueChecker:
                     "",
                     f", but you're using `Java {self.log.major_java_version}`" if not self.log.major_java_version is None
                     else ""
-                ).add("java_update_guide")
+                ).add(self.log.java_update_guide)
                 if self.log.is_prism: builder.add("prism_java_compat_check")
                 found_crash_cause = True
         
@@ -372,7 +340,7 @@ class IssueChecker:
                         needed_java_version = parsed_version
                 except: pass
             if not needed_java_version is None:
-                builder.error("need_new_java", needed_java_version).add("java_update_guide")
+                builder.error("need_new_java", needed_java_version).add(self.log.java_update_guide)
                 if self.log.is_prism: builder.add("prism_java_compat_check")
                 found_crash_cause = True
             elif self.log.has_content("java.lang.UnsupportedClassVersionError: net/minecraft/class_310"):
@@ -383,7 +351,7 @@ class IssueChecker:
             "Could not reserve enough space for ",
             "Invalid maximum heap size: "
         ]):
-            builder.error("32_bit_java_crash").add("java_update_guide")
+            builder.error("32_bit_java_crash").add(self.log.java_update_guide)
             if self.log.is_prism: builder.add("prism_java_compat_check")
             found_crash_cause = True
         
@@ -421,7 +389,7 @@ class IssueChecker:
             found_crash_cause = True
         
         if not found_crash_cause and is_mcsr_log and not self.log.major_java_version is None and self.log.major_java_version < 17:
-            builder.note("not_using_java_17", self.log.major_java_version).add("java_update_guide")
+            builder.note("not_using_java_17", self.log.major_java_version).add(self.log.java_update_guide)
             if self.log.is_prism: builder.add("prism_java_compat_check")
 
         elif self.log.launcher == "MultiMC" and self.log.operating_system == OperatingSystem.MACOS:
@@ -885,11 +853,8 @@ class IssueChecker:
         if not match is None:
             builder.error("corrupted_file", re.sub(r"/(Users|home)/([^/]+)/", "/Users/********/", match.group(1)))
         
-        if self.log.has_mod("serversiderng-9"):
-            builder.warning("using_ssrng")
-        
-        if any(self.log.has_mod(f"serversiderng-{i}") for i in range(1, 9)):
-            builder.error("using_old_ssrng")
+        if self.log.has_mod("serversiderng"):
+            builder.error("using_ssrng")
         
         if all(self.log.has_content(text) for text in [
             "net.minecraft.class_148: Feature placement",

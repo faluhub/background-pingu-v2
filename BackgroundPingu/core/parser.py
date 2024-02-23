@@ -323,6 +323,11 @@ class Log:
             min_limit_1 += min(mod_cnt * 100, 1000)
             min_limit_2 += min(mod_cnt * 50, 200)
         
+        if self.is_ssg_log:
+            min_limit_0 *= 0.7
+            min_limit_1 *= 0.7
+            min_limit_2 *= 0.7
+        
         if self.has_java_argument("shenandoah"):
             min_limit_0 *= 0.7
             min_limit_1 *= 0.7
@@ -342,7 +347,7 @@ class Log:
         if self.is_newer_than("1.18"):
             max_limit_0 += 15000
             max_limit_1 += 8000
-            max_limit_2 += 6300
+            max_limit_2 += 6000
         elif self.is_newer_than("1.14"):
             max_limit_0 += 10000
             max_limit_1 += 4500
@@ -357,6 +362,11 @@ class Log:
             max_limit_0 += min(mod_cnt * 400, 4000)
             max_limit_1 += max(min(mod_cnt * 200, 1500), 9000)
             max_limit_2 += max(min(mod_cnt * 100, 800), 8000)
+        
+        if self.is_ssg_log:
+            max_limit_0 *= 0.7
+            max_limit_1 *= 0.7
+            max_limit_2 *= 0.7
         
         if self.has_java_argument("shenandoah"):
             max_limit_0 *= 0.7
@@ -383,6 +393,13 @@ class Log:
             min_recomm,
             max_recomm
         )
+
+    @cached_property
+    def java_update_guide(self) -> str:
+        if self.launcher == "Official Launcher":
+            return "k4_setup_guide"
+
+        return "java_update_guide"
     
     @cached_property
     def libraries(self) -> str:
@@ -426,6 +443,62 @@ class Log:
             if self.has_content(f" {exit_code}"): return exit_code
 
         return None
+
+    @cached_property
+    def is_ssg_log(self) -> bool:
+        for ssg_mod in [
+            "setspawn",
+            "chunkcacher"
+        ]:
+            if self.has_mod(ssg_mod): return True
+        
+        return False
+    
+    @cached_property
+    def is_not_wall_log(self) -> bool:
+        if not self.minecraft_folder.split("/.minecraft")[0][-1].isdigit():
+            return True
+        
+        return False
+    
+    @cached_property
+    def recommended_mods(self) -> list[str]:
+        if self.minecraft_version != "1.16.1": return []
+        
+        mods = [
+            "sodium",
+            "lithium",
+            "starlight",
+            "lazystronghold",
+        ]
+
+        if self.launcher != "Official Launcher":
+            mods.append("voyager")
+
+        if self.is_ssg_log:
+            mods += [
+                "setspawn",
+                "chunkcacher",
+                "SpeedRunIGT",
+                "antiresourcereload",
+            ]
+        elif not self.has_mod("mcsrranked") and not self.has_mod("peepopractice"):
+            mods += [
+                "antigone",
+                "worldpreview",
+                "SpeedRunIGT",
+                "lazystronghold",
+                "antiresourcereload",
+                "fast-reset",
+                "atum",
+            ]
+            if not self.is_not_wall_log:
+                mods += [
+                    "sleepbackground",
+                    "state-output",
+                ]
+        
+        return mods
     
     def is_newer_than(self, compared_version: str) -> bool:
         if self.parsed_mc_version is None: return False
