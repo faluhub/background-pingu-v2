@@ -322,7 +322,7 @@ class IssueChecker:
                 if self.log.is_prism: builder.add("prism_java_compat_check")
                 found_crash_cause = True
         
-        if not found_crash_cause and self.log.has_content("require the use of Java 17"):
+        if not found_crash_cause and self.log.has_pattern(r"require the use of Java 1(7|6)"):
             builder.error("need_java_17_mc").add("java_update_guide")
             found_crash_cause = True
         
