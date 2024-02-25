@@ -854,7 +854,7 @@ class IssueChecker:
             builder.error("corrupted_file", re.sub(r"/(Users|home)/([^/]+)/", "/Users/********/", match.group(1)))
         
         if self.log.has_mod("serversiderng"):
-            builder.error("using_ssrng")
+            builder.error("using_ssrng").add("modcheck_v1_warning")
         
         if all(self.log.has_content(text) for text in [
             "net.minecraft.class_148: Feature placement",
