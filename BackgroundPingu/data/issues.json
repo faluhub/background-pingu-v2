@@ -44,6 +44,7 @@
     "error.corrupted_file": "The file `{}` seems to be corrupted.",
     "error.corrupted_mod_config": "The config file of the mod `{}` seems to be corrupted. Try deleting it from `.minecraft/config`.",
     "error.delete_dot_fabric": "This crash could be fixed by deleting the `.minecraft/.fabric` folder.",
+    "error.downgrade_atum": "This crash may be fixed by downgrading `Atum` to [**this version**](https://modrinth.com/mod/atum/versions).",
     "error.eav_crash": "This crash may be caused by one of the following:",
     "error.entity_culling": "If your entity counter on F3 is `-1`, turn off `Entity Culling` in `Video Settings`.",
     "error.exitcode": "Your game crashed with exitcode `{}`. Here are some possible solutions:",

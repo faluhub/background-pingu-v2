@@ -922,7 +922,9 @@ class IssueChecker:
         if not match is None:
             builder.info("send_watchdog_report", re.sub(r"\\(Users|home)\\[^\\]+\\", "/Users/********/", match.group(1)))
             found_crash_cause = True
-    
+
+        if not found_crash_cause and self.log.has_content_in_stacktrace("atum"):
+            builder.error("downgrade_atum", experimental=True)
 
         if not found_crash_cause:
             wrong_mods = []
