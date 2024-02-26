@@ -84,8 +84,9 @@ In general, it's a good idea to watch top runs and top runners' streams to get a
 
     @commands.slash_command(name="java", description="Gives a guide to update Java.")
     async def java(self, ctx: discord.ApplicationContext):
-        text = """* You can install the latest version of Java [**here**](<https://adoptium.net/temurin/releases/>). Download the .msi file if you're on Windows, download the .pkg file if you're on macOS.
+        text = """* You can install the latest version of Java [**here**](<https://adoptium.net/temurin/releases/?os=windows>). Download and run the `.msi` file if you're on Windows, or the `.pkg` file if you're on macOS.
 * After installing Java, follow the steps in the image below (assuming you're using MultiMC or Prism launcher)[:](https://cdn.discordapp.com/attachments/433058639956410383/1172533931485175879/image.png)
+ * If the Java you installed doesn't show up, click `Refresh` on the bottom left in the `Auto-detect` menu.
  * On Prism, also make sure to disable the Java compatibility check in Settings > Java.
 * We do not recommend using the official Minecraft launcher since it is [tedious](<https://bit.ly/updatejavamc>) to switch Java versions. Watch [**this video**](<https://youtu.be/VL8Syekw4Q0>) to set up MultiMC for speedrunning."""
         return await ctx.respond(text)
@@ -217,15 +218,15 @@ If you want a custom modpack, go [here](<https://mods.tildejustin.dev/?type=modp
     async def practicemaps(self, ctx: discord.ApplicationContext):
         text = """*Consider getting [MapCheck](<https://github.com/cylorun/Map-Check/releases/latest>) to download multiple maps at once.*
 [Bastions](<https://github.com/LlamaPag/bastion>)
-[Blaze practice](<https://github.com/Semperzz/Blaze-Practice>)
+[Blaze](<https://github.com/Semperzz/Blaze-Practice>)
 [Buried treasure](<https://github.com/Mescht/BTPractice>)
-[Crafting](<https://github.com/Semperzz/Crafting-Practice-v2>)
+[Crafting](<https://github.com/Semperzz/Crafting-Practice-v2>) / [Search crafting](<https://github.com/7rowl/Search-Crafting-Practice>)
 [One cycle / End practice](<https://github.com/ryguy2k4/ryguy2k4endpractice>)
-[Overworld practice](<https://github.com/7rowl/OWPractice>)
-[PeepoPractice, mod for all splits](<https://github.com/faluhub/peepoPractice>)
+[Overworld](<https://github.com/7rowl/OWPractice>)
 [Portals](<https://github.com/Semperzz/Portal-Practice>)
-[Stronghold Trainer](<https://github.com/mjtb49/StrongholdTrainer>)
-[Zero cycle](<https://zerocycle.repl.co/_zero_cycle_practice_astraf_nayoar.zip>)"""
+[Zero cycle](<https://web.archive.org/web/20230325094650/https://zerocycle.repl.co/_zero_cycle_practice_astraf_nayoar.zip>) / [Mongeycoaster variant](<https://drive.google.com/drive/folders/1Z9RSDIwlg5E6U5JdrdZPRvqM8AyqZDP->)
+Practice mods:
+[PeepoPractice, for practicing splits](<https://github.com/faluhub/peepoPractice>)"""
         return await ctx.respond(text)
 
     @commands.slash_command(name="mapcheck", description="Gives a link to MapCheck.")

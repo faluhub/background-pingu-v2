@@ -212,7 +212,7 @@ class IssueChecker:
         
         builder.set_footer(footer.strip())
 
-        if self.log.has_content("(Session ID is token:") and not self.log.has_content("(Session ID is token:<"):
+        if self.log.has_content("(Session ID is token:") and not self.log.has_content("(Session ID is token:<") and not self.log.has_content("(Session ID is token:0:<"):
             builder.error("leaked_session_id_token")
         
         match = re.search(r"/(Users|home)/([^/]+)/", self.log._content)
@@ -322,7 +322,7 @@ class IssueChecker:
                 if self.log.is_prism: builder.add("prism_java_compat_check")
                 found_crash_cause = True
         
-        if not found_crash_cause and self.log.has_content("require the use of Java 17"):
+        if not found_crash_cause and self.log.has_pattern(r"require the use of Java 1(7|6)"):
             builder.error("need_java_17_mc").add("java_update_guide")
             found_crash_cause = True
         
@@ -854,7 +854,7 @@ class IssueChecker:
             builder.error("corrupted_file", re.sub(r"/(Users|home)/([^/]+)/", "/Users/********/", match.group(1)))
         
         if self.log.has_mod("serversiderng"):
-            builder.error("using_ssrng")
+            builder.error("using_ssrng").add("modcheck_v1_warning")
         
         if all(self.log.has_content(text) for text in [
             "net.minecraft.class_148: Feature placement",
@@ -922,7 +922,9 @@ class IssueChecker:
         if not match is None:
             builder.info("send_watchdog_report", re.sub(r"\\(Users|home)\\[^\\]+\\", "/Users/********/", match.group(1)))
             found_crash_cause = True
-    
+
+        if not found_crash_cause and self.log.has_content_in_stacktrace("atum"):
+            builder.error("downgrade_atum", experimental=True)
 
         if not found_crash_cause:
             wrong_mods = []

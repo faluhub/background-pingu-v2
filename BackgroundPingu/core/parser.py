@@ -456,6 +456,8 @@ class Log:
     
     @cached_property
     def is_not_wall_log(self) -> bool:
+        if self.minecraft_folder is None: return False
+        
         if not self.minecraft_folder.split("/.minecraft")[0][-1].isdigit():
             return True
         
@@ -469,7 +471,6 @@ class Log:
             "sodium",
             "lithium",
             "starlight",
-            "lazystronghold",
         ]
 
         if self.launcher != "Official Launcher":
@@ -491,6 +492,7 @@ class Log:
                 "antiresourcereload",
                 "fast-reset",
                 "atum",
+                "lazystronghold",
             ]
             if not self.is_not_wall_log:
                 mods += [
