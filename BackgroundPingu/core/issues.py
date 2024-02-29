@@ -219,7 +219,7 @@ class IssueChecker:
         if match and match.group(2).lower() not in ["user", "admin", "********"]:
             builder.info("leaked_username").add("upload_log_leaked_username")
         match = None
-
+        
         if is_mcsr_log:
             for mod in self.log.mods:
                 metadata = self.get_mod_metadata(mod)
@@ -401,6 +401,14 @@ class IssueChecker:
             and self.log.has_content("Instance update failed")
         ):
             builder.error("multimc_neoforge")
+            found_crash_cause = True
+        
+        if (self.log.mod_loader == ModLoader.FORGE
+            and (self.log.has_content("Caused by: java.lang.NoSuchMethodError: 'boolean net.minecraftforge.")
+                or self.log.has_content("Unable to detect the forge installer!"))
+        ):
+            if self.log.is_prism: builder.error("delete_prism_cache")
+            else: builder.error("multimc_broken_forge")
             found_crash_cause = True
 
         if self.log.has_content("[LWJGL] Failed to load a library. Possible solutions:") and self.log.is_newer_than("1.20"):
