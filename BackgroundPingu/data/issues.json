@@ -149,6 +149,5 @@
     "warning.too_little_ram": "You have too little RAM allocated, which can cause crashes and lag spikes.",
     "warning.too_little_ram_crash": "This crash may be caused by not having enough RAM allocated.",
     "warning.too_much_ram": "You have too much RAM allocated, which [can cause lag spikes](https://vazkii.notion.site/A-semi-technical-explanation-of-why-you-shouldn-t-allocate-too-much-RAM-to-Minecraft-78e7bd41ba6646de8d1c55c033674bce).",
-    "warning.using_fabric_api": "You're using `Fabric API`, which is not allowed for speedrunning. Remove it from your `.minecraft/mods` folder.",
-    "warning.using_ssrng": "You are using the `ServerSideRNG` mod. The server for it is currently down, so the mod is useless and it's recommended to remove it as it could cause issues."
+    "warning.using_fabric_api": "You're using `Fabric API`, which is not allowed for speedrunning. Remove it from your `.minecraft/mods` folder."
 }
