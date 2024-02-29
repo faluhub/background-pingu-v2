@@ -546,13 +546,13 @@ class IssueChecker:
                 builder.error("gl_pixel_format")
             if self.log.stacktrace is None: found_crash_cause = True
         
-        elif (len(self.log.whatever_mods) == 0 and self.log.has_mod("xaero")) and self.log.has_content("Field too big for insn"):
+        elif (len(self.log.whatever_mods) == 0 or self.log.has_mod("xaero")) and self.log.has_content("Field too big for insn"):
             wrong_mods = [mod for mod in self.log.whatever_mods if "xaero" in mod.lower()]
             if len(wrong_mods) == 1: wrong_mods == ["xaero"]
             builder.error("mods_crash", "; ".join(wrong_mods))
             found_crash_cause = True
         
-        elif self.log.has_content("A fatal error has been detected by the Java Runtime Environment") or self.log.has_content("EXCEPTION_ACCESS_VIOLATION"):
+        elif not found_crash_cause and self.log.has_content("A fatal error has been detected by the Java Runtime Environment") or self.log.has_content("EXCEPTION_ACCESS_VIOLATION"):
             builder.error("eav_crash")
             if self.log.has_pattern(r"  \[ntdll\.dll\+(0x[0-9a-f]+)\]"):
                 builder.add("eav_crash_1", bold=True)
