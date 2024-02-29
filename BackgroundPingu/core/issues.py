@@ -219,7 +219,7 @@ class IssueChecker:
         if match and match.group(2).lower() not in ["user", "admin", "********"]:
             builder.info("leaked_username").add("upload_log_leaked_username")
         match = None
-
+        
         if is_mcsr_log:
             for mod in self.log.mods:
                 metadata = self.get_mod_metadata(mod)
@@ -402,6 +402,14 @@ class IssueChecker:
         ):
             builder.error("multimc_neoforge")
             found_crash_cause = True
+        
+        if (self.log.mod_loader == ModLoader.FORGE
+            and (self.log.has_content("Caused by: java.lang.NoSuchMethodError: 'boolean net.minecraftforge.")
+                or self.log.has_content("Unable to detect the forge installer!"))
+        ):
+            if self.log.is_prism: builder.error("delete_prism_cache")
+            else: builder.error("multimc_broken_forge")
+            found_crash_cause = True
 
         if self.log.has_content("[LWJGL] Failed to load a library. Possible solutions:") and self.log.is_newer_than("1.20"):
             builder.error("update_mmc")
@@ -538,13 +546,13 @@ class IssueChecker:
                 builder.error("gl_pixel_format")
             if self.log.stacktrace is None: found_crash_cause = True
         
-        elif (len(self.log.whatever_mods) == 0 and self.log.has_mod("xaero")) and self.log.has_content("Field too big for insn"):
+        elif (len(self.log.whatever_mods) == 0 or self.log.has_mod("xaero")) and self.log.has_content("Field too big for insn"):
             wrong_mods = [mod for mod in self.log.whatever_mods if "xaero" in mod.lower()]
             if len(wrong_mods) == 1: wrong_mods == ["xaero"]
             builder.error("mods_crash", "; ".join(wrong_mods))
             found_crash_cause = True
         
-        elif self.log.has_content("A fatal error has been detected by the Java Runtime Environment") or self.log.has_content("EXCEPTION_ACCESS_VIOLATION"):
+        elif not found_crash_cause and self.log.has_content("A fatal error has been detected by the Java Runtime Environment") or self.log.has_content("EXCEPTION_ACCESS_VIOLATION"):
             builder.error("eav_crash")
             if self.log.has_pattern(r"  \[ntdll\.dll\+(0x[0-9a-f]+)\]"):
                 builder.add("eav_crash_1", bold=True)
