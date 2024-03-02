@@ -212,13 +212,11 @@ class IssueChecker:
         
         builder.set_footer(footer.strip())
 
-        if self.log.has_content("(Session ID is token:") and not self.log.has_content("(Session ID is token:<") and not self.log.has_content("(Session ID is token:0:<"):
+        if self.log.leaked_session_id:
             builder.error("leaked_session_id_token")
         
-        match = re.search(r"/(Users|home)/([^/]+)/", self.log._content)
-        if match and match.group(2).lower() not in ["user", "admin", "********"]:
+        if self.log.leaked_pc_username:
             builder.info("leaked_username").add("upload_log_leaked_username")
-        match = None
         
         if is_mcsr_log:
             for mod in self.log.mods:
@@ -407,9 +405,7 @@ class IssueChecker:
             and (self.log.has_content("Caused by: java.lang.NoSuchMethodError: 'boolean net.minecraftforge.")
                 or self.log.has_content("Unable to detect the forge installer!"))
         ):
-            if self.log.is_prism: builder.error("delete_prism_cache")
-            else: builder.error("multimc_broken_forge")
-            found_crash_cause = True
+            builder.error("delete_launcher_cache")
 
         if self.log.has_content("[LWJGL] Failed to load a library. Possible solutions:") and self.log.is_newer_than("1.20"):
             builder.error("update_mmc")
