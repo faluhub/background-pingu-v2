@@ -44,7 +44,7 @@
     "error.corrupted_file": "The file `{}` seems to be corrupted.",
     "error.corrupted_mod_config": "The config file of the mod `{}` seems to be corrupted. Try deleting it from `.minecraft/config`.",
     "error.delete_dot_fabric": "This crash could be fixed by deleting the `.minecraft/.fabric` folder.",
-    "error.delete_prism_cache": "You might need to delete some cached files. To do that, press `Folders > View Launcher Root Folder`, and __**after closing the launcher**__ delete the folder named \"meta\".",
+    "error.delete_launcher_cache": "You might need to delete some cached files. To do that, press `Folders > View Launcher Root Folder`, and __**after closing the launcher**__ delete the folder named \"meta\". If that doesn't help, you can try a different `Forge` version.",
     "error.downgrade_atum": "This crash may be fixed by downgrading `Atum` to [**this version**](https://modrinth.com/mod/atum/versions).",
     "error.eav_crash": "This crash may be caused by one of the following:",
     "error.entity_culling": "If your entity counter on F3 is `-1`, turn off `Entity Culling` in `Video Settings`.",

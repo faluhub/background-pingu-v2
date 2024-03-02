@@ -405,9 +405,7 @@ class IssueChecker:
             and (self.log.has_content("Caused by: java.lang.NoSuchMethodError: 'boolean net.minecraftforge.")
                 or self.log.has_content("Unable to detect the forge installer!"))
         ):
-            if self.log.is_prism: builder.error("delete_prism_cache")
-            else: builder.error("multimc_broken_forge")
-            found_crash_cause = True
+            builder.error("delete_launcher_cache")
 
         if self.log.has_content("[LWJGL] Failed to load a library. Possible solutions:") and self.log.is_newer_than("1.20"):
             builder.error("update_mmc")
