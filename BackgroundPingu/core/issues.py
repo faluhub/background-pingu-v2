@@ -212,13 +212,11 @@ class IssueChecker:
         
         builder.set_footer(footer.strip())
 
-        if self.log.has_content("(Session ID is token:") and not self.log.has_content("(Session ID is token:<") and not self.log.has_content("(Session ID is token:0:<"):
+        if self.log.leaked_session_id:
             builder.error("leaked_session_id_token")
         
-        match = re.search(r"/(Users|home)/([^/]+)/", self.log._content)
-        if match and match.group(2).lower() not in ["user", "admin", "********"]:
+        if self.log.leaked_pc_username:
             builder.info("leaked_username").add("upload_log_leaked_username")
-        match = None
         
         if is_mcsr_log:
             for mod in self.log.mods:

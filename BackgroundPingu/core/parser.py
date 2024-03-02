@@ -15,6 +15,24 @@ class ModLoader(enum.Enum):
 
 class Log:
     def __init__(self, content: str) -> None:
+        pattern = r"(/|\\)(Users|home)(/|\\)([^/\\]+)(/|\\)"
+        match = re.search(pattern, content)
+        if match and match.group(3).lower() not in ["user", "admin", "********"]:
+            self.leaked_pc_username = True
+        else: self.leaked_pc_username = False
+        match = None
+        
+        content = re.sub(pattern, r"\1\2\3********\5", content)
+        # just replacing pc_username with "" is a bad idea
+        # for instance, if it's "Alex", it could also replace it in the mod "Alex Caves", which would leak it
+
+        pattern = r"Session ID is token:.{30,}?\n"
+        if re.search(pattern, content) is not None:
+            replacement = "Session ID is (redacted))\n"
+            content = re.sub(pattern, replacement, content)
+            self.leaked_session_id = True
+        else: self.leaked_session_id = False
+
         self._content = content
         self._lower_content = self._content.lower()
         self.launchers = [
