@@ -181,7 +181,7 @@ Village / Fortress: `root.tick.level.entities.blockEntities`"""
 
     @commands.slash_command(name="standardsettings", description="Explains what StandardSettings is.")
     async def standardsettings(self, ctx: discord.ApplicationContext):
-        text = """If your settings reset whenever you create a world, you are probably using StandardSettings <https://github.com/KingContaria/StandardSettings>
+        text = """If your settings reset whenever you create a world, you are probably using StandardSettings <https://github.com/Slackow/StandardSettings>
 If you want to change the values that the settings reset to, click the link above and scroll down for instructions
 If you don't want your settings to reset, remove StandardSettings from your mods folder"""
         return await ctx.respond(text)
