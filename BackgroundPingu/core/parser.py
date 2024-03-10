@@ -471,6 +471,17 @@ class Log:
             if self.has_mod(ssg_mod): return True
         
         return False
+
+    @cached_property
+    def is_ranked_log(self) -> bool:
+        for ranked_mod in [
+            "mcsrranked"
+        ]:
+            if self.has_mod(ranked_mod): return True
+        
+        if self.has_content("com.mcsr.projectelo."): return True
+        
+        return False
     
     @cached_property
     def is_not_wall_log(self) -> bool:
