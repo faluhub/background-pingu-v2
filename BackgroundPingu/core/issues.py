@@ -394,14 +394,6 @@ class IssueChecker:
             builder.note("use_prism").add("mac_setup_guide")
         
         if (self.log.mod_loader == ModLoader.FORGE
-            and self.log.launcher == "MultiMC"
-            and self.log.is_newer_than("1.20")
-            and self.log.has_content("Instance update failed")
-        ):
-            builder.error("multimc_neoforge")
-            found_crash_cause = True
-        
-        if (self.log.mod_loader == ModLoader.FORGE
             and (self.log.has_content("Caused by: java.lang.NoSuchMethodError: 'boolean net.minecraftforge.")
                 or self.log.has_content("Unable to detect the forge installer!"))
         ):
