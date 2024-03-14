@@ -441,6 +441,7 @@ class Log:
             r"Reported exception thrown!\n.*",
             r"Shutdown failure!\n.*",
             r"Minecraft has crashed!.*",
+            r"A mod crashed on startup!\n.*",
         ]
         for crash_pattern in crash_patterns:
             match = re.search(crash_pattern, log, re.DOTALL)
@@ -540,7 +541,7 @@ class Log:
     
     def has_content_in_stacktrace(self, content: str) -> bool:
         if self.stacktrace is None: return False
-        return content.lower() in self.stacktrace.lower()
+        return content.lower().replace("_","") in self.stacktrace.lower().replace("_","")
 
     def has_pattern(self, pattern: str) -> bool:
         return bool(re.compile(pattern, re.IGNORECASE).search(self._lower_content))
