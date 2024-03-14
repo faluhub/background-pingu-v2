@@ -415,6 +415,7 @@ class Log:
     @cached_property
     def java_update_guide(self) -> str:
         if self.launcher == "Official Launcher":
+            if self.operating_system == OperatingSystem.MACOS: return "mac_setup_guide"
             return "k4_setup_guide"
 
         return "java_update_guide"
