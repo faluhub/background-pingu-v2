@@ -146,7 +146,7 @@ Watch the 1st video for a rough overview, the 2nd and 3rd for more information a
 
     @commands.slash_command(name="1_16mods", description="Gives an explanation of 1.16 mods.")
     async def one_sixteen_mods(self, ctx: discord.ApplicationContext):
-        text = """Download the mods here: <https://mods.tildejustin.dev/
+        text = """Download the mods here: <https://mods.tildejustin.dev/>
 All other mods are banned[.](https://cdn.discordapp.com/attachments/433058639956410383/1210046680322408468/image.png)"""
         return await ctx.respond(text)
 
