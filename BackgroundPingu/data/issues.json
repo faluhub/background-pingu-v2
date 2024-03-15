@@ -1,6 +1,6 @@
 {
     "add.allocate_ram_guide": "You should allocate `{}`-`{}` MB. Check out [**this document**](https://docs.google.com/document/d/1aPF1lyBAfPWyeHIH80F8JJw8rvvy6lRm0WJ2xxSrRh8/edit#heading=h.owelqvpsehpw) for a guide on how to fix it.",
-    "add.allocate_ram_guide_mmc": "You should allocate `{}`-`{}` MB. See [**this image**](https://cdn.discordapp.com/attachments/1060236401838403699/1139608929068924928/image.png) for a guide on how to fix it.",
+    "add.allocate_ram_guide_mmc": "You should allocate `{}`-`{}` MB. See [**this image**](https://i.imgur.com/T0N9GvB.png) for a guide on how to fix it.",
     "add.eav_crash_1": "- Concurrently running programs, such as `OBS` and `Discord`, that use the same graphics card as the game:",
     "add.eav_crash_1.1": "a) Having `Hardware Acceleration` enabled in `Discord`.",
     "add.eav_crash_1.2": "b) Using game capture instead of window capture in `OBS`.",
@@ -72,7 +72,6 @@
     "error.missing_dependency_2": "A mod you're using requires having the mod `{}` installed. Please install it.",
     "error.mod_crash": "Mod `{}` seems to be causing this crash. Removing it should stop this crash from happening.",
     "error.mods_crash": "Mods `{}` seem to be causing this crash. Removing one of them should stop this crash from happening.",
-    "error.multimc_neoforge": "`MultiMC` does not currently support `NeoForge`. You should use [**Prism Launcher**](https://prismlauncher.org/) instead.",
     "error.need_java_17_mc": "You are playing on a Minecraft version that requires using `Java 17+`.",
     "error.need_java_17_mods": "You are using {} (`{}`) that require{} using `Java 17+`{}.",
     "error.need_new_java": "You need to use `Java {}+`.",

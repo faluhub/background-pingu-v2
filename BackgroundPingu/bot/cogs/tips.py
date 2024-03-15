@@ -146,8 +146,8 @@ Watch the 1st video for a rough overview, the 2nd and 3rd for more information a
 
     @commands.slash_command(name="1_16mods", description="Gives an explanation of 1.16 mods.")
     async def one_sixteen_mods(self, ctx: discord.ApplicationContext):
-        text = """The allowed mods can be found and downloaded [**here**](<https://mods.tildejustin.dev/>)
-AntiResourceReload and SetSpawn require Java 17 or newer[.](https://cdn.discordapp.com/attachments/433058639956410383/1184135653680742490/image.png) If you need help updating your Java version, do `/java`."""
+        text = """Download the mods here: <https://mods.tildejustin.dev/>
+All other mods are banned[.](https://cdn.discordapp.com/attachments/433058639956410383/1210046680322408468/image.png)"""
         return await ctx.respond(text)
 
     @commands.slash_command(name="areessgee", description="Gives a link to AreEssGee.")
@@ -169,7 +169,7 @@ Don't forget to check the FAQ in the readme!
     async def allowedmods(self, ctx: discord.ApplicationContext):
         text = """If you use Optifine (allowed only in pre-1.15), please read the [**detailed mod rules**](<http://bombch.us/DOOK>).
 The allowed mods can be found and downloaded [**here**](<https://mods.tildejustin.dev/> ).
-All other mods, including Fabric API, are banned[.](https://cdn.discordapp.com/attachments/433058639956410383/1184134775334764648/image.png)"""
+All other mods, including Fabric API, are banned[.](https://cdn.discordapp.com/attachments/433058639956410383/1210046023196606605/image.png)"""
         return await ctx.respond(text)
 
     @commands.slash_command(name="piedirectory", description="Gives the useful pie directories.")
@@ -181,7 +181,7 @@ Village / Fortress: `root.tick.level.entities.blockEntities`"""
 
     @commands.slash_command(name="standardsettings", description="Explains what StandardSettings is.")
     async def standardsettings(self, ctx: discord.ApplicationContext):
-        text = """If your settings reset whenever you create a world, you are probably using StandardSettings <https://github.com/KingContaria/StandardSettings>
+        text = """If your settings reset whenever you create a world, you are probably using StandardSettings <https://github.com/Slackow/StandardSettings>
 If you want to change the values that the settings reset to, click the link above and scroll down for instructions
 If you don't want your settings to reset, remove StandardSettings from your mods folder"""
         return await ctx.respond(text)

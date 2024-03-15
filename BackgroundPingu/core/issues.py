@@ -196,7 +196,7 @@ class IssueChecker:
         
         if not self.log.minecraft_version is None: footer += f" {self.log.minecraft_version}"
 
-        if self.log.has_mod("mcsrranked"): footer += " Ranked"
+        if self.log.is_ranked_log: footer += " Ranked"
         elif self.log.is_ssg_log: footer += " SSG"
         elif is_mcsr_log: footer += " RSG"
         elif not self.log.mod_loader is None: footer += f" {self.log.mod_loader.value}"
@@ -393,18 +393,12 @@ class IssueChecker:
         elif self.log.launcher == "MultiMC" and self.log.operating_system == OperatingSystem.MACOS:
             builder.note("use_prism").add("mac_setup_guide")
         
-        if (self.log.mod_loader == ModLoader.FORGE
-            and self.log.launcher == "MultiMC"
-            and self.log.is_newer_than("1.20")
-            and self.log.has_content("Instance update failed")
-        ):
-            builder.error("multimc_neoforge")
-            found_crash_cause = True
-        
-        if (self.log.mod_loader == ModLoader.FORGE
-            and (self.log.has_content("Caused by: java.lang.NoSuchMethodError: 'boolean net.minecraftforge.")
-                or self.log.has_content("Unable to detect the forge installer!"))
-        ):
+        if (self.log.mod_loader in [ModLoader.FORGE, None]
+            and any(self.log.has_content(delete_launcher_cache_crash) for delete_launcher_cache_crash in [
+                "Caused by: java.lang.NoSuchMethodError: 'boolean net.minecraftforge.",
+                "Unable to detect the forge installer!",
+                "Reason:\nOne or more subtasks failed"
+        ])):
             builder.error("delete_launcher_cache")
 
         if self.log.has_content("[LWJGL] Failed to load a library. Possible solutions:") and self.log.is_newer_than("1.20"):

@@ -415,6 +415,7 @@ class Log:
     @cached_property
     def java_update_guide(self) -> str:
         if self.launcher == "Official Launcher":
+            if self.operating_system == OperatingSystem.MACOS: return "mac_setup_guide"
             return "k4_setup_guide"
 
         return "java_update_guide"
@@ -441,6 +442,7 @@ class Log:
             r"Reported exception thrown!\n.*",
             r"Shutdown failure!\n.*",
             r"Minecraft has crashed!.*",
+            r"A mod crashed on startup!\n.*",
         ]
         for crash_pattern in crash_patterns:
             match = re.search(crash_pattern, log, re.DOTALL)
@@ -469,6 +471,17 @@ class Log:
             "chunkcacher"
         ]:
             if self.has_mod(ssg_mod): return True
+        
+        return False
+
+    @cached_property
+    def is_ranked_log(self) -> bool:
+        for ranked_mod in [
+            "mcsrranked"
+        ]:
+            if self.has_mod(ranked_mod): return True
+        
+        if self.has_content("com.mcsr.projectelo."): return True
         
         return False
     
@@ -529,7 +542,7 @@ class Log:
     
     def has_content_in_stacktrace(self, content: str) -> bool:
         if self.stacktrace is None: return False
-        return content.lower() in self.stacktrace.lower()
+        return content.lower().replace("_","") in self.stacktrace.lower().replace("_","")
 
     def has_pattern(self, pattern: str) -> bool:
         return bool(re.compile(pattern, re.IGNORECASE).search(self._lower_content))
