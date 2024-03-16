@@ -63,6 +63,7 @@
     "error.java_comp_check": "Enable the `Skip Java compatibility checks` option in `Settings > Java` either in your instance's settings or in global settings.",
     "error.leaked_session_id_token": "**Your log has your session ID in it. Fully log out and relog back into the launcher right now.**",
     "error.legacy_fabric_modpack": "You likely imported a `Legacy Fabric` modpack. This doesn't work, you'll need to get a `Legacy Fabric` instance from [**here**](https://github.com/Minecraft-Java-Edition-Speedrunning/legacy-fabric-instance-generator/releases) and add the mods to it.",
+    "error.legacyjavafixer": "MinecraftForge provides a coremod to fix this issue with older `Forge` versions on recent `Java` versions. You can download it [**here**](https://dist.creeper.host/FTB2/maven/net/minecraftforge/lex/legacyjavafixer/1.0/legacyjavafixer-1.0.jar).",
     "error.lithium_crash": "This seems to be a rare crash caused by `Lithium` that you can't do anything about. It happens really rarely, so far we only know about 4 times of when it happened to someone, so it's not worth it to not use `Lithium` because of it.",
     "error.locked_libs": "Another process appears to be locking your native library JARs. To solve this, restart your PC.",
     "error.m1_multimc_hack": "You seem to be using `M1 MultiMC hack`. It can often cause issues. You should use [**Prism Launcher**](https://prismlauncher.org/) instead.",

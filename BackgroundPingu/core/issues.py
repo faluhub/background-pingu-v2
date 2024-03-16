@@ -616,8 +616,11 @@ class IssueChecker:
             found_crash_cause = True
         
         pattern = r"Uncaught exception in thread \"Thread-\d+\"\njava\.util\.ConcurrentModificationException: null"
-        if "java.util.ConcurrentModificationException" in re.sub(pattern, "", self.log._content) and self.log.short_version == "1.16" and not self.log.has_mod("voyager"):
-            builder.error("no_voyager_crash")
+        if "java.util.ConcurrentModificationException" in re.sub(pattern, "", self.log._content):
+            if self.log.short_version == "1.16" and not self.log.has_mod("voyager"):
+                builder.error("no_voyager_crash")
+            elif self.log.has_content("[SEVERE] [ForgeModLoader] Unable to launch") and not self.log.has_mod("legacyjavafixer"):
+                builder.error("legacyjavafixer")
         
         if self.log.has_content("java.lang.IllegalStateException: Adding Entity listener a second time") and self.log.has_content("me.jellysquid.mods.lithium.common.entity.tracker.nearby"):
             builder.error("lithium_crash")
