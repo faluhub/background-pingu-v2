@@ -417,7 +417,8 @@ class IssueChecker:
             found_crash_cause = True
             
         elif any(self.log.has_content(crash) for crash in [
-            "java.lang.ClassNotFoundException: can't find class com.llamalad7.mixinextras.MixinExtrasBootstrap",
+            "java.lang.ClassNotFoundException: can't find class com.llamalad7.mixinextras",
+            "java.lang.ClassNotFoundException: com.llamalad7.mixinextras",
             "java.lang.NoClassDefFoundError: com/redlimerl/speedrunigt",
         ]):
             builder.error("old_fabric_crash").add("fabric_guide_prism" if self.log.is_prism else "fabric_guide_mmc", "update")
