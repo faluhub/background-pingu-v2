@@ -64,5 +64,5 @@ class Paginator(View):
             await self.edit_message(interaction)
             try: await self.post.delete(reason="Re-uploaded log.")
             except discord.Forbidden: pass
-        except TypeError:
+        except (TypeError, discord.errors.NotFound):
             return await interaction.response.send_message("Something went wrong while re-uploading this log. Try again.", ephemeral=True)
