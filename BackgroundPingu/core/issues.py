@@ -92,10 +92,13 @@ class IssueChecker:
         self.log = log
         self.link = link
         self.java_17_mods = [
-            "antiresourcereload-1.16.1-4.0.0",
             "serversiderng",
-            "peepopractice",
             "areessgee"
+        ]
+        self.outdated_java_17_mods = [
+            "antiresourcereload-1.16.1-4.0.0",
+            "peepopractice-1",
+            "peepopractice-2.0",
         ]
         self.assume_as_latest = [
             "sodiummac",
@@ -302,20 +305,34 @@ class IssueChecker:
         
         if not self.log.major_java_version is None and self.log.major_java_version < 17:
             wrong_mods = []
+            wrong_outdated_mods = []
+
             for mod in self.java_17_mods:
                 for installed_mod in self.log.whatever_mods:
                     if mod in installed_mod.lower():
                         wrong_mods.append(mod)
+            for mod in self.outdated_java_17_mods:
+                for installed_mod in self.log.whatever_mods:
+                    if mod in installed_mod.lower():
+                        wrong_outdated_mods.append(mod)
             if len(wrong_mods) > 0:
+                wrong_mods += wrong_outdated_mods
                 builder.error(
                     "need_java_17_mods",
-                    "mods" if len(wrong_mods) > 1 else
-                    "a mod",
+                    "mods" if len(wrong_mods) > 1 else "a mod",
                     "`, `".join(wrong_mods),
-                    "s" if len(wrong_mods) == 1 else
-                    "",
-                    f", but you're using `Java {self.log.major_java_version}`" if not self.log.major_java_version is None
-                    else ""
+                    "s" if len(wrong_mods) == 1 else "",
+                    f", but you're using `Java {self.log.major_java_version}`" if not self.log.major_java_version is None else "",
+                ).add(self.log.java_update_guide)
+                if self.log.is_prism: builder.add("prism_java_compat_check")
+                found_crash_cause = True
+            elif len(wrong_outdated_mods) > 0:
+                builder.error(
+                    "need_java_17_outdated_mods",
+                    "mods" if len(wrong_outdated_mods) > 1 else "a mod",
+                    "`, `".join(wrong_outdated_mods),
+                    f", but you're using `Java {self.log.major_java_version}`" if not self.log.major_java_version is None else "",
+                    "it" if len(wrong_outdated_mods) == 1 else "them"
                 ).add(self.log.java_update_guide)
                 if self.log.is_prism: builder.add("prism_java_compat_check")
                 found_crash_cause = True
@@ -353,17 +370,6 @@ class IssueChecker:
             if self.log.is_prism: builder.add("prism_java_compat_check")
             found_crash_cause = True
         
-        if self.log.has_content("mcwrap.py"):
-            if self.log.launcher is None or self.log.launcher == "MultiMC" or not self.log.has_content("mac-lwjgl-fix"):
-                builder.error("m1_multimc_hack").add("mac_setup_guide")
-        
-        elif not found_crash_cause and self.log.has_content("You might want to install a 64bit Java version"):
-            if self.log.operating_system == OperatingSystem.MACOS:
-                builder.error("arm_java_multimc").add("mac_setup_guide")
-            else:
-                builder.error("32_bit_java").add("java_update_guide")
-            found_crash_cause = True
-        
         if not found_crash_cause and (any(self.log.has_content(broken_java) for broken_java in [
             "Could not start java:\n\n\nCheck your ",
             "Incompatible magic value 0 in class file sun/security/provider/SunEntries",
@@ -386,11 +392,22 @@ class IssueChecker:
             builder.error("headless_java")
             found_crash_cause = True
         
+        if self.log.has_content("mcwrap.py"):
+            if self.log.launcher is None or self.log.launcher == "MultiMC" or not self.log.has_content("mac-lwjgl-fix"):
+                builder.error("m1_multimc_hack").add("mac_setup_guide")
+        
+        elif not found_crash_cause and self.log.has_content("You might want to install a 64bit Java version"):
+            if self.log.operating_system == OperatingSystem.MACOS:
+                builder.error("arm_java_multimc").add("mac_setup_guide")
+            else:
+                builder.error("32_bit_java").add("java_update_guide")
+            found_crash_cause = True
+        
         if not found_crash_cause and is_mcsr_log and not self.log.major_java_version is None and self.log.major_java_version < 17:
             builder.note("not_using_java_17", self.log.major_java_version).add(self.log.java_update_guide)
             if self.log.is_prism: builder.add("prism_java_compat_check")
 
-        elif self.log.launcher == "MultiMC" and self.log.operating_system == OperatingSystem.MACOS:
+        elif self.log.launcher == "MultiMC" and self.log.operating_system == OperatingSystem.MACOS and not self.log.has_content("32-bit architecture"):
             builder.note("use_prism").add("mac_setup_guide")
         
         if (self.log.mod_loader in [ModLoader.FORGE, None]
@@ -417,7 +434,8 @@ class IssueChecker:
             found_crash_cause = True
             
         elif any(self.log.has_content(crash) for crash in [
-            "java.lang.ClassNotFoundException: can't find class com.llamalad7.mixinextras.MixinExtrasBootstrap",
+            "java.lang.ClassNotFoundException: can't find class com.llamalad7.mixinextras",
+            "java.lang.ClassNotFoundException: com.llamalad7.mixinextras",
             "java.lang.NoClassDefFoundError: com/redlimerl/speedrunigt",
         ]):
             builder.error("old_fabric_crash").add("fabric_guide_prism" if self.log.is_prism else "fabric_guide_mmc", "update")
@@ -616,8 +634,11 @@ class IssueChecker:
             found_crash_cause = True
         
         pattern = r"Uncaught exception in thread \"Thread-\d+\"\njava\.util\.ConcurrentModificationException: null"
-        if "java.util.ConcurrentModificationException" in re.sub(pattern, "", self.log._content) and self.log.short_version == "1.16" and not self.log.has_mod("voyager"):
-            builder.error("no_voyager_crash")
+        if "java.util.ConcurrentModificationException" in re.sub(pattern, "", self.log._content):
+            if self.log.short_version == "1.16" and not self.log.has_mod("voyager"):
+                builder.error("no_voyager_crash")
+            elif self.log.has_content("[SEVERE] [ForgeModLoader] Unable to launch") and not self.log.has_mod("legacyjavafixer"):
+                builder.error("legacyjavafixer")
         
         if self.log.has_content("java.lang.IllegalStateException: Adding Entity listener a second time") and self.log.has_content("me.jellysquid.mods.lithium.common.entity.tracker.nearby"):
             builder.error("lithium_crash")
