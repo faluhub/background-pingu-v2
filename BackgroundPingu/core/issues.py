@@ -92,10 +92,13 @@ class IssueChecker:
         self.log = log
         self.link = link
         self.java_17_mods = [
-            "antiresourcereload-1.16.1-4.0.0",
             "serversiderng",
-            "peepopractice",
             "areessgee"
+        ]
+        self.outdated_java_17_mods = [
+            "antiresourcereload-1.16.1-4.0.0",
+            "peepopractice-1",
+            "peepopractice-2.0",
         ]
         self.assume_as_latest = [
             "sodiummac",
@@ -302,20 +305,34 @@ class IssueChecker:
         
         if not self.log.major_java_version is None and self.log.major_java_version < 17:
             wrong_mods = []
+            wrong_outdated_mods = []
+
             for mod in self.java_17_mods:
                 for installed_mod in self.log.whatever_mods:
                     if mod in installed_mod.lower():
                         wrong_mods.append(mod)
+            for mod in self.outdated_java_17_mods:
+                for installed_mod in self.log.whatever_mods:
+                    if mod in installed_mod.lower():
+                        wrong_outdated_mods.append(mod)
             if len(wrong_mods) > 0:
+                wrong_mods += wrong_outdated_mods
                 builder.error(
                     "need_java_17_mods",
-                    "mods" if len(wrong_mods) > 1 else
-                    "a mod",
+                    "mods" if len(wrong_mods) > 1 else "a mod",
                     "`, `".join(wrong_mods),
-                    "s" if len(wrong_mods) == 1 else
-                    "",
-                    f", but you're using `Java {self.log.major_java_version}`" if not self.log.major_java_version is None
-                    else ""
+                    "s" if len(wrong_mods) == 1 else "",
+                    f", but you're using `Java {self.log.major_java_version}`" if not self.log.major_java_version is None else "",
+                ).add(self.log.java_update_guide)
+                if self.log.is_prism: builder.add("prism_java_compat_check")
+                found_crash_cause = True
+            elif len(wrong_outdated_mods) > 0:
+                builder.error(
+                    "need_java_17_outdated_mods",
+                    "mods" if len(wrong_outdated_mods) > 1 else "a mod",
+                    "`, `".join(wrong_outdated_mods),
+                    f", but you're using `Java {self.log.major_java_version}`" if not self.log.major_java_version is None else "",
+                    "it" if len(wrong_outdated_mods) == 1 else "them"
                 ).add(self.log.java_update_guide)
                 if self.log.is_prism: builder.add("prism_java_compat_check")
                 found_crash_cause = True
