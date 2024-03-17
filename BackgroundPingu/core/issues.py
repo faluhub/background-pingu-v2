@@ -353,17 +353,6 @@ class IssueChecker:
             if self.log.is_prism: builder.add("prism_java_compat_check")
             found_crash_cause = True
         
-        if self.log.has_content("mcwrap.py"):
-            if self.log.launcher is None or self.log.launcher == "MultiMC" or not self.log.has_content("mac-lwjgl-fix"):
-                builder.error("m1_multimc_hack").add("mac_setup_guide")
-        
-        elif not found_crash_cause and self.log.has_content("You might want to install a 64bit Java version"):
-            if self.log.operating_system == OperatingSystem.MACOS:
-                builder.error("arm_java_multimc").add("mac_setup_guide")
-            else:
-                builder.error("32_bit_java").add("java_update_guide")
-            found_crash_cause = True
-        
         if not found_crash_cause and (any(self.log.has_content(broken_java) for broken_java in [
             "Could not start java:\n\n\nCheck your ",
             "Incompatible magic value 0 in class file sun/security/provider/SunEntries",
@@ -386,11 +375,22 @@ class IssueChecker:
             builder.error("headless_java")
             found_crash_cause = True
         
+        if self.log.has_content("mcwrap.py"):
+            if self.log.launcher is None or self.log.launcher == "MultiMC" or not self.log.has_content("mac-lwjgl-fix"):
+                builder.error("m1_multimc_hack").add("mac_setup_guide")
+        
+        elif not found_crash_cause and self.log.has_content("You might want to install a 64bit Java version"):
+            if self.log.operating_system == OperatingSystem.MACOS:
+                builder.error("arm_java_multimc").add("mac_setup_guide")
+            else:
+                builder.error("32_bit_java").add("java_update_guide")
+            found_crash_cause = True
+        
         if not found_crash_cause and is_mcsr_log and not self.log.major_java_version is None and self.log.major_java_version < 17:
             builder.note("not_using_java_17", self.log.major_java_version).add(self.log.java_update_guide)
             if self.log.is_prism: builder.add("prism_java_compat_check")
 
-        elif self.log.launcher == "MultiMC" and self.log.operating_system == OperatingSystem.MACOS:
+        elif self.log.launcher == "MultiMC" and self.log.operating_system == OperatingSystem.MACOS and not self.log.has_content("32-bit architecture"):
             builder.note("use_prism").add("mac_setup_guide")
         
         if (self.log.mod_loader in [ModLoader.FORGE, None]
