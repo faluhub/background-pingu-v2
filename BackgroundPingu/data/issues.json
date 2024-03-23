@@ -86,6 +86,7 @@
     "error.no_voyager_crash": "This is a rare crash that can be prevented by using [**Voyager**](https://github.com/modmuss50/Voyager/releases/latest). You should install it.",
     "error.not_using_mac_sodium": "You seem to be using a version of `Sodium` that has a memory leak on `MacOS`. Delete the one you have and download [**this version**](https://github.com/Minecraft-Java-Edition-Speedrunning/mcsr-sodium-mac-1.16.1/releases/tag/latest) instead.",
     "error.old_fabric_crash": "This crash seems to be caused by using an outdated version of `Fabric Loader`. You should update it.",
+    "error.old_mod_crash": "This crash seems to be caused by using an outdated version of `{}`. You should update it, download the latest version [**here**]({}).",
     "error.old_ranked_version": "You're using an old `MCSR Ranked` mod version. You need to update it, you can download the latest version [**here**](https://modrinth.com/mod/mcsr-ranked/versions).",
     "error.old_sodium_crash": "This crash is caused by using an old version of `Sodium`.",
     "error.old_wp_with_stateoutput": "This crash is caused by using `State Output` with an old `WorldPreview` version. You should update `WorldPreview`.",

@@ -811,6 +811,7 @@ class IssueChecker:
             for incompatible_mod in ["WorldPreview", "Atum"]:
                 if self.log.has_mod(incompatible_mod):
                     builder.error("incompatible_mod", "PeepoPractice", incompatible_mod)
+                    found_crash_cause = True
 
         if self.log.has_content("Mixin apply for mod areessgee failed areessgee.mixins.json:nether.StructureFeatureMixin from mod areessgee -> net.minecraft.class_3195"):
             builder.error("incompatible_mod", "AreEssGee", "peepoPractice")
@@ -949,7 +950,14 @@ class IssueChecker:
             found_crash_cause = True
 
         if not found_crash_cause and self.log.has_content_in_stacktrace("atum"):
-            builder.error("downgrade_atum", experimental=True)
+            if self.log.has_mod("autoresetter"):
+                builder.error("downgrade_atum")
+                found_crash_cause = True
+            elif self.log.has_mod("beachfilter"):
+                builder.error("old_mod_crash", "beachfilter", "https://github.com/DuncanRuns/BeachFilter-Mod/releases/latest/")
+                found_crash_cause = True
+            else:
+                builder.error("downgrade_atum", experimental=True)
 
         if not found_crash_cause:
             wrong_mods = []
