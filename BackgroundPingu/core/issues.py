@@ -728,7 +728,7 @@ class IssueChecker:
             found_crash_cause = True
         
         if self.log.has_mod("mcsrranked-1") or self.log.has_mod("mcsrranked-2") or self.log.has_mod("mcsrranked-3.1.jar"):
-            builder.error("old_ranked_version")
+            builder.error("old_ranked_version").add("update_mods_prism")
 
         match = re.search(r"Incompatible mod set found! READ THE BELOW LINES!(.*?$)", self.log._content, re.DOTALL)
         if not match is None:
@@ -877,7 +877,7 @@ class IssueChecker:
         pattern = r"Error analyzing \[(.*?)\]: java\.util\.zip\.ZipException: zip END header not found"
         match = re.search(pattern, self.log._content)
         if not match is None:
-            builder.error("corrupted_file", re.sub(r"/(Users|home)/([^/]+)/", "/Users/********/", match.group(1)))
+            builder.error("corrupted_file", match.group(1))
         
         if self.log.has_mod("serversiderng"):
             builder.error("using_ssrng").add("modcheck_v1_warning")
@@ -946,7 +946,7 @@ class IssueChecker:
         pattern = r"\[Integrated Watchdog/ERROR\]:? This crash report has been saved to: (.*\.txt)"
         match = re.search(pattern, self.log._content)
         if not match is None:
-            builder.info("send_watchdog_report", re.sub(r"\\(Users|home)\\[^\\]+\\", "/Users/********/", match.group(1)))
+            builder.info("send_watchdog_report", match.group(1))
             found_crash_cause = True
 
         if not found_crash_cause and self.log.has_content_in_stacktrace("atum"):
