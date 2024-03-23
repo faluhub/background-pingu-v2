@@ -110,7 +110,8 @@ class IssueChecker:
             "biomethreadlocalfix",
             "sleepbackground-3.8-1.8.x-1.12.x",
             "tab-focus",
-            "voyager"
+            "voyager",
+            "forceport"
         ]
         self.assume_as_legal = [
             "mcsrranked",
@@ -258,10 +259,10 @@ class IssueChecker:
             builder.note("amount_illegal_mods", len(illegal_mods), temp)
         
         if len(outdated_mods) > 5:
-            builder.error("amount_outdated_mods", len(outdated_mods), "`, `".join([mod for mod in outdated_mods.keys()])).add("update_mods").add("modcheck_v1_warning")
+            builder.warning("amount_outdated_mods", len(outdated_mods), "`, `".join([mod for mod in outdated_mods.keys()])).add("update_mods").add("modcheck_v1_warning")
         else:
             for mod_name, link in outdated_mods.items():
-                builder.warning("outdated_mod", mod_name, link)
+                builder.note("outdated_mod", mod_name, link)
 
         for key, value in all_incompatible_mods.items():
             for incompatible_mod in value:
@@ -822,7 +823,7 @@ class IssueChecker:
                     found_crash_cause = True
 
         if self.log.has_content("Mixin apply for mod areessgee failed areessgee.mixins.json:nether.StructureFeatureMixin from mod areessgee -> net.minecraft.class_3195"):
-            builder.error("incompatible_mod", "AreEssGee", "peepoPractice")
+            builder.error("incompatible_mod", "AreEssGee", "PeepoPractice")
             found_crash_cause = True
         
         if self.log.has_mod("speedrunigt") and self.log.has_mod("stronghold-trainer"):
