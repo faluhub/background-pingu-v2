@@ -728,8 +728,11 @@ class IssueChecker:
             found_crash_cause = True
         
         if self.log.has_mod("mcsrranked-1") or self.log.has_mod("mcsrranked-2") or self.log.has_mod("mcsrranked-3.1.jar"):
-            builder.error("old_ranked_version")
+            builder.error("old_mod_version", "MCSR Ranked", "https://modrinth.com/mod/mcsr-ranked/versions/")
             if self.log.is_prism: builder.add("update_mods_prism")
+
+        if self.log.has_mod("peepopractice-1") or self.log.has_mod("peepopractice-2.0"):
+            builder.error("old_mod_version", "PeepoPractice", "https://github.com/faluhub/peepoPractice/releases/latest/")
 
         match = re.search(r"Incompatible mod set found! READ THE BELOW LINES!(.*?$)", self.log._content, re.DOTALL)
         if not match is None:
