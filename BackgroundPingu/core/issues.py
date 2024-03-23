@@ -114,7 +114,8 @@ class IssueChecker:
         ]
         self.assume_as_legal = [
             "mcsrranked",
-            "mangodfps"
+            "mangodfps",
+            "statsperreset"
         ]
         self.mcsr_mods = [
             "worldpreview",
