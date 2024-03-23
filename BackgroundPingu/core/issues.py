@@ -734,6 +734,10 @@ class IssueChecker:
         if self.log.has_mod("peepopractice-1") or self.log.has_mod("peepopractice-2.0"):
             builder.error("old_mod_version", "PeepoPractice", "https://github.com/faluhub/peepoPractice/releases/latest/")
 
+        if self.log.has_pattern(r"^Prism Launcher version: [1-7]"):
+            builder.error("old_prism_version")
+            if self.log.has_content("AppData/Roaming/PrismLauncher"): builder.add("update_prism_installer")
+
         match = re.search(r"Incompatible mod set found! READ THE BELOW LINES!(.*?$)", self.log._content, re.DOTALL)
         if not match is None:
             found_crash_cause = True
