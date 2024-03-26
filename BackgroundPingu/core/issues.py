@@ -92,7 +92,6 @@ class IssueChecker:
         self.log = log
         self.link = link
         self.java_17_mods = [
-            "serversiderng",
             "areessgee"
         ]
         self.outdated_java_17_mods = [
