@@ -861,11 +861,11 @@ class IssueChecker:
             else:
                 builder.warning("no_mappings", self.log.edit_instance)
 
-        if (not self.log.fabric_mc_version is None
+        if (not self.log.loader_mc_version is None
             and not self.log.minecraft_version is None
-            and self.log.minecraft_version != self.log.fabric_mc_version
+            and self.log.minecraft_version != self.log.loader_mc_version
         ):
-            builder.error("minecraft_version_mismatch", self.log.edit_instance)
+            builder.error("minecraft_version_mismatch", "Forge" if self.log.mod_loader == ModLoader.FORGE else "Intermediary Mappings", self.log.edit_instance)
             found_crash_cause = True
         
         if not found_crash_cause and self.log.has_content("ERROR]: Mixin apply for mod fabric-networking-api-v1 failed"):

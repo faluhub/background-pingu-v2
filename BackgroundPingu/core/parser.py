@@ -162,9 +162,10 @@ class Log:
         except version.InvalidVersion: return None
     
     @cached_property
-    def fabric_mc_version(self) -> str:
+    def loader_mc_version(self) -> str:
         for pattern in [
-            r"libraries/net/fabricmc/intermediary/(\S+)/intermediary-"
+            r"libraries/net/fabricmc/intermediary/(\S+)/intermediary-",
+            r"--fml.mcVersion (\S+)",
         ]:
             match = re.compile(pattern).search(self._content)
             if not match is None:
