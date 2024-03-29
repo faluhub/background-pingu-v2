@@ -49,7 +49,7 @@ class Log:
         mclogs_match = re.search(r"https://mclo\.gs/(\w+)", link)
         if paste_ee_match: link = f"https://paste.ee/d/{paste_ee_match.group(1)}/0"
         elif mclogs_match: link = f"https://api.mclo.gs/1/raw/{mclogs_match.group(1)}"
-        elif not ".txt" in link and not ".log" in link: return None
+        elif not ".txt" in link and not ".log" in link and not ".tdump" in link: return None
         res = requests.get(link, timeout=5)
         if res.status_code == 200:
             return Log(res.text.replace("\r", ""))
@@ -162,9 +162,10 @@ class Log:
         except version.InvalidVersion: return None
     
     @cached_property
-    def fabric_mc_version(self) -> str:
+    def loader_mc_version(self) -> str:
         for pattern in [
-            r"libraries/net/fabricmc/intermediary/(\S+)/intermediary-"
+            r"libraries/net/fabricmc/intermediary/(\S+)/intermediary-",
+            r"--fml.mcVersion (\S+)",
         ]:
             match = re.compile(pattern).search(self._content)
             if not match is None:
@@ -548,9 +549,9 @@ class Log:
         return bool(re.compile(pattern, re.IGNORECASE).search(self._lower_content))
     
     def has_mod(self, mod_name: str) -> bool:
-        mod_name = mod_name.lower().replace(" ", "-")
+        mod_name = mod_name.lower().replace(" ", "").replace("-", "")
         for mod in self.mods + self.fabric_mods:
-            if mod_name in mod.lower().replace(" ", "-"):
+            if mod_name in mod.lower().replace(" ", "").replace("-", ""):
                 return True
         return False
     
