@@ -847,7 +847,7 @@ class IssueChecker:
         if self.log.has_content("There is not enough space on the disk"):
             builder.error("out_of_disk_space")
             found_crash_cause = True
-        elif self.log.has_content("Failed to store chunk"):
+        elif not found_crash_cause and self.log.has_content("Failed to store chunk"):
             builder.warning("out_of_disk_space")
         
         if not found_crash_cause and (len(self.log.whatever_mods) == 0 or self.log.has_mod("atum")) and self.log.has_content("java.lang.StackOverflowError"):
