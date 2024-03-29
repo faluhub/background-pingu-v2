@@ -935,9 +935,8 @@ class IssueChecker:
             if "Rar$" in self.log.minecraft_folder:
                 builder.error("need_to_extract_from_zip", self.log.launcher if not self.log.launcher is None else "the launcher")
 
-
         if (not found_crash_cause
-            and any(self.link.endswith(file_extension) for file_extension in [".log", ".txt"])
+            and any(self.link.endswith(file_extension) for file_extension in [".log", ".txt", ".tdump"])
             and self.log.has_content("minecraft")
         ):
             builder.info("upload_log_attachment")
