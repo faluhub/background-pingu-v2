@@ -15,7 +15,7 @@ class ModLoader(enum.Enum):
 
 class Log:
     def __init__(self, content: str) -> None:
-        pattern = r"(/|\\)(Users|home)(/|\\)([^/\\]+)(/|\\)"
+        pattern = r"(/|\\|//)(Users|home)(/|\\|//)([^/\\]+)(/|\\|//)"
         match = re.search(pattern, content)
         if match and match.group(4).lower() not in ["user", "admin", "********"]:
             self.leaked_pc_username = True
