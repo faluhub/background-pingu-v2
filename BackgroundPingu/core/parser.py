@@ -15,14 +15,23 @@ class ModLoader(enum.Enum):
 
 class Log:
     def __init__(self, content: str) -> None:
-        pattern = r"(/|\\|//)(Users|home)(/|\\|//)([^/\\]+)(/|\\|//)"
-        match = re.search(pattern, content)
-        if match and match.group(4).lower() not in ["user", "admin", "********"]:
-            self.leaked_pc_username = True
-        else: self.leaked_pc_username = False
+        self.leaked_pc_username = False
+        pattern = r"(/|\\|//|\\\\)(Users|home)(/|\\|//|\\\\)([^/\\]+)(/|\\|//|\\\\)"
+        for match in re.findall(pattern, content):
+            if match and match[3].lower() not in ["user", "admin", "********"]:
+                self.leaked_pc_username = True
+                break
         match = None
-        
         content = re.sub(pattern, r"\1\2\3********\5", content)
+
+        pattern = r"\"USERNAME=([^/\\]+)\"" # from mmc/prism logs
+        for match in re.findall(pattern, content):
+            if match and match[3].lower() not in ["user", "admin", "********"]:
+                self.leaked_pc_username = True
+                break
+        match = None
+        content = re.sub(pattern, r"\"USERNAME=********\"", content)
+
         # just replacing pc_username with "" is a bad idea
         # for instance, if it's "Alex", it could also replace it in the mod "Alex Caves", which would leak it
 
