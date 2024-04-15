@@ -908,6 +908,7 @@ class IssueChecker:
             maxfps_0_indicators = [
                 "########## GL ERROR ##########",
                 "java.lang.ArithmeticException: / by zero",
+                "at net.minecraft.class_3928.method_25394",
                 " -805306369",
             ]
 

@@ -50,7 +50,7 @@
     "error.eav_crash": "This crash may be caused by one of the following:",
     "error.entity_culling": "If your entity counter on F3 is `-1`, turn off `Entity Culling` in `Video Settings`.",
     "error.exitcode": "Your game crashed with exitcode `{}`. Here are some possible solutions:",
-    "error.exitcode_805306369": "Check your `.minecraft/options.txt` file for the line `maxFps:0`. If you find it, change `0` to the value you want and save the file.",
+    "error.exitcode_805306369": "This crash is likely caused by the line `maxFps:0` in your `.minecraft/options.txt` file. If you find it, change `0` to the value you want and save the file.",
     "error.forge_java_bug": "Old versions of `Forge` crash with `Java 8u321+`. To fix this, update `Forge` to the latest version via the `Versions` tab (right click on `Forge`, click `Change Version`, and choose the latest one). Alternatively, you can download `Java 8u312 or lower`; see [**archive**](https://github.com/adoptium/temurin8-binaries/releases/tag/jdk8u312-b07).",
     "error.forge_missing_dependencies": "You seem to be missing dependencies. Check your log to see which mods you're missing.",
     "error.forge_too_new_java": "You need to use `Java 8` to use `Forge` on this Minecraft version. Use [**this guide**](https://docs.google.com/document/d/1PIjyPMulI3r5aZpfywt5OQR_12qEzX5UTfU8DQHtNp8/edit) to install it, but make sure to install Java **8** instead of Java **17**.",
