@@ -306,10 +306,10 @@ class IssueChecker:
             if self.log.has_mod("sodium-1.16.1-v1") or self.log.has_mod("sodium-1.16.1-v2"):
                 builder.error("not_using_mac_sodium")
         
+        wrong_not_needed_mods = []
         if not self.log.major_java_version is None and self.log.major_java_version < 17:
             wrong_mods = []
             wrong_outdated_mods = []
-            wrong_not_needed_mods = []
 
             for installed_mod in self.log.whatever_mods:
                 for mod in self.java_17_mods:
@@ -520,7 +520,7 @@ class IssueChecker:
                 builder.error("too_little_ram_crash").add(*self.log.ram_guide)
                 found_crash_cause = True
             elif self.log.max_allocated < min_limit_0 and self.log.has_content(" -805306369"):
-                builder.warning("too_little_ram_crash").add(*self.log.ram_guide)
+                builder.note("too_little_ram_crash").add(*self.log.ram_guide)
             elif self.log.max_allocated < min_limit_2:
                 builder.warning("too_little_ram").add(*self.log.ram_guide)
             elif self.log.max_allocated < min_limit_1:
@@ -854,7 +854,7 @@ class IssueChecker:
             builder.error("out_of_disk_space")
             found_crash_cause = True
         elif not found_crash_cause and self.log.has_content("Failed to store chunk"):
-            builder.warning("out_of_disk_space")
+            builder.note("out_of_disk_space")
         
         if not found_crash_cause and self.log.has_content("java.lang.StackOverflowError") and self.log.has_content("$atum$createDesiredWorld"):
             builder.error("stack_overflow_crash")
