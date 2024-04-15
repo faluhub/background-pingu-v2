@@ -392,9 +392,9 @@ class Log:
             max_limit_2 += max(min(mod_cnt * 100, 800), 8000)
         
         if self.is_ssg_log:
-            max_limit_0 *= 0.7
-            max_limit_1 *= 0.7
-            max_limit_2 *= 0.7
+            max_limit_0 *= 0.8
+            max_limit_1 *= 0.8
+            max_limit_2 *= 0.8
         
         if self.has_java_argument("shenandoah"):
             max_limit_0 *= 0.7
