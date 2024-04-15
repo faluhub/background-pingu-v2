@@ -618,7 +618,7 @@ class IssueChecker:
             if mod_name.lower() == "fabric": builder.error("requires_fabric_api")
             else: builder.error("requires_mod", mod_name)
         
-        if self.log.has_mod("fabric-api") and is_mcsr_log:
+        if is_mcsr_log and self.log.has_mod("fabric-api"):
             builder.warning("using_fabric_api")
         
         if self.log.has_content("Couldn't extract native jar"):
@@ -680,10 +680,6 @@ class IssueChecker:
             "java.lang.NullPointerException: Cannot invoke \"com.mojang.authlib.minecraft.MinecraftProfileTexture.getHash()\" because \"?\" is null",
             " to profiler if profiler tick hasn't started - missing "
         ]): builder.info("log_spam")
-        
-        if self.log.has_content("the mods atum and autoreset"):
-            builder.error("autoreset_user").add("update_mods").add("modcheck_v1_warning")
-            found_crash_cause = True
 
         if self.log.has_content("Launched instance in offline mode") and self.log.has_content("(missing)\n"):
             builder.error("online_launch_required", self.log.edit_instance)
@@ -720,11 +716,6 @@ class IssueChecker:
         if self.log.has_content("ClassLoaders$AppClassLoader cannot be cast to class java.net.URLClassLoader"):
             builder.error("forge_too_new_java")
             found_crash_cause = True
-        if self.log.mod_loader == ModLoader.FORGE and not found_crash_cause:
-            if self.log.has_content("Unable to detect the forge installer!"):
-                builder.error("random_forge_crash_1")
-            if self.log.has_content("java.lang.NoClassDefFoundError: cpw/mods/modlauncher/Launcher"):
-                builder.error("random_forge_crash_2")
         
         if any(self.log.has_content(sodium_rtss_crash) for sodium_rtss_crash in [
             "RivaTuner Statistics Server (RTSS) is not compatible with Sodium",
