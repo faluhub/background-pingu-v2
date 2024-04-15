@@ -92,12 +92,14 @@ class IssueChecker:
         self.log = log
         self.link = link
         self.java_17_mods = [
-            "areessgee"
+            "areessgee",
+            "peepopractice",
         ]
         self.outdated_java_17_mods = [
             "antiresourcereload-1.16.1-4.0.0",
-            "peepopractice-1",
-            "peepopractice-2.0",
+        ]
+        self.not_needed_java_17_mods = [
+            "serversiderng",
         ]
         self.assume_as_latest = [
             "sodiummac",
@@ -307,15 +309,19 @@ class IssueChecker:
         if not self.log.major_java_version is None and self.log.major_java_version < 17:
             wrong_mods = []
             wrong_outdated_mods = []
+            wrong_not_needed_mods = []
 
-            for mod in self.java_17_mods:
-                for installed_mod in self.log.whatever_mods:
+            for installed_mod in self.log.whatever_mods:
+                for mod in self.java_17_mods:
                     if mod in installed_mod.lower():
                         wrong_mods.append(mod)
-            for mod in self.outdated_java_17_mods:
-                for installed_mod in self.log.whatever_mods:
+                for mod in self.outdated_java_17_mods:
                     if mod in installed_mod.lower():
                         wrong_outdated_mods.append(mod)
+                for mod in self.not_needed_java_17_mods:
+                    if mod in installed_mod.lower():
+                        wrong_not_needed_mods.append(mod)
+            
             if len(wrong_mods) > 0:
                 wrong_mods += wrong_outdated_mods
                 builder.error(
@@ -342,7 +348,7 @@ class IssueChecker:
             builder.error("need_java_17_mc").add("java_update_guide")
             found_crash_cause = True
         
-        if not found_crash_cause:
+        if not found_crash_cause and len(wrong_not_needed_mods) == 0:
             needed_java_version = None
             if self.log.has_content("java.lang.UnsupportedClassVersionError"):
                 match = re.compile(r"class file version (\d+\.\d+)").search(self.log._content)
