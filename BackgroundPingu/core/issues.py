@@ -418,7 +418,10 @@ class IssueChecker:
             if self.log.launcher is None or self.log.launcher == "MultiMC" or not self.log.has_content("mac-lwjgl-fix"):
                 builder.error("m1_multimc_hack").add("mac_setup_guide")
         
-        elif not found_crash_cause and self.log.has_content("You might want to install a 64bit Java version"):
+        elif not found_crash_cause and any(self.log.has_pattern(using_32_bit_java) for using_32_bit_java in [
+            r"You might want to install a 64bit Java version",
+            r", using 32 \((.+)\) architecture, from"
+        ]):
             if self.log.operating_system == OperatingSystem.MACOS:
                 builder.error("arm_java_multimc").add("mac_setup_guide")
             else:
