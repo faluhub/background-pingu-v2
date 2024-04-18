@@ -498,6 +498,8 @@ class Log:
     
     @cached_property
     def is_not_wall_log(self) -> bool:
+        if self.is_ranked_log: return True
+        
         if self.minecraft_folder is None: return False
         
         if not self.minecraft_folder.split("/.minecraft")[0][-1].isdigit():
