@@ -188,6 +188,7 @@ class IssueChecker:
         is_mcsr_log = any(self.log.has_mod(mcsr_mod) for mcsr_mod in self.mcsr_mods) or self.log.minecraft_version == "1.16.1"
         found_crash_cause = False
         illegal_mods = []
+        missing_mods = []
         checked_mods = {}
         outdated_mods = {}
         all_incompatible_mods = {}
@@ -252,17 +253,39 @@ class IssueChecker:
                     else: checked_mods[mod_name.lower()] = False
                 elif all(not weird_mod in mod.lower() for weird_mod in self.assume_as_legal): illegal_mods.append(mod)
         
-        if len(illegal_mods) > 0:
-            if len(illegal_mods) > 6: temp = "s"
-            elif len(illegal_mods) > 1: temp = f"s (`{', '.join(illegal_mods)}`)"
-            else: temp = f" (`{illegal_mods[0]}`)"
-            builder.note("amount_illegal_mods", len(illegal_mods), temp)
+        if len(self.log.whatever_mods) > 0:
+            for recommended_mod in self.log.recommended_mods:
+                if not self.log.has_mod(recommended_mod):
+                    metadata = self.get_mod_metadata(recommended_mod)
+                    latest_version = self.get_latest_version(metadata)
+                    missing_mods.append([recommended_mod, latest_version["page"]])
         
-        if len(outdated_mods) > 5:
-            builder.warning("amount_outdated_mods", len(outdated_mods), "`, `".join([mod for mod in outdated_mods.keys()])).add("update_mods").add("modcheck_v1_warning")
+        if len(outdated_mods) + len(missing_mods) > 5:
+            if len(missing_mods) == 0:
+                builder.warning(
+                    "outdated_mods",
+                    len(outdated_mods),
+                    "`, `".join([mod for mod in outdated_mods.keys()]),
+                ).add("update_mods").add("modcheck_v1_warning")
+            elif len(outdated_mods) == 0:
+                builder.warning(
+                    "missing_mods",
+                    len(missing_mods),
+                    "`, `".join([mod[0] for mod in missing_mods]),
+                ).add("update_mods").add("modcheck_v1_warning")
+            else:
+                builder.warning(
+                    "missing_and_outdated_mods",
+                    len(missing_mods),
+                    "`, `".join([mod[0] for mod in missing_mods]),
+                    len(outdated_mods),
+                    "`, `".join([mod for mod in outdated_mods.keys()]),
+                ).add("update_mods").add("modcheck_v1_warning")
         else:
             for mod_name, link in outdated_mods.items():
                 builder.note("outdated_mod", mod_name, link)
+            for missing_mod in missing_mods:
+                builder.warning("missing_mod", missing_mod[0], missing_mod[1])
 
         for key, value in all_incompatible_mods.items():
             for incompatible_mod in value:
@@ -270,7 +293,13 @@ class IssueChecker:
                     builder.error("incompatible_mod", key, incompatible_mod)
         
         if len(duplicate_mods) > 0:
-            builder.note("duplicate_mod", ", ".join(set(duplicate_mods)))
+            builder.note("duplicate_mods", ", ".join(set(duplicate_mods)))
+        
+        if len(illegal_mods) > 0:
+            if len(illegal_mods) > 6: temp = "s"
+            elif len(illegal_mods) > 1: temp = f"s (`{', '.join(illegal_mods)}`)"
+            else: temp = f" (`{illegal_mods[0]}`)"
+            builder.note("amount_illegal_mods", len(illegal_mods), temp)
 
         if len(self.log.mods) == 0:
             for mod in self.log.fabric_mods:
@@ -287,19 +316,6 @@ class IssueChecker:
                     temp,
                     experimental = (self.log.minecraft_version != "1.16.1")
                 )
-        
-        if len(self.log.whatever_mods) > 0:
-            missing_mods = []
-            for recommended_mod in self.log.recommended_mods:
-                if not self.log.has_mod(recommended_mod):
-                    metadata = self.get_mod_metadata(recommended_mod)
-                    latest_version = self.get_latest_version(metadata)
-                    missing_mods.append([recommended_mod, latest_version["page"]])
-            if len(missing_mods) > 4:
-                builder.warning("missing_mods", len(missing_mods), "`, `".join([mod[0] for mod in missing_mods])).add("update_mods").add("modcheck_v1_warning")
-            else:
-                for missing_mod in missing_mods:
-                    builder.warning("missing_mod", missing_mod[0], missing_mod[1])
         
         if self.log.operating_system == OperatingSystem.MACOS:
             if self.log.has_mod("sodium-1.16.1-v1") or self.log.has_mod("sodium-1.16.1-v2"):
