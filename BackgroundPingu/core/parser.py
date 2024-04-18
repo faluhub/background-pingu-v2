@@ -453,6 +453,7 @@ class Log:
             r"Shutdown failure!\n.*",
             r"Minecraft has crashed!.*",
             r"A mod crashed on startup!\n.*",
+            r"Encountered an unexpected exception\n.*",
         ]
         for crash_pattern in crash_patterns:
             match = re.search(crash_pattern, log, re.DOTALL)

@@ -103,7 +103,6 @@ class IssueChecker:
         ]
         self.assume_as_latest = [
             "sodiummac",
-            "lazystronghold",
             "krypton",
             "sodium-fabric-mc1.16.5-0.2.0+build.4",
             "optifine",
@@ -112,12 +111,12 @@ class IssueChecker:
             "sleepbackground-3.8-1.8.x-1.12.x",
             "tab-focus",
             "voyager",
-            "forceport"
+            "forceport",
         ]
         self.assume_as_legal = [
             "mcsrranked",
             "mangodfps",
-            "statsperreset"
+            "statsperreset",
         ]
         self.mcsr_mods = [
             "worldpreview",
@@ -138,7 +137,7 @@ class IssueChecker:
             "peepopractice",
             "fast-reset",
             "antigone",
-            "mcsrranked"
+            "mcsrranked",
         ]
         self.general_mods = [
             "atum",
@@ -148,7 +147,7 @@ class IssueChecker:
             "krypton",
             "lazydfu",
             "dynamicfps",
-            "voyager"
+            "voyager",
         ]
     
     def get_mod_metadata(self, mod_filename: str) -> dict:
