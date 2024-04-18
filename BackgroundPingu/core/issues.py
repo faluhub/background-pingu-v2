@@ -609,7 +609,8 @@ class IssueChecker:
                               self.log.launcher if self.log.launcher is not None else "your launcher",
                               " > Tweaks" if self.log.is_prism else "")
                 found_crash_cause = True
-            else: builder.note("builtin_lib_recommendation", system_arg)
+            elif any(self.log.has_content_in_stacktrace(lib) for lib in ["GLFW", "OpenAL"]):
+                builder.warning("builtin_lib_recommendation", system_arg)
 
         required_mod_match = re.findall(r"requires (.*?) of (\w+),", self.log._content)
         for required_mod in required_mod_match:
