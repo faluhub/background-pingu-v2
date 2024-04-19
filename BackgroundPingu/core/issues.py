@@ -87,10 +87,11 @@ class IssueBuilder:
         return messages
 
 class IssueChecker:
-    def __init__(self, bot: BackgroundPingu, log: Log, link: str) -> None:
+    def __init__(self, bot: BackgroundPingu, log: Log, link: str, server_id: int) -> None:
         self.bot = bot
         self.log = log
         self.link = link
+        self.server_id = server_id
         self.java_17_mods = [
             "areessgee",
             "peepopractice",
@@ -103,7 +104,6 @@ class IssueChecker:
         ]
         self.assume_as_latest = [
             "sodiummac",
-            "lazystronghold",
             "krypton",
             "sodium-fabric-mc1.16.5-0.2.0+build.4",
             "optifine",
@@ -112,12 +112,12 @@ class IssueChecker:
             "sleepbackground-3.8-1.8.x-1.12.x",
             "tab-focus",
             "voyager",
-            "forceport"
+            "forceport",
         ]
         self.assume_as_legal = [
             "mcsrranked",
             "mangodfps",
-            "statsperreset"
+            "statsperreset",
         ]
         self.mcsr_mods = [
             "worldpreview",
@@ -138,7 +138,7 @@ class IssueChecker:
             "peepopractice",
             "fast-reset",
             "antigone",
-            "mcsrranked"
+            "mcsrranked",
         ]
         self.general_mods = [
             "atum",
@@ -148,7 +148,7 @@ class IssueChecker:
             "krypton",
             "lazydfu",
             "dynamicfps",
-            "voyager"
+            "voyager",
         ]
     
     def get_mod_metadata(self, mod_filename: str) -> dict:
@@ -189,6 +189,7 @@ class IssueChecker:
         is_mcsr_log = any(self.log.has_mod(mcsr_mod) for mcsr_mod in self.mcsr_mods) or self.log.minecraft_version == "1.16.1"
         found_crash_cause = False
         illegal_mods = []
+        missing_mods = []
         checked_mods = {}
         outdated_mods = {}
         all_incompatible_mods = {}
@@ -253,17 +254,39 @@ class IssueChecker:
                     else: checked_mods[mod_name.lower()] = False
                 elif all(not weird_mod in mod.lower() for weird_mod in self.assume_as_legal): illegal_mods.append(mod)
         
-        if len(illegal_mods) > 0:
-            if len(illegal_mods) > 6: temp = "s"
-            elif len(illegal_mods) > 1: temp = f"s (`{', '.join(illegal_mods)}`)"
-            else: temp = f" (`{illegal_mods[0]}`)"
-            builder.note("amount_illegal_mods", len(illegal_mods), temp)
+        if len(self.log.whatever_mods) > 0:
+            for recommended_mod in self.log.recommended_mods:
+                if not self.log.has_mod(recommended_mod):
+                    metadata = self.get_mod_metadata(recommended_mod)
+                    latest_version = self.get_latest_version(metadata)
+                    missing_mods.append([recommended_mod, latest_version["page"]])
         
-        if len(outdated_mods) > 5:
-            builder.warning("amount_outdated_mods", len(outdated_mods), "`, `".join([mod for mod in outdated_mods.keys()])).add("update_mods").add("modcheck_v1_warning")
+        if len(outdated_mods) + len(missing_mods) > 5:
+            if len(missing_mods) == 0:
+                builder.warning(
+                    "outdated_mods",
+                    len(outdated_mods),
+                    "`, `".join([mod for mod in outdated_mods.keys()]),
+                ).add("update_mods").add("modcheck_v1_warning")
+            elif len(outdated_mods) == 0:
+                builder.warning(
+                    "missing_mods",
+                    len(missing_mods),
+                    "`, `".join([mod[0] for mod in missing_mods]),
+                ).add("update_mods").add("modcheck_v1_warning")
+            else:
+                builder.warning(
+                    "missing_and_outdated_mods",
+                    len(missing_mods),
+                    "`, `".join([mod[0] for mod in missing_mods]),
+                    len(outdated_mods),
+                    "`, `".join([mod for mod in outdated_mods.keys()]),
+                ).add("update_mods").add("modcheck_v1_warning")
         else:
             for mod_name, link in outdated_mods.items():
                 builder.note("outdated_mod", mod_name, link)
+            for missing_mod in missing_mods:
+                builder.warning("missing_mod", missing_mod[0], missing_mod[1])
 
         for key, value in all_incompatible_mods.items():
             for incompatible_mod in value:
@@ -271,7 +294,13 @@ class IssueChecker:
                     builder.error("incompatible_mod", key, incompatible_mod)
         
         if len(duplicate_mods) > 0:
-            builder.note("duplicate_mod", ", ".join(set(duplicate_mods)))
+            builder.note("duplicate_mods", ", ".join(set(duplicate_mods)))
+        
+        if len(illegal_mods) > 0:
+            if len(illegal_mods) > 6: temp = "s"
+            elif len(illegal_mods) > 1: temp = f"s (`{', '.join(illegal_mods)}`)"
+            else: temp = f" (`{illegal_mods[0]}`)"
+            builder.note("amount_illegal_mods", len(illegal_mods), temp)
 
         if len(self.log.mods) == 0:
             for mod in self.log.fabric_mods:
@@ -288,19 +317,6 @@ class IssueChecker:
                     temp,
                     experimental = (self.log.minecraft_version != "1.16.1")
                 )
-        
-        if len(self.log.whatever_mods) > 0:
-            missing_mods = []
-            for recommended_mod in self.log.recommended_mods:
-                if not self.log.has_mod(recommended_mod):
-                    metadata = self.get_mod_metadata(recommended_mod)
-                    latest_version = self.get_latest_version(metadata)
-                    missing_mods.append([recommended_mod, latest_version["page"]])
-            if len(missing_mods) > 4:
-                builder.warning("missing_mods", len(missing_mods), "`, `".join([mod[0] for mod in missing_mods])).add("update_mods").add("modcheck_v1_warning")
-            else:
-                for missing_mod in missing_mods:
-                    builder.warning("missing_mod", missing_mod[0], missing_mod[1])
         
         if self.log.operating_system == OperatingSystem.MACOS:
             if self.log.has_mod("sodium-1.16.1-v1") or self.log.has_mod("sodium-1.16.1-v2"):
@@ -403,7 +419,10 @@ class IssueChecker:
             if self.log.launcher is None or self.log.launcher == "MultiMC" or not self.log.has_content("mac-lwjgl-fix"):
                 builder.error("m1_multimc_hack").add("mac_setup_guide")
         
-        elif not found_crash_cause and self.log.has_content("You might want to install a 64bit Java version"):
+        elif not found_crash_cause and any(self.log.has_pattern(using_32_bit_java) for using_32_bit_java in [
+            r"You might want to install a 64bit Java version",
+            r", using 32 \((.+)\) architecture, from"
+        ]):
             if self.log.operating_system == OperatingSystem.MACOS:
                 builder.error("arm_java_multimc").add("mac_setup_guide")
             else:
@@ -519,7 +538,7 @@ class IssueChecker:
             if (self.log.max_allocated < min_limit_1 and self.log.has_content(" -805306369")) or self.log.has_content("java.lang.OutOfMemoryError") or self.log.has_content("GL error GL_OUT_OF_MEMORY"):
                 builder.error("too_little_ram_crash").add(*self.log.ram_guide)
                 found_crash_cause = True
-            elif self.log.max_allocated < min_limit_0 and self.log.has_content(" -805306369"):
+            elif self.log.max_allocated < min_limit_0 and self.log.has_content(" -805306369") and self.log.stacktrace is None:
                 builder.note("too_little_ram_crash").add(*self.log.ram_guide)
             elif self.log.max_allocated < min_limit_2:
                 builder.warning("too_little_ram").add(*self.log.ram_guide)
@@ -610,7 +629,8 @@ class IssueChecker:
                               self.log.launcher if self.log.launcher is not None else "your launcher",
                               " > Tweaks" if self.log.is_prism else "")
                 found_crash_cause = True
-            else: builder.note("builtin_lib_recommendation", system_arg)
+            elif any(self.log.has_content_in_stacktrace(lib) for lib in ["GLFW", "OpenAL"]):
+                builder.warning("builtin_lib_recommendation", system_arg)
 
         required_mod_match = re.findall(r"requires (.*?) of (\w+),", self.log._content)
         for required_mod in required_mod_match:
@@ -618,7 +638,7 @@ class IssueChecker:
             if mod_name.lower() == "fabric": builder.error("requires_fabric_api")
             else: builder.error("requires_mod", mod_name)
         
-        if self.log.has_mod("fabric-api") and is_mcsr_log:
+        if is_mcsr_log and self.log.has_mod("fabric-api"):
             builder.warning("using_fabric_api")
         
         if self.log.has_content("Couldn't extract native jar"):
@@ -680,10 +700,6 @@ class IssueChecker:
             "java.lang.NullPointerException: Cannot invoke \"com.mojang.authlib.minecraft.MinecraftProfileTexture.getHash()\" because \"?\" is null",
             " to profiler if profiler tick hasn't started - missing "
         ]): builder.info("log_spam")
-        
-        if self.log.has_content("the mods atum and autoreset"):
-            builder.error("autoreset_user").add("update_mods").add("modcheck_v1_warning")
-            found_crash_cause = True
 
         if self.log.has_content("Launched instance in offline mode") and self.log.has_content("(missing)\n"):
             builder.error("online_launch_required", self.log.edit_instance)
@@ -720,11 +736,6 @@ class IssueChecker:
         if self.log.has_content("ClassLoaders$AppClassLoader cannot be cast to class java.net.URLClassLoader"):
             builder.error("forge_too_new_java")
             found_crash_cause = True
-        if self.log.mod_loader == ModLoader.FORGE and not found_crash_cause:
-            if self.log.has_content("Unable to detect the forge installer!"):
-                builder.error("random_forge_crash_1")
-            if self.log.has_content("java.lang.NoClassDefFoundError: cpw/mods/modlauncher/Launcher"):
-                builder.error("random_forge_crash_2")
         
         if any(self.log.has_content(sodium_rtss_crash) for sodium_rtss_crash in [
             "RivaTuner Statistics Server (RTSS) is not compatible with Sodium",
@@ -887,7 +898,6 @@ class IssueChecker:
                 else: wrong_mod = mod_name
                 builder.error("corrupted_mod_config", wrong_mod)
                 found_crash_cause = True
-        
         pattern = r"Error analyzing \[(.*?)\]: java\.util\.zip\.ZipException: zip END header not found"
         match = re.search(pattern, self.log._content)
         if not match is None:
@@ -995,7 +1005,7 @@ class IssueChecker:
                 else:
                     for mod in self.log.whatever_mods:
                         mod_name = mod.lower().replace(".jar", "")
-                        for c in ["+", "-", "_", "=", ",", " "]: mod_name = mod_name.replace(c, "-")
+                        for c in ["+", "_", "=", ",", " "]: mod_name = mod_name.replace(c, "-")
                         mod_name_parts = mod_name.split("-")
                         mod_name = ""
                         for part in mod_name_parts:
@@ -1007,8 +1017,25 @@ class IssueChecker:
                         if len(mod_name) < 5 and mod_name != "atum": mod_name = f".{mod_name}"
                         if len(mod_name) > 2 and mod_name in self.log.stacktrace:
                             if not mod in wrong_mods: wrong_mods.append(mod)
-
-            if len(wrong_mods) == 1:
+            
+            if any(mayasmod in " ".join(wrong_mods) for mayasmod in [
+                "peepopractice",
+                "areessgee",
+            ]) and self.server_id != 1070838405925179392:
+                builder.error(
+                    "mayas_mod_crash",
+                    "s" if len(wrong_mods) > 1 else "",
+                    "; ".join(wrong_mods[:12]),
+                    "" if len(wrong_mods) > 1 else "s",
+                )
+            elif "ranked" in " ".join(wrong_mods) and self.server_id != 1056779246728658984:
+                builder.error(
+                    "ranked_mod_crash",
+                    "s" if len(wrong_mods) > 1 else "",
+                    "; ".join(wrong_mods[:12]),
+                    "" if len(wrong_mods) > 1 else "s",
+                )
+            elif len(wrong_mods) == 1:
                 builder.error("mod_crash", wrong_mods[0])
             elif len(wrong_mods) > 0 and len(wrong_mods) < 10:
                 builder.error("mods_crash", "; ".join(wrong_mods))

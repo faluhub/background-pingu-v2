@@ -26,9 +26,9 @@ class Core(Cog):
         logs = [(match.split("?ex")[0], parser.Log.from_link(match)) for match in matches]
         logs = [(match, log) for (match, log) in logs if not log is None]
         # logs.append(("message", parser.Log(msg.content)))
-        for match, log in logs:
+        for link, log in logs:
             try:
-                results = issues.IssueChecker(self.bot, log, match).check()
+                results = issues.IssueChecker(self.bot, log, link, msg.guild.id).check()
                 if results.has_values():
                     messages = results.build()
                     result["embed"] = await self.build_embed(results, messages, msg)

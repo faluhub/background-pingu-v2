@@ -441,8 +441,13 @@ class Log:
     
     @cached_property
     def stacktrace(self) -> str:
-        ignored_pattern = r"(?s)---- Minecraft Crash Report ----.*?This is just a prompt for computer specs to be printed"
-        log = re.sub(ignored_pattern, "", self._content)
+        log = self._content
+        ignored_patterns = [
+            r"(?s)---- Minecraft Crash Report ----.*?This is just a prompt for computer specs to be printed",
+            r"(?s)WARNING: coremods are present:.*?Contact their authors BEFORE contacting forge"
+        ]
+        for pattern in ignored_patterns:
+            log = re.sub(pattern, "", log)
         
         crash_patterns = [
             r"---- Minecraft Crash Report ----.*A detailed walkthrough of the error",
@@ -453,6 +458,7 @@ class Log:
             r"Shutdown failure!\n.*",
             r"Minecraft has crashed!.*",
             r"A mod crashed on startup!\n.*",
+            r"Encountered an unexpected exception\n.*",
         ]
         for crash_pattern in crash_patterns:
             match = re.search(crash_pattern, log, re.DOTALL)
@@ -497,6 +503,8 @@ class Log:
     
     @cached_property
     def is_not_wall_log(self) -> bool:
+        if self.is_ranked_log: return True
+        
         if self.minecraft_folder is None: return False
         
         if not self.minecraft_folder.split("/.minecraft")[0][-1].isdigit():
