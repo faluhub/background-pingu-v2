@@ -87,10 +87,11 @@ class IssueBuilder:
         return messages
 
 class IssueChecker:
-    def __init__(self, bot: BackgroundPingu, log: Log, link: str) -> None:
+    def __init__(self, bot: BackgroundPingu, log: Log, link: str, server_id: int) -> None:
         self.bot = bot
         self.log = log
         self.link = link
+        self.server_id = server_id
         self.java_17_mods = [
             "areessgee",
             "peepopractice",
@@ -897,7 +898,6 @@ class IssueChecker:
                 else: wrong_mod = mod_name
                 builder.error("corrupted_mod_config", wrong_mod)
                 found_crash_cause = True
-        
         pattern = r"Error analyzing \[(.*?)\]: java\.util\.zip\.ZipException: zip END header not found"
         match = re.search(pattern, self.log._content)
         if not match is None:
@@ -1005,7 +1005,7 @@ class IssueChecker:
                 else:
                     for mod in self.log.whatever_mods:
                         mod_name = mod.lower().replace(".jar", "")
-                        for c in ["+", "-", "_", "=", ",", " "]: mod_name = mod_name.replace(c, "-")
+                        for c in ["+", "_", "=", ",", " "]: mod_name = mod_name.replace(c, "-")
                         mod_name_parts = mod_name.split("-")
                         mod_name = ""
                         for part in mod_name_parts:
@@ -1017,8 +1017,25 @@ class IssueChecker:
                         if len(mod_name) < 5 and mod_name != "atum": mod_name = f".{mod_name}"
                         if len(mod_name) > 2 and mod_name in self.log.stacktrace:
                             if not mod in wrong_mods: wrong_mods.append(mod)
-
-            if len(wrong_mods) == 1:
+            
+            if any(mayasmod in " ".join(wrong_mods) for mayasmod in [
+                "peepopractice",
+                "areessgee",
+            ]) and self.server_id != 1070838405925179392:
+                builder.error(
+                    "mayas_mod_crash",
+                    "s" if len(wrong_mods) > 1 else "",
+                    "; ".join(wrong_mods[:12]),
+                    "" if len(wrong_mods) > 1 else "s",
+                )
+            elif "ranked" in " ".join(wrong_mods) and self.server_id != 1056779246728658984:
+                builder.error(
+                    "ranked_mod_crash",
+                    "s" if len(wrong_mods) > 1 else "",
+                    "; ".join(wrong_mods[:12]),
+                    "" if len(wrong_mods) > 1 else "s",
+                )
+            elif len(wrong_mods) == 1:
                 builder.error("mod_crash", wrong_mods[0])
             elif len(wrong_mods) > 0 and len(wrong_mods) < 10:
                 builder.error("mods_crash", "; ".join(wrong_mods))
