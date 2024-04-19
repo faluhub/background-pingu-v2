@@ -111,12 +111,6 @@ In general, it's a good idea to watch top runs and top runners' streams to get a
 [Bastion practice map](<https://github.com/LlamaPag/bastion/releases/latest>)"""
         return await ctx.respond(text)
 
-    @commands.slash_command(name="fabricapi", description="Explains that Fabric API isn't legal.")
-    async def fabricapi(self, ctx: discord.ApplicationContext):
-        text = """⚠️ Fabric API is banned! __DO NOT USE IT!__ ⚠️ 
-Fabric API is a mod separate from fabric loader, none of the allowed mods require it, and as such it is not allowed. If you have a fabric-api jar in .minecraft/mods you can just delete it, otherwise you're already fine"""
-        return await ctx.respond(text)
-
     @commands.slash_command(name="1_16_1", description="Explains why using 1.16.1 is standard and recommended for Minecraft speedrunning.")
     async def one_sixteen_one(self, ctx: discord.ApplicationContext):
         text = "1.16.1 gives 4x more pearls and 3x more string from piglin barters on average compared to later versions. This, as well as not having piglin brutes, means that using 1.16.1 is standard and recommended for Minecraft speedrunning. You can play later versions if you wish (the category is 1.16+) but it will put you at a severe disadvantage. This only applies for RSG Any%, not SSG (which uses 1.16.5 for the current seed) or other category extensions."
@@ -193,7 +187,8 @@ If you want to change the values that the settings reset to, click the link abov
 If you don't want your settings to reset, remove StandardSettings from your mods folder"""
         return await ctx.respond(text)
 
-    '''@commands.slash_command(name="modpack_list", description="Gives a list of MCSR modpacks.")
+    # remove the spaces          (here) when uncommenting, also for `/modpack`
+    '''@commands.slash_command(name = "modpack_list", description="Gives a list of MCSR modpacks.")
     async def modpack_list(self, ctx: discord.ApplicationContext):
         text = """### Modpacks for [PrismLauncher](<https://prismlauncher.org/download/>) / [MultiMC](<https://multimc.org/>) / [ATLauncher](<https://atlauncher.com/>)
 Do `/modpack` for a tutorial on how to import them.
@@ -209,7 +204,7 @@ If you're wondering why your settings keep resetting, do `/standardsettings`.
   - Download: **[Windows](https://mods.tildejustin.dev/modpacks/v4/MCSRRanked-Windows-1.16.1-Pro.mrpack) | [macOS](https://mods.tildejustin.dev/modpacks/v4/MCSRRanked-OSX-1.16.1-Pro.mrpack) | [Linux](https://mods.tildejustin.dev/modpacks/v4/MCSRRanked-Linux-1.16.1-Pro.mrpack)**"""
         return await ctx.respond(text)
 
-    @commands.slash_command(name="modpack", description="Gives instructions for setting up an RSG modpack instance.")
+    @commands.slash_command(name = "modpack", description="Gives instructions for setting up an RSG modpack instance.")
     async def modpack(self, ctx: discord.ApplicationContext):
         text = """Download [**MultiMC**](<https://multimc.org/>), extract it and launch `MultiMC.exe`. Click `Add instance > Import from zip`. Copy the link below that corresponds to your operating system, and paste it into the text field below `Import from zip`:
 - Windows or Linux: <https://mods.tildejustin.dev/modpacks/v4/MCSR-1.16.1-Windows-RSG.mrpack>
@@ -279,6 +274,91 @@ Get AHK **version 1.1** here if you don't have it yet: <https://www.autohotkey.c
     @commands.slash_command(name="ram", description="Gives a guide to change the amount of allocated RAM on MultiMC/Prism.")
     async def ram(self, ctx: discord.ApplicationContext):
         text = "https://cdn.discordapp.com/attachments/433058639956410383/995651366280245328/unknown.png"
+        return await ctx.respond(text)
+
+    @commands.slash_command(name="bastions", description="Gives links to bastion routes.")
+    async def bastions(self, ctx: discord.ApplicationContext):
+        text = """[Introductory bastion routes](<https://www.youtube.com/playlist?list=PL7Q35RXRsOR-udeKzwlYGJd0ZrvGJ0fwu>)
+[Advanced routes](<https://bit.ly/2ZwM3lI>)"""
+        return await ctx.respond(text)
+
+    @commands.slash_command(name="crafting", description="Gives links to search crafting resources.s")
+    async def crafting(self, ctx: discord.ApplicationContext):
+        text = """[Overview of Language Crafting for Minecraft Speedruns](https://docs.google.com/document/d/1jSeciLoEgSwWWCdNk0dKignzxJskxJ5_zeCQmcdGmTg) *(contains: Vietnamese, Ukrainian, Korean, Bosnian, English)*
+[Search crafting languages comparison](<https://docs.google.com/spreadsheets/d/1NM5U84PjTBA6oMDSyFgveVVWcP7i0aCIFqvQCNUotYE/edit#gid=1472263979>)
+[Remapping keys explanation](<https://docs.google.com/document/d/1V2Uk4wDZknr6U9KbYJEc0JRYO7OWmhtmNIK0swTzXxs>)
+
+More search crafting languages:
+[Norwegian](<https://docs.google.com/document/u/0/d/1p3i64xH4C63d3QO7U6VXXe0JZIj-zHtrv1ZC_BKaCwk>), [Franggian](<https://docs.google.com/document/d/1_GvCg7kQP9Ls6yFX_b3eF4UqlPgSxbPjeQsWMr2QQGA>), [French Canadian](<https://docs.google.com/document/d/e/2PACX-1vRZ6v_jah6lNFUeT3ZOKlDhtooF8HZfJNS0KpeNXwHlFayjYcx_GTOIPSijOhm6BSLxPvCrZfRNq5qt/pub>), [Danish](<https://docs.google.com/spreadsheets/u/0/d/1btQ3Tx8gCvdUD_x71lEm0j7ZUE72GocsE0urh1xdIKU/htmlview#gid=0>), [Maltese](<https://docs.google.com/document/d/1Hm2BE0soChqjv499DElXYM_r30-m5nfr-TIaCWc3vTk>), [Pirate Speak](<https://docs.google.com/document/d/1PTwAu86MCue7KJah6QWNhSdE4pL7r-4cuuO6OdUhbS8>), [Vietnamese V2](<https://docs.google.com/document/d/1AKqzwW1km12fvKfx3niuORhD8RRncRU71pUBZA-apRA>)"""
+        return await ctx.respond(text)
+
+    @commands.slash_command(name="endfight", description="Gives a link to the end fight tutorial.")
+    async def endfight(self, ctx: discord.ApplicationContext):
+        text = "https://youtu.be/JrCZ6E0LKko"
+        return await ctx.respond(text)
+
+    @commands.slash_command(name="eyelineup", description="Gives a guide to lining up the crosshair on the ender eye for measuring.")
+    async def eyelineup(self, ctx: discord.ApplicationContext):
+        text = """The right edge of the crosshair should line up with the left edge of the eye's middle pixel, as shown in the image below[:](https://cdn.discordapp.com/attachments/433058639956410383/1122565681515352154/image.png)"""
+        return await ctx.respond(text)
+
+    @commands.slash_command(name="gamma", description="Gives a guide for increasing brightness past 100%.")
+    async def gamma(self, ctx: discord.ApplicationContext):
+        text = """If you're using the latest version of Sodium for 1.16.1, you can adjust the brightness level up to 500% in-game via `Options > Video Settings` in the title screen.
+Otherwise, open your `options.txt` file in your Minecraft directory and change the value next to `gamma` to `5.0`, or do `/setup` for a guide on setting up mods."""
+        return await ctx.respond(text)
+
+    @commands.slash_command(name="ghostbucket", description="Gives an explanation for ghost buckets.")
+    async def ghostbucket(self, ctx: discord.ApplicationContext):
+        text = "Ghost buckets occur if your crosshair moves from one block to another as you right click with a bucket. Keep your mouse still while you right click to prevent them from occurring."
+        return await ctx.respond(text)
+
+    @commands.slash_command(name="jultifaq", description="Gives a link to Julti FAQ document.")
+    async def jultifaq(self, ctx: discord.ApplicationContext):
+        text = "https://tinyurl.com/JultiFAQ"
+        return await ctx.respond(text)
+
+    @commands.slash_command(name="lazychunks", description="Gives an explanation of lazy chunks for pie-ray.")
+    async def lazychunks(self, ctx: discord.ApplicationContext):
+        text = """Spawners up to 3 chunks outside your render distance remain loaded and will still show up on the pie chart. This is why just dropping your render distance by 1 won't unload the spawner. You have to drop it by at least 4 to unload it.
+
+*Example: If the spawner loads in at 15 chunks, you should decrease your render distance to 11 (press Shift-F3-F four times), then increase it to 14 (press F3-F three times). Reopen the pie chart and the spawner should be gone.*"""
+        return await ctx.respond(text)
+
+    @commands.slash_command(name="mpk", description="Gives a link to MiniPracticeKit.")
+    async def mpk(self, ctx: discord.ApplicationContext):
+        text = """<https://github.com/Knawk/mc-MiniPracticeKit>
+https://discord.com/channels/83066801105145856/405839885509984256/1146302423095332915"""
+        return await ctx.respond(text)
+
+    @commands.slash_command(name="onecycle", description="Gives a link to a onecycle tutorial.")
+    async def onecycle(self, ctx: discord.ApplicationContext):
+        text = "https://youtu.be/JaVyuTyDxxs"
+        return await ctx.respond(text)
+
+    @commands.slash_command(name="portals", description="Gives a link to portals spreadsheet.")
+    async def portals(self, ctx: discord.ApplicationContext):
+        text = "https://bit.ly/portalspreadsheet"
+        return await ctx.respond(text)
+
+    @commands.slash_command(name="preemptive", description="Gives links to preemptive resources.")
+    async def preemptive(self, ctx: discord.ApplicationContext):
+        text = """Video explanation/tutorial by addlama: https://youtu.be/2dWq2wXy43M
+Detailed document by Mimi: <https://docs.google.com/document/d/1Xnmki5jOwuiwVnyv1b3VJLpiDWfNixgKW3zQowmpsYo/edit>"""
+        return await ctx.respond(text)
+
+    @commands.slash_command(name="resizemacro", description="Gives a link to resize macro.")
+    async def resizemacro(self, ctx: discord.ApplicationContext):
+        text = "https://discord.com/channels/83066801105145856/405839885509984256/1200806271230681178"
+        return await ctx.respond(text)
+
+    @commands.slash_command(name="zerocycle", description="Gives links to zero cycle resources.")
+    async def zerocycle(self, ctx: discord.ApplicationContext):
+        text = """[Zero Cycle Common Setups](https://youtu.be/ytXFMLdiOe8)
+[Zero practice maps + more videos](<https://web.archive.org/web/20230325094650/https://zerocycle.repl.co/>)
+Additionally. [practice setting up your inventory for zero cycle](https://github.com/Semperzz/Zero-Sorting-Practice>)
+
+[Zero Cycle music video by Dylqn & Fulham](<https://youtu.be/iuti2oacMNI>)"""
         return await ctx.respond(text)
 
     # @commands.slash_command(name="", description="")
