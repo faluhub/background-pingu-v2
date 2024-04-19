@@ -441,8 +441,13 @@ class Log:
     
     @cached_property
     def stacktrace(self) -> str:
-        ignored_pattern = r"(?s)---- Minecraft Crash Report ----.*?This is just a prompt for computer specs to be printed"
-        log = re.sub(ignored_pattern, "", self._content)
+        log = self._content
+        ignored_patterns = [
+            r"(?s)---- Minecraft Crash Report ----.*?This is just a prompt for computer specs to be printed",
+            r"(?s)WARNING: coremods are present:.*?Contact their authors BEFORE contacting forge"
+        ]
+        for pattern in ignored_patterns:
+            log = re.sub(pattern, "", log)
         
         crash_patterns = [
             r"---- Minecraft Crash Report ----.*A detailed walkthrough of the error",
