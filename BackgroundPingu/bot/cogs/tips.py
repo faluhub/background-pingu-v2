@@ -1,4 +1,4 @@
-import discord
+import discord, re
 from discord import commands
 from discord.ext.commands import Cog
 from BackgroundPingu.bot.main import BackgroundPingu
@@ -285,6 +285,34 @@ Get AHK **version 1.1** here if you don't have it yet: <https://www.autohotkey.c
     # async def (self, ctx: discord.ApplicationContext):
     #     text = ""
     #     return await ctx.respond(text)
+
+    @commands.slash_command(name="tags", description="Lists all possible tags.")
+    async def tags(self, ctx: discord.ApplicationContext):
+        with open("BackgroundPingu/bot/cogs/tips.py") as file:
+            text = file.read()
+        tags = re.findall(r"name=\"([^\"]*)\"", text)
+
+        # Separate tags into groups based on first letter
+        groups = {}
+        for tag in tags:
+            if len(tag) == 0: continue
+            first_letter = tag[0].upper() if tag[0].isalpha() else "#"
+            groups.setdefault(first_letter, []).append(tag)
+
+        # Sort each group
+        for group in groups.values():
+            group.sort()
+
+        # Format and print the groups
+        text = ""
+        for letter, group in sorted(groups.items()):
+            if letter.isalpha():
+                text += f"[{letter}] {', '.join(group)}\n"
+            else:
+                text += f"[#] {', '.join(group)}\n"
+
+        text = f"```{text}```"
+        return await ctx.respond(text)
 
 def setup(bot: BackgroundPingu):
     bot.add_cog(Tips(bot))
