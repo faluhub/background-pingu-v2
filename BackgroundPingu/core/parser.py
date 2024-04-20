@@ -541,7 +541,6 @@ class Log:
                 "antiresourcereload",
                 "fast-reset",
                 "atum",
-                "lazystronghold",
             ]
             if not self.is_not_wall_log:
                 mods += [
