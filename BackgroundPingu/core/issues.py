@@ -1055,7 +1055,7 @@ class IssueChecker:
                         total += value
                 if total >= 2: builder.error("entity_culling")
             
-            if any(self.log.has_content(crash) for crash in [
+            if not found_crash_cause and any(self.log.has_content(crash) for crash in [
                 "Process exited with code ",
                 "Process crashed with exitcode ",
                 "Process crashed with exit code ",

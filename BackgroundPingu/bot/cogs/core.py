@@ -40,7 +40,7 @@ class Core(Cog):
                 found_result = True
             if found_result: break
         if not found_result and include_content:
-            results = issues.IssueChecker(self.bot, parser.Log(msg.content), "message").check()
+            results = issues.IssueChecker(self.bot, parser.Log(msg.content), "message", msg.guild.id).check()
             if results.has_values():
                 messages = results.build()
                 result["embed"] = await self.build_embed(results, messages, msg)
