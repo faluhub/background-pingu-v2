@@ -709,7 +709,12 @@ class IssueChecker:
         match = re.search(pattern, self.log._content)
         if not match is None:
             switch_java = False
-            if self.log.is_newer_than("1.17"):
+            if self.log.is_newer_than("1.20.5"):
+                try:
+                    current_version = int(match.group(1))
+                    switch_java = (current_version < 21)
+                except: switch_java = True
+            elif self.log.is_newer_than("1.17"):
                 try:
                     current_version = int(match.group(1))
                     switch_java = (current_version < 17)
@@ -723,8 +728,8 @@ class IssueChecker:
                     current_version,
                     compatible_version,
                     compatible_version,
-                    " (download the .msi file)" if self.log.operating_system == OperatingSystem.WINDOWS else
-                    " (download the .pkg file)" if self.log.operating_system == OperatingSystem.MACOS else
+                    " (download the `.msi` file)" if self.log.operating_system == OperatingSystem.WINDOWS else
+                    " (download the `.pkg` file)" if self.log.operating_system == OperatingSystem.MACOS else
                     "",
                     compatible_version
                 )
