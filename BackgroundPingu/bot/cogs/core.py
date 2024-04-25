@@ -28,7 +28,7 @@ class Core(Cog):
         # logs.append(("message", parser.Log(msg.content)))
         for link, log in logs:
             try:
-                results = issues.IssueChecker(self.bot, log, link, msg.guild.id).check()
+                results = issues.IssueChecker(self.bot, log, link, msg.guild.id if not msg.guild is None else None).check()
                 if results.has_values():
                     messages = results.build()
                     result["embed"] = await self.build_embed(results, messages, msg)
@@ -40,7 +40,7 @@ class Core(Cog):
                 found_result = True
             if found_result: break
         if not found_result and include_content:
-            results = issues.IssueChecker(self.bot, parser.Log(msg.content), "message", msg.guild.id).check()
+            results = issues.IssueChecker(self.bot, parser.Log(msg.content), "message", msg.guild.id if not msg.guild is None else None).check()
             if results.has_values():
                 messages = results.build()
                 result["embed"] = await self.build_embed(results, messages, msg)
