@@ -451,6 +451,7 @@ class Log:
         
         crash_patterns = [
             r"---- Minecraft Crash Report ----.*A detailed walkthrough of the error",
+            r"-- Crash --.*-- Mods --",
             r"Failed to start Minecraft:.*",
             r"Unable to launch\n.*",
             r"Exception caught from launcher\n.*",
