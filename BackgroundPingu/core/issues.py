@@ -535,11 +535,13 @@ class IssueChecker:
         
         if not self.log.max_allocated is None:
             min_limit_0, min_limit_1, min_limit_2 = self.log.recommended_min_allocated
-            if (self.log.max_allocated < min_limit_1 and self.log.has_content(" -805306369")) or self.log.has_content("java.lang.OutOfMemoryError") or self.log.has_content("GL error GL_OUT_OF_MEMORY"):
+            if self.log.has_content("java.lang.OutOfMemoryError") or self.log.has_content("GL error GL_OUT_OF_MEMORY"):
                 builder.error("too_little_ram_crash").add(*self.log.ram_guide)
                 found_crash_cause = True
+            elif self.log.max_allocated < min_limit_1 and self.log.has_content(" -805306369") and self.log.stacktrace is None:
+                builder.error("too_little_ram_crash", experimental=True).add(*self.log.ram_guide)
             elif self.log.max_allocated < min_limit_0 and self.log.has_content(" -805306369") and self.log.stacktrace is None:
-                builder.note("too_little_ram_crash").add(*self.log.ram_guide)
+                builder.note("too_little_ram_crash", experimental=True).add(*self.log.ram_guide)
             elif self.log.max_allocated < min_limit_2:
                 builder.warning("too_little_ram").add(*self.log.ram_guide)
             elif self.log.max_allocated < min_limit_1:
