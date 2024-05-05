@@ -577,7 +577,7 @@ class IssueChecker:
         
         if self.log.has_pattern(r"  \[(ig[0-9]+icd[0-9]+\.dll)[+ ](0x[0-9a-f]+)\]"):
             if self.log.has_content("speedrunigt") or self.log.has_mod("mcsrranked"):
-                builder.error("eav_crash").add("eav_crash_srigt")
+                builder.error("eav_crash", experimental=True).add("eav_crash_srigt")
             else:
                 builder.error("gl_pixel_format")
             if self.log.stacktrace is None: found_crash_cause = True
@@ -589,7 +589,7 @@ class IssueChecker:
             found_crash_cause = True
         
         elif not found_crash_cause and self.log.has_content("A fatal error has been detected by the Java Runtime Environment") or self.log.has_content("EXCEPTION_ACCESS_VIOLATION"):
-            builder.error("eav_crash")
+            builder.error("eav_crash", experimental=True)
             if self.log.has_pattern(r"  \[ntdll\.dll\+(0x[0-9a-f]+)\]"):
                 builder.add("eav_crash_1", bold=True)
                 builder.add("eav_crash_1.1", bold=True)
@@ -919,6 +919,7 @@ class IssueChecker:
             "StarLightInterface"
         ]):
             builder.error("starlight_crash")
+            found_crash_cause = True
         
         if not found_crash_cause:
             total = 0
@@ -938,18 +939,27 @@ class IssueChecker:
         if (not found_crash_cause and self.log.stacktrace is None and self.log.exitcode == -1073741819
             or self.log.has_content("The instruction at 0x%p referenced memory at 0x%p. The memory could not be %s.")
         ):
-            builder.error("exitcode", "-1073741819")
+            builder.error("exitcode", "-1073741819", experimental=True)
             builder.add("exitcode_1073741819_1").add("exitcode_1073741819_2")
             if self.log._content.count("\n") < 500:
                 if self.log.has_mod("sodium") and not self.log.has_mod("sodiummac"): builder.add(f"exitcode_1073741819_3")
                 builder.add(f"exitcode_1073741819_4")
             builder.add("exitcode_1073741819_5")
+            builder.add("eav_crash_1").add("eav_crash_1.1").add("eav_crash_1.2").add("eav_crash_1.3")
 
         if not found_crash_cause and self.log.stacktrace is None and self.log.exitcode == -1073740791:
-            builder.error("exitcode", "-1073740791")
+            builder.error("exitcode", "-1073740791", experimental=True)
             builder.add("exitcode_1073741819_2")
             if self.log._content.count("\n") < 500: builder.add("exitcode_1073741819_4")
             builder.add("exitcode_1073741819_5")
+            builder.add("eav_crash_1").add("eav_crash_1.1").add("eav_crash_1.2").add("eav_crash_1.3")
+
+        if not found_crash_cause and self.log.stacktrace is None and self.log.exitcode == -1073740771:
+            builder.error("exitcode", "-1073740771", experimental=True)
+            builder.add("exitcode_1073741819_2")
+            if self.log._content.count("\n") < 500: builder.add("exitcode_1073741819_4")
+            builder.add("exitcode_1073741819_5")
+            builder.add("eav_crash_1").add("eav_crash_1.1").add("eav_crash_1.2").add("eav_crash_1.3")
         
         if not self.log.minecraft_folder is None:
             if not found_crash_cause and "OneDrive" in self.log.minecraft_folder:
