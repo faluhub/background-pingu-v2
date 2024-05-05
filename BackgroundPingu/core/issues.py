@@ -278,8 +278,10 @@ class IssueChecker:
                 builder.warning(
                     "missing_and_outdated_mods",
                     len(missing_mods),
+                    "s" if len(missing_mods) > 1 else "",
                     "`, `".join([mod[0] for mod in missing_mods]),
                     len(outdated_mods),
+                    "s" if len(outdated_mods) > 1 else "",
                     "`, `".join([mod for mod in outdated_mods.keys()]),
                 ).add("update_mods").add("modcheck_v1_warning")
         else:

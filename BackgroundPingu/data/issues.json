@@ -145,7 +145,7 @@
     "top_info.uploaded_log": "The log has been uploaded to {}.",
     "top_info.uploaded_log_2": "The log has been uploaded to {}. (Note that `mclo.gs` censors sensitive information)",
     "warning.builtin_lib_recommendation": "You seem to be using your system's `{}`. This can cause the instance to crash if not properly setup; make sure this isn't the cause of it.",
-    "warning.missing_and_outdated_mods": "You are missing `{}` mods (`{}`) and are using `{}` outdated mods (`{}`)!",
+    "warning.missing_and_outdated_mods": "You are missing `{}` mod{} (`{}`) and are using `{}` outdated mod{} (`{}`)!",
     "warning.missing_mod": "You seem to be missing the mod `{}`. You can download it [**here**]({}).",
     "warning.missing_mods": "You seem to be missing {} recommended mods (`{}`).",
     "warning.no_mappings": "Your instance seems to be missing mappings. You might want to check the `Edit{} > Version` tab.",
