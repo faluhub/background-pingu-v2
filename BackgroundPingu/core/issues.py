@@ -559,7 +559,13 @@ class IssueChecker:
         elif self.log.has_content("OutOfMemoryError") or self.log.has_content("GL error GL_OUT_OF_MEMORY"):
             builder.error("too_little_ram_crash").add(*self.log.ram_guide)
             found_crash_cause = True
-        
+
+        if self.log.has_content("There is not enough space on the disk"):
+            builder.error("out_of_disk_space")
+            found_crash_cause = True
+        elif not found_crash_cause and self.log.has_content("Failed to store chunk"):
+            builder.note("out_of_disk_space", experimental=True)
+
         if self.log.has_mod("phosphor") and not self.log.minecraft_version == "1.12.2":
             builder.note("starlight_better")
             metadata = self.get_mod_metadata("starlight")
@@ -590,7 +596,7 @@ class IssueChecker:
             builder.error("mods_crash", "; ".join(wrong_mods))
             found_crash_cause = True
         
-        elif not found_crash_cause and self.log.has_content("A fatal error has been detected by the Java Runtime Environment") or self.log.has_content("EXCEPTION_ACCESS_VIOLATION"):
+        elif not found_crash_cause and (self.log.has_content("A fatal error has been detected by the Java Runtime Environment") or self.log.has_content("EXCEPTION_ACCESS_VIOLATION")):
             builder.error("eav_crash", experimental=True)
             if self.log.has_pattern(r"  \[ntdll\.dll\+(0x[0-9a-f]+)\]"):
                 builder.add("eav_crash_1", bold=True)
@@ -869,12 +875,6 @@ class IssueChecker:
         if self.log.has_content("java.lang.ClassNotFoundException: dev.tildejustin.stateoutput.State"):
             builder.error("old_wp_with_stateoutput")
             found_crash_cause = True
-
-        if self.log.has_content("There is not enough space on the disk"):
-            builder.error("out_of_disk_space")
-            found_crash_cause = True
-        elif not found_crash_cause and self.log.has_content("Failed to store chunk"):
-            builder.note("out_of_disk_space")
         
         if not found_crash_cause and self.log.has_content("java.lang.StackOverflowError") and self.log.has_content("$atum$createDesiredWorld"):
             builder.error("stack_overflow_crash")
