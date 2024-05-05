@@ -451,6 +451,7 @@ class Log:
         
         crash_patterns = [
             r"---- Minecraft Crash Report ----.*A detailed walkthrough of the error",
+            r"-- Crash --.*-- Mods --",
             r"Failed to start Minecraft:.*",
             r"Unable to launch\n.*",
             r"Exception caught from launcher\n.*",
@@ -475,7 +476,7 @@ class Log:
             try: return int(match.group(2))
             except ValueError: pass
         
-        for exit_code in [-1073741819, -1073740791, -805306369]:
+        for exit_code in [-1073741819, -1073740791, -805306369, -1073740771]:
             if self.has_content(f" {exit_code}"): return exit_code
 
         return None

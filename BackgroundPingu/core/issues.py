@@ -278,8 +278,10 @@ class IssueChecker:
                 builder.warning(
                     "missing_and_outdated_mods",
                     len(missing_mods),
+                    "s" if len(missing_mods) > 1 else "",
                     "`, `".join([mod[0] for mod in missing_mods]),
                     len(outdated_mods),
+                    "s" if len(outdated_mods) > 1 else "",
                     "`, `".join([mod for mod in outdated_mods.keys()]),
                 ).add("update_mods").add("modcheck_v1_warning")
         else:
@@ -535,11 +537,13 @@ class IssueChecker:
         
         if not self.log.max_allocated is None:
             min_limit_0, min_limit_1, min_limit_2 = self.log.recommended_min_allocated
-            if (self.log.max_allocated < min_limit_1 and self.log.has_content(" -805306369")) or self.log.has_content("java.lang.OutOfMemoryError") or self.log.has_content("GL error GL_OUT_OF_MEMORY"):
+            if self.log.has_content("java.lang.OutOfMemoryError") or self.log.has_content("GL error GL_OUT_OF_MEMORY"):
                 builder.error("too_little_ram_crash").add(*self.log.ram_guide)
                 found_crash_cause = True
+            elif self.log.max_allocated < min_limit_1 and self.log.has_content(" -805306369") and self.log.stacktrace is None:
+                builder.error("too_little_ram_crash", experimental=True).add(*self.log.ram_guide)
             elif self.log.max_allocated < min_limit_0 and self.log.has_content(" -805306369") and self.log.stacktrace is None:
-                builder.note("too_little_ram_crash").add(*self.log.ram_guide)
+                builder.note("too_little_ram_crash", experimental=True).add(*self.log.ram_guide)
             elif self.log.max_allocated < min_limit_2:
                 builder.warning("too_little_ram").add(*self.log.ram_guide)
             elif self.log.max_allocated < min_limit_1:
@@ -555,7 +559,20 @@ class IssueChecker:
         elif self.log.has_content("OutOfMemoryError") or self.log.has_content("GL error GL_OUT_OF_MEMORY"):
             builder.error("too_little_ram_crash").add(*self.log.ram_guide)
             found_crash_cause = True
+
+        if self.log.has_content("There is not enough space on the disk"):
+            builder.error("out_of_disk_space")
+            found_crash_cause = True
+        elif not found_crash_cause and self.log.has_content("Failed to store chunk"):
+            builder.note("out_of_disk_space", experimental=True)
         
+        if any(self.log.has_pattern(out_of_memory_on_pc) for out_of_memory_on_pc in [
+            r"There is insufficient memory for the Java Runtime Environment to continue.",
+            r"memory allocation (.*) failed",
+        ]):
+            builder.error("out_of_memory_pc", experimental=True)
+            found_crash_cause = True
+
         if self.log.has_mod("phosphor") and not self.log.minecraft_version == "1.12.2":
             builder.note("starlight_better")
             metadata = self.get_mod_metadata("starlight")
@@ -575,7 +592,7 @@ class IssueChecker:
         
         if self.log.has_pattern(r"  \[(ig[0-9]+icd[0-9]+\.dll)[+ ](0x[0-9a-f]+)\]"):
             if self.log.has_content("speedrunigt") or self.log.has_mod("mcsrranked"):
-                builder.error("eav_crash").add("eav_crash_srigt")
+                builder.error("eav_crash", experimental=True).add("eav_crash_srigt")
             else:
                 builder.error("gl_pixel_format")
             if self.log.stacktrace is None: found_crash_cause = True
@@ -586,8 +603,8 @@ class IssueChecker:
             builder.error("mods_crash", "; ".join(wrong_mods))
             found_crash_cause = True
         
-        elif not found_crash_cause and self.log.has_content("A fatal error has been detected by the Java Runtime Environment") or self.log.has_content("EXCEPTION_ACCESS_VIOLATION"):
-            builder.error("eav_crash")
+        elif not found_crash_cause and (self.log.has_content("A fatal error has been detected by the Java Runtime Environment") or self.log.has_content("EXCEPTION_ACCESS_VIOLATION")):
+            builder.error("eav_crash", experimental=True)
             if self.log.has_pattern(r"  \[ntdll\.dll\+(0x[0-9a-f]+)\]"):
                 builder.add("eav_crash_1", bold=True)
                 builder.add("eav_crash_1.1", bold=True)
@@ -865,12 +882,6 @@ class IssueChecker:
         if self.log.has_content("java.lang.ClassNotFoundException: dev.tildejustin.stateoutput.State"):
             builder.error("old_wp_with_stateoutput")
             found_crash_cause = True
-
-        if self.log.has_content("There is not enough space on the disk"):
-            builder.error("out_of_disk_space")
-            found_crash_cause = True
-        elif not found_crash_cause and self.log.has_content("Failed to store chunk"):
-            builder.note("out_of_disk_space")
         
         if not found_crash_cause and self.log.has_content("java.lang.StackOverflowError") and self.log.has_content("$atum$createDesiredWorld"):
             builder.error("stack_overflow_crash")
@@ -917,6 +928,7 @@ class IssueChecker:
             "StarLightInterface"
         ]):
             builder.error("starlight_crash")
+            found_crash_cause = True
         
         if not found_crash_cause:
             total = 0
@@ -936,18 +948,27 @@ class IssueChecker:
         if (not found_crash_cause and self.log.stacktrace is None and self.log.exitcode == -1073741819
             or self.log.has_content("The instruction at 0x%p referenced memory at 0x%p. The memory could not be %s.")
         ):
-            builder.error("exitcode", "-1073741819")
+            builder.error("exitcode", "-1073741819", experimental=True)
             builder.add("exitcode_1073741819_1").add("exitcode_1073741819_2")
             if self.log._content.count("\n") < 500:
                 if self.log.has_mod("sodium") and not self.log.has_mod("sodiummac"): builder.add(f"exitcode_1073741819_3")
                 builder.add(f"exitcode_1073741819_4")
             builder.add("exitcode_1073741819_5")
+            builder.add("eav_crash_1").add("eav_crash_1.1").add("eav_crash_1.2").add("eav_crash_1.3")
 
         if not found_crash_cause and self.log.stacktrace is None and self.log.exitcode == -1073740791:
-            builder.error("exitcode", "-1073740791")
+            builder.error("exitcode", "-1073740791", experimental=True)
             builder.add("exitcode_1073741819_2")
             if self.log._content.count("\n") < 500: builder.add("exitcode_1073741819_4")
             builder.add("exitcode_1073741819_5")
+            builder.add("eav_crash_1").add("eav_crash_1.1").add("eav_crash_1.2").add("eav_crash_1.3")
+
+        if not found_crash_cause and self.log.stacktrace is None and self.log.exitcode == -1073740771:
+            builder.error("exitcode", "-1073740771", experimental=True)
+            builder.add("exitcode_1073741819_2")
+            if self.log._content.count("\n") < 500: builder.add("exitcode_1073741819_4")
+            builder.add("exitcode_1073741819_5")
+            builder.add("eav_crash_1").add("eav_crash_1.1").add("eav_crash_1.2").add("eav_crash_1.3")
         
         if not self.log.minecraft_folder is None:
             if not found_crash_cause and "OneDrive" in self.log.minecraft_folder:

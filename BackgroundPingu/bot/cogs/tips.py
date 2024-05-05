@@ -101,14 +101,7 @@ In general, it's a good idea to watch top runs and top runners' streams to get a
 
     @commands.slash_command(name="setup", description="Gives a link to a tutorial to setup Minecraft Speedrunning.")
     async def setup(self, ctx: discord.ApplicationContext):
-        text = """[Setup video tutorial](https://youtu.be/VL8Syekw4Q0)
-**⚠️Follow these __updated__ links instead of the ones in the video description!!!⚠️**
-[Java JDK latest version](<https://adoptium.net/temurin/releases/?os=windows>), get JDK .msi
-[MultiMC Launcher](<https://multimc.org/#Download>) 
-[ModCheck mod downloader](<https://github.com/tildejustin/modcheck/releases/latest>), use 'Select All Recommended' in the program
-[Portal Practice Map](<https://github.com/Semperzz/Portal-Practice/releases/latest>) 
-[Onecycle / end practice map](<https://github.com/ryguy2k4/ryguy2k4endpractice/releases/latest>) 
-[Bastion practice map](<https://github.com/LlamaPag/bastion/releases/latest>)"""
+        text = """https://youtu.be/VL8Syekw4Q0"""
         return await ctx.respond(text)
 
     @commands.slash_command(name="1_16_1", description="Explains why using 1.16.1 is standard and recommended for Minecraft speedrunning.")
