@@ -567,7 +567,7 @@ class IssueChecker:
             builder.note("out_of_disk_space", experimental=True)
         
         if any(self.log.has_pattern(out_of_memory_on_pc) for out_of_memory_on_pc in [
-            r"There is insufficient memory for the Java Runtime Environment to continue.",
+            r"There is insufficient memory for the Java Runtime Environment to continue",
             r"memory allocation (.*) failed",
         ]):
             builder.error("out_of_memory_pc", experimental=True)
@@ -603,7 +603,10 @@ class IssueChecker:
             builder.error("mods_crash", "; ".join(wrong_mods))
             found_crash_cause = True
         
-        elif not found_crash_cause and (self.log.has_content("A fatal error has been detected by the Java Runtime Environment") or self.log.has_content("EXCEPTION_ACCESS_VIOLATION")):
+        elif (not found_crash_cause
+            and (self.log.has_content("A fatal error has been detected by the Java Runtime Environment") or self.log.has_content("EXCEPTION_ACCESS_VIOLATION"))
+            and self.log.stacktrace is None
+        ):
             builder.error("eav_crash", experimental=True)
             if self.log.has_pattern(r"  \[ntdll\.dll\+(0x[0-9a-f]+)\]"):
                 builder.add("eav_crash_1", bold=True)
@@ -845,9 +848,9 @@ class IssueChecker:
                 if is_mcsr_log:
                     builder.error("use_sodium_not_optifine_mcsr").add("update_mods").add("modcheck_v1_warning")
                 elif self.log.mod_loader == ModLoader.FORGE:
-                    builder.error("use_sodium_not_optifine", "Embeddium").add("embeddium_download")
+                    builder.error("use_sodium_not_optifine", "Embeddium").add("optifine_alternatives")
                 else:
-                    builder.error("use_sodium_not_optifine", "Sodium").add("sodium_download")
+                    builder.error("use_sodium_not_optifine", "Sodium").add("optifine_alternatives")
         
         if self.log.has_mod("esimod"):
             for incompatible_mod in ["serverSideRNG", "SpeedRunIGT", "WorldPreview", "mcsrranked"]:
