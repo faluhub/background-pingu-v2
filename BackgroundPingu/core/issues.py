@@ -565,6 +565,13 @@ class IssueChecker:
             found_crash_cause = True
         elif not found_crash_cause and self.log.has_content("Failed to store chunk"):
             builder.note("out_of_disk_space", experimental=True)
+        
+        if any(self.log.has_pattern(out_of_memory_on_pc) for out_of_memory_on_pc in [
+            r"There is insufficient memory for the Java Runtime Environment to continue.",
+            r"memory allocation (.*) failed",
+        ]):
+            builder.error("out_of_memory_pc", experimental=True)
+            found_crash_cause = True
 
         if self.log.has_mod("phosphor") and not self.log.minecraft_version == "1.12.2":
             builder.note("starlight_better")
