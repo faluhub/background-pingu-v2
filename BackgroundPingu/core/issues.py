@@ -365,9 +365,13 @@ class IssueChecker:
                 if self.log.is_prism: builder.add("prism_java_compat_check")
                 found_crash_cause = True
         
-        if not found_crash_cause and self.log.has_pattern(r"require the use of Java 1(7|6)"):
-            builder.error("need_java_17_mc").add("java_update_guide")
-            found_crash_cause = True
+        if not found_crash_cause:
+            if self.log.has_pattern(r"require the use of Java 1(7|6)"):
+                builder.error("need_new_java_mc", 17).add("java_update_guide")
+                found_crash_cause = True
+            if self.log.is_newer_than("1.20.5") and self.log.major_java_version < 21:
+                builder.error("need_new_java_mc", 21).add("java_update_guide")
+                found_crash_cause = True
         
         if not found_crash_cause and len(wrong_not_needed_mods) == 0:
             needed_java_version = None
