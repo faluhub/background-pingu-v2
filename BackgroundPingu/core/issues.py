@@ -149,6 +149,8 @@ class IssueChecker:
             "lazydfu",
             "dynamicfps",
             "voyager",
+            "platifonia",
+            "retino",
         ]
     
     def get_mod_metadata(self, mod_filename: str) -> dict:
