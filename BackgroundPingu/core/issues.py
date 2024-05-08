@@ -259,6 +259,7 @@ class IssueChecker:
                 if not self.log.has_mod(recommended_mod):
                     metadata = self.get_mod_metadata(recommended_mod)
                     latest_version = self.get_latest_version(metadata)
+                    if latest_version is None: continue
                     missing_mods.append([recommended_mod, latest_version["page"]])
         
         if len(outdated_mods) + len(missing_mods) > 5:
@@ -1009,7 +1010,7 @@ class IssueChecker:
             elif self.log.has_mod("beachfilter"):
                 builder.error("old_mod_crash", "beachfilter", "https://github.com/DuncanRuns/BeachFilter-Mod/releases/latest/")
                 found_crash_cause = True
-            else:
+            elif self.log.minecraft_version == "1.16.1":
                 builder.error("downgrade_atum", experimental=True)
 
         if not found_crash_cause:

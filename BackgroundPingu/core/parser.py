@@ -515,16 +515,22 @@ class Log:
     
     @cached_property
     def recommended_mods(self) -> list[str]:
-        if self.minecraft_version != "1.16.1": return []
-        
-        mods = [
-            "sodium",
-            "lithium",
-            "starlight",
-        ]
+        mods = []
 
-        if self.launcher != "Official Launcher":
+        if not self.is_newer_than("1.15"): return mods
+        
+        if self.operating_system == OperatingSystem.MACOS and self.minecraft_version == "1.16.1":
+            mods.append("sodiummac")
+        else:
+            mods.append("sodium")
+        mods.append("lithium")
+        if not self.is_newer_than("1.20"): mods.append("starlight")
+
+        if self.launcher != "Official Launcher" and not self.is_newer_than("1.17"):
             mods.append("voyager")
+        
+        if self.is_newer_than("1.17"):
+            mods.append("planifolia")
 
         if self.is_ssg_log:
             mods += [
