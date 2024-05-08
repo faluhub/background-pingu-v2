@@ -955,26 +955,26 @@ class IssueChecker:
             or self.log.has_content("The instruction at 0x%p referenced memory at 0x%p. The memory could not be %s.")
         ):
             builder.error("exitcode", "-1073741819", experimental=True)
-            builder.add("exitcode_1073741819_1").add("exitcode_1073741819_2")
+            builder.add("eav_crash_1").add("eav_crash_1.1").add("eav_crash_1.2").add("eav_crash_1.3")
+            builder.add("exitcode_1073741819_2")
             if self.log._content.count("\n") < 500:
                 if self.log.has_mod("sodium") and not self.log.has_mod("sodiummac"): builder.add(f"exitcode_1073741819_3")
                 builder.add(f"exitcode_1073741819_4")
-            builder.add("exitcode_1073741819_5")
-            builder.add("eav_crash_1").add("eav_crash_1.1").add("eav_crash_1.2").add("eav_crash_1.3")
+            builder.add("exitcode_1073741819_5").add("exitcode_1073741819_1")
 
         if not found_crash_cause and self.log.stacktrace is None and self.log.exitcode == -1073740791:
             builder.error("exitcode", "-1073740791", experimental=True)
+            builder.add("eav_crash_1").add("eav_crash_1.1").add("eav_crash_1.2").add("eav_crash_1.3")
             builder.add("exitcode_1073741819_2")
             if self.log._content.count("\n") < 500: builder.add("exitcode_1073741819_4")
             builder.add("exitcode_1073741819_5")
-            builder.add("eav_crash_1").add("eav_crash_1.1").add("eav_crash_1.2").add("eav_crash_1.3")
 
         if not found_crash_cause and self.log.stacktrace is None and self.log.exitcode == -1073740771:
             builder.error("exitcode", "-1073740771", experimental=True)
+            builder.add("eav_crash_1").add("eav_crash_1.1").add("eav_crash_1.2").add("eav_crash_1.3")
             builder.add("exitcode_1073741819_2")
             if self.log._content.count("\n") < 500: builder.add("exitcode_1073741819_4")
             builder.add("exitcode_1073741819_5")
-            builder.add("eav_crash_1").add("eav_crash_1.1").add("eav_crash_1.2").add("eav_crash_1.3")
         
         if not self.log.minecraft_folder is None:
             if not found_crash_cause and "OneDrive" in self.log.minecraft_folder:
