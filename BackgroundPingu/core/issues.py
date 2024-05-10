@@ -149,6 +149,8 @@ class IssueChecker:
             "lazydfu",
             "dynamicfps",
             "voyager",
+            "platifonia",
+            "retino",
         ]
     
     def get_mod_metadata(self, mod_filename: str) -> dict:
@@ -259,6 +261,7 @@ class IssueChecker:
                 if not self.log.has_mod(recommended_mod):
                     metadata = self.get_mod_metadata(recommended_mod)
                     latest_version = self.get_latest_version(metadata)
+                    if latest_version is None: continue
                     missing_mods.append([recommended_mod, latest_version["page"]])
         
         if len(outdated_mods) + len(missing_mods) > 5:
@@ -362,9 +365,13 @@ class IssueChecker:
                 if self.log.is_prism: builder.add("prism_java_compat_check")
                 found_crash_cause = True
         
-        if not found_crash_cause and self.log.has_pattern(r"require the use of Java 1(7|6)"):
-            builder.error("need_java_17_mc").add("java_update_guide")
-            found_crash_cause = True
+        if not found_crash_cause:
+            if self.log.has_pattern(r"require the use of Java 1(7|6)"):
+                builder.error("need_new_java_mc", 17).add("java_update_guide")
+                found_crash_cause = True
+            if self.log.is_newer_than("1.20.5") and self.log.major_java_version < 21:
+                builder.error("need_new_java_mc", 21).add("java_update_guide")
+                found_crash_cause = True
         
         if not found_crash_cause and len(wrong_not_needed_mods) == 0:
             needed_java_version = None
@@ -567,7 +574,7 @@ class IssueChecker:
             builder.note("out_of_disk_space", experimental=True)
         
         if any(self.log.has_pattern(out_of_memory_on_pc) for out_of_memory_on_pc in [
-            r"There is insufficient memory for the Java Runtime Environment to continue.",
+            r"There is insufficient memory for the Java Runtime Environment to continue",
             r"memory allocation (.*) failed",
         ]):
             builder.error("out_of_memory_pc", experimental=True)
@@ -603,7 +610,10 @@ class IssueChecker:
             builder.error("mods_crash", "; ".join(wrong_mods))
             found_crash_cause = True
         
-        elif not found_crash_cause and (self.log.has_content("A fatal error has been detected by the Java Runtime Environment") or self.log.has_content("EXCEPTION_ACCESS_VIOLATION")):
+        elif (not found_crash_cause
+            and (self.log.has_content("A fatal error has been detected by the Java Runtime Environment") or self.log.has_content("EXCEPTION_ACCESS_VIOLATION"))
+            and self.log.stacktrace is None
+        ):
             builder.error("eav_crash", experimental=True)
             if self.log.has_pattern(r"  \[ntdll\.dll\+(0x[0-9a-f]+)\]"):
                 builder.add("eav_crash_1", bold=True)
@@ -845,9 +855,9 @@ class IssueChecker:
                 if is_mcsr_log:
                     builder.error("use_sodium_not_optifine_mcsr").add("update_mods").add("modcheck_v1_warning")
                 elif self.log.mod_loader == ModLoader.FORGE:
-                    builder.error("use_sodium_not_optifine", "Embeddium").add("embeddium_download")
+                    builder.error("use_sodium_not_optifine", "Embeddium").add("optifine_alternatives")
                 else:
-                    builder.error("use_sodium_not_optifine", "Sodium").add("sodium_download")
+                    builder.error("use_sodium_not_optifine", "Sodium").add("optifine_alternatives")
         
         if self.log.has_mod("esimod"):
             for incompatible_mod in ["serverSideRNG", "SpeedRunIGT", "WorldPreview", "mcsrranked"]:
@@ -949,26 +959,26 @@ class IssueChecker:
             or self.log.has_content("The instruction at 0x%p referenced memory at 0x%p. The memory could not be %s.")
         ):
             builder.error("exitcode", "-1073741819", experimental=True)
-            builder.add("exitcode_1073741819_1").add("exitcode_1073741819_2")
+            builder.add("eav_crash_1").add("eav_crash_1.1").add("eav_crash_1.2").add("eav_crash_1.3")
+            builder.add("exitcode_1073741819_2")
             if self.log._content.count("\n") < 500:
                 if self.log.has_mod("sodium") and not self.log.has_mod("sodiummac"): builder.add(f"exitcode_1073741819_3")
                 builder.add(f"exitcode_1073741819_4")
-            builder.add("exitcode_1073741819_5")
-            builder.add("eav_crash_1").add("eav_crash_1.1").add("eav_crash_1.2").add("eav_crash_1.3")
+            builder.add("exitcode_1073741819_5").add("exitcode_1073741819_1")
 
         if not found_crash_cause and self.log.stacktrace is None and self.log.exitcode == -1073740791:
             builder.error("exitcode", "-1073740791", experimental=True)
+            builder.add("eav_crash_1").add("eav_crash_1.1").add("eav_crash_1.2").add("eav_crash_1.3")
             builder.add("exitcode_1073741819_2")
             if self.log._content.count("\n") < 500: builder.add("exitcode_1073741819_4")
             builder.add("exitcode_1073741819_5")
-            builder.add("eav_crash_1").add("eav_crash_1.1").add("eav_crash_1.2").add("eav_crash_1.3")
 
         if not found_crash_cause and self.log.stacktrace is None and self.log.exitcode == -1073740771:
             builder.error("exitcode", "-1073740771", experimental=True)
+            builder.add("eav_crash_1").add("eav_crash_1.1").add("eav_crash_1.2").add("eav_crash_1.3")
             builder.add("exitcode_1073741819_2")
             if self.log._content.count("\n") < 500: builder.add("exitcode_1073741819_4")
             builder.add("exitcode_1073741819_5")
-            builder.add("eav_crash_1").add("eav_crash_1.1").add("eav_crash_1.2").add("eav_crash_1.3")
         
         if not self.log.minecraft_folder is None:
             if not found_crash_cause and "OneDrive" in self.log.minecraft_folder:
@@ -1006,7 +1016,7 @@ class IssueChecker:
             elif self.log.has_mod("beachfilter"):
                 builder.error("old_mod_crash", "beachfilter", "https://github.com/DuncanRuns/BeachFilter-Mod/releases/latest/")
                 found_crash_cause = True
-            else:
+            elif self.log.minecraft_version == "1.16.1":
                 builder.error("downgrade_atum", experimental=True)
 
         if not found_crash_cause:
