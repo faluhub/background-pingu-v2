@@ -256,7 +256,7 @@ class IssueChecker:
                     else: checked_mods[mod_name.lower()] = False
                 elif all(not weird_mod in mod.lower() for weird_mod in self.assume_as_legal): illegal_mods.append(mod)
         
-        if len(self.log.whatever_mods) > 0:
+        if is_mcsr_log and len(self.log.whatever_mods) > 0:
             for recommended_mod in self.log.recommended_mods:
                 if not self.log.has_mod(recommended_mod):
                     metadata = self.get_mod_metadata(recommended_mod)
@@ -961,7 +961,7 @@ class IssueChecker:
             builder.error("exitcode", "-1073741819", experimental=True)
             builder.add("eav_crash_1").add("eav_crash_1.1").add("eav_crash_1.2").add("eav_crash_1.3")
             builder.add("exitcode_1073741819_2")
-            if self.log._content.count("\n") < 500:
+            if self.log.lines < 500:
                 if self.log.has_mod("sodium") and not self.log.has_mod("sodiummac"): builder.add(f"exitcode_1073741819_3")
                 builder.add(f"exitcode_1073741819_4")
             builder.add("exitcode_1073741819_5").add("exitcode_1073741819_1")
@@ -970,14 +970,14 @@ class IssueChecker:
             builder.error("exitcode", "-1073740791", experimental=True)
             builder.add("eav_crash_1").add("eav_crash_1.1").add("eav_crash_1.2").add("eav_crash_1.3")
             builder.add("exitcode_1073741819_2")
-            if self.log._content.count("\n") < 500: builder.add("exitcode_1073741819_4")
+            if self.log.lines < 500: builder.add("exitcode_1073741819_4")
             builder.add("exitcode_1073741819_5")
 
         if not found_crash_cause and self.log.stacktrace is None and self.log.exitcode == -1073740771:
             builder.error("exitcode", "-1073740771", experimental=True)
             builder.add("eav_crash_1").add("eav_crash_1.1").add("eav_crash_1.2").add("eav_crash_1.3")
             builder.add("exitcode_1073741819_2")
-            if self.log._content.count("\n") < 500: builder.add("exitcode_1073741819_4")
+            if self.log.lines < 500: builder.add("exitcode_1073741819_4")
             builder.add("exitcode_1073741819_5")
         
         if not self.log.minecraft_folder is None:
@@ -988,6 +988,9 @@ class IssueChecker:
             if "Rar$" in self.log.minecraft_folder:
                 builder.error("need_to_extract_from_zip", self.log.launcher if not self.log.launcher is None else "the launcher")
 
+        if self.log.lines == 25000:
+            builder.error("mclogs_cutoff")
+        
         if (not found_crash_cause
             and any(self.link.endswith(file_extension) for file_extension in [".log", ".txt", ".tdump"])
             and self.log.has_content("minecraft")
@@ -1107,3 +1110,4 @@ class IssueChecker:
                 builder.error("chunk_multidraw")
         
         return builder
+            
