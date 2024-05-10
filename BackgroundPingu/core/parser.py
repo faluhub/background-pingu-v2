@@ -44,6 +44,7 @@ class Log:
 
         self._content = content
         self._lower_content = self._content.lower()
+        self.lines = self._content.count("\n") + 1
         self.launchers = [
             "MultiMC",
             "Prism",
