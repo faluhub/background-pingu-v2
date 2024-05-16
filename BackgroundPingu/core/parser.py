@@ -82,13 +82,19 @@ class Log:
             "fabricloader ",
             "minecraft ",
         ]
+        excluded_patterns = [
+            r" via ",
+            r"<0x.*>",
+        ]
 
         pattern = re.compile(r"\t- ([^\n]+)", re.DOTALL)
 
         fabric_mods = []
         for mod in pattern.findall(self._content):
             mod = mod.replace("_", "-")
-            if not any(mod.startswith(prefix) for prefix in excluded_prefixes) and not " via " in mod:
+            if (not any(mod.startswith(prefix) for prefix in excluded_prefixes)
+                and not any(re.search(pattern, mod) for pattern in excluded_patterns)
+            ):
                 fabric_mods.append(mod)
         
         return fabric_mods
