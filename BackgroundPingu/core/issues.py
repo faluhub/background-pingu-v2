@@ -226,6 +226,7 @@ class IssueChecker:
         
         if self.log.leaked_pc_username:
             builder.info("leaked_username").add("upload_log_leaked_username")
+            if self.log.lines > 25000: builder.add("upload_log_25k_lines")
         
         if is_mcsr_log:
             for mod in self.log.mods:
@@ -995,6 +996,7 @@ class IssueChecker:
         if (not found_crash_cause
             and any(self.link.endswith(file_extension) for file_extension in [".log", ".txt", ".tdump"])
             and self.log.has_content("minecraft")
+            and not self.log.lines > 25000
         ):
             builder.info("upload_log_attachment")
 
