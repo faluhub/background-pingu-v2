@@ -150,6 +150,8 @@ class Log:
         if self.has_content("Operating System: Windows"): return OperatingSystem.WINDOWS
         if self.has_content("Operating System: Mac OS"): return OperatingSystem.MACOS
 
+        if self.has_content("/Applications/"): return OperatingSystem.MACOS
+
         return None
     
     @cached_property
@@ -523,6 +525,9 @@ class Log:
     @cached_property
     def recommended_mods(self) -> list[str]:
         mods = []
+
+        if self.operating_system == OperatingSystem.MACOS:
+            mods.append("retino")
 
         if not self.is_newer_than("1.15"): return mods
         
