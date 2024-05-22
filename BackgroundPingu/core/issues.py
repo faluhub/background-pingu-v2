@@ -395,6 +395,37 @@ class IssueChecker:
                 builder.error("need_new_java", 17).add("k4_setup_guide")
                 found_crash_cause = True
         
+        pattern = r"This instance is not compatible with Java version (\d+)\.\nPlease switch to one of the following Java versions for this instance:\nJava version (\d+)"
+        match = re.search(pattern, self.log._content)
+        if not found_crash_cause and not match is None:
+            switch_java = False
+            if self.log.is_newer_than("1.20.5"):
+                try:
+                    current_version = int(match.group(1))
+                    switch_java = (current_version < 21)
+                except: switch_java = True
+            elif self.log.is_newer_than("1.17"):
+                try:
+                    current_version = int(match.group(1))
+                    switch_java = (current_version < 17)
+                except: switch_java = True
+            elif self.log.mod_loader == ModLoader.FORGE: switch_java = True
+            if switch_java:
+                current_version = match.group(1)
+                compatible_version = match.group(2)
+                builder.error(
+                    "incorrect_java_prism",
+                    current_version,
+                    compatible_version,
+                    compatible_version,
+                    " (download the `.msi` file)" if self.log.operating_system == OperatingSystem.WINDOWS else
+                    " (download the `.pkg` file)" if self.log.operating_system == OperatingSystem.MACOS else
+                    "",
+                    compatible_version
+                )
+            else: builder.error("java_comp_check")
+            found_crash_cause = True
+        
         if not found_crash_cause and any(self.log.has_content(crash_32_bit_java) for crash_32_bit_java in [
             "Could not reserve enough space for ",
             "Invalid maximum heap size: "
@@ -733,36 +764,6 @@ class IssueChecker:
         if self.log.has_content("Launched instance in offline mode") and self.log.has_content("(missing)\n"):
             builder.error("online_launch_required", self.log.edit_instance)
             found_crash_cause = True
-        
-        pattern = r"This instance is not compatible with Java version (\d+)\.\nPlease switch to one of the following Java versions for this instance:\nJava version (\d+)"
-        match = re.search(pattern, self.log._content)
-        if not match is None:
-            switch_java = False
-            if self.log.is_newer_than("1.20.5"):
-                try:
-                    current_version = int(match.group(1))
-                    switch_java = (current_version < 21)
-                except: switch_java = True
-            elif self.log.is_newer_than("1.17"):
-                try:
-                    current_version = int(match.group(1))
-                    switch_java = (current_version < 17)
-                except: switch_java = True
-            elif self.log.mod_loader == ModLoader.FORGE: switch_java = True
-            if switch_java:
-                current_version = match.group(1)
-                compatible_version = match.group(2)
-                builder.error(
-                    "incorrect_java_prism",
-                    current_version,
-                    compatible_version,
-                    compatible_version,
-                    " (download the `.msi` file)" if self.log.operating_system == OperatingSystem.WINDOWS else
-                    " (download the `.pkg` file)" if self.log.operating_system == OperatingSystem.MACOS else
-                    "",
-                    compatible_version
-                )
-            else: builder.error("java_comp_check")
         
         if self.log.has_content("java.lang.ClassNotFoundException: org.apache.logging.log4j.spi.AbstractLogger"):
             builder.error("no_abstract_logger")
