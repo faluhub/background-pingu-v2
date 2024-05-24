@@ -133,6 +133,11 @@ Watch the 1st video for a rough overview, the 2nd and 3rd for more information a
         text = "https://youtu.be/QSEkkmwjhW8"
         return await ctx.respond(text)
 
+    @commands.slash_command(name="wall", description="Gives a link to a Julti tutorial.")
+    async def wall(self, ctx: discord.ApplicationContext):
+        text = "https://youtu.be/QSEkkmwjhW8"
+        return await ctx.respond(text)
+
     @commands.slash_command(name="modcheck", description="Gives a link to ModCheck.")
     async def modcheck(self, ctx: discord.ApplicationContext):
         text = "Application that helps install the allowed mods <https://github.com/tildejustin/modcheck/releases/latest>"

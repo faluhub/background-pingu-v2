@@ -7,7 +7,7 @@ def get_mods(start: bool=True):
     if start: print("Getting mods...")
     path = "./BackgroundPingu/data/mods.json"
     mods = []
-    link = "https://raw.githubusercontent.com/tildejustin/mcsr-meta/main/mods.json"
+    link = "https://raw.githubusercontent.com/tildejustin/mcsr-meta/schema-6/mods.json"
     headers = {'Cache-Control': 'no-cache'}
     res = requests.get(link, headers=headers, timeout=10)
     if res.status_code == 200:
@@ -20,8 +20,8 @@ def get_mods(start: bool=True):
             item.pop("recommended", "")
             item.pop("traits", "")
             item.pop("modid", "")
-            item["files"] = item.pop("versions")
-            item["incompatible"] = item.pop("incompatibilities")
+            item["files"] = item.pop("versions", [])
+            item["incompatible"] = item.pop("incompatibilities", [])
             for fi in item["files"]:
                 fi.pop("hash", "")
                 fi["game_versions"] = [f"=={a}" for a in fi.pop("target_version")]

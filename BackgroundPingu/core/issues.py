@@ -226,6 +226,7 @@ class IssueChecker:
         
         if self.log.leaked_pc_username:
             builder.info("leaked_username").add("upload_log_leaked_username")
+            if self.log.lines > 25000: builder.add("upload_log_25k_lines")
         
         if is_mcsr_log:
             for mod in self.log.mods:
@@ -393,6 +394,37 @@ class IssueChecker:
             elif self.log.has_content("java.lang.UnsupportedClassVersionError: net/minecraft/class_310"):
                 builder.error("need_new_java", 17).add("k4_setup_guide")
                 found_crash_cause = True
+        
+        pattern = r"This instance is not compatible with Java version (\d+)\.\nPlease switch to one of the following Java versions for this instance:\nJava version (\d+)"
+        match = re.search(pattern, self.log._content)
+        if not found_crash_cause and not match is None:
+            switch_java = False
+            if self.log.is_newer_than("1.20.5"):
+                try:
+                    current_version = int(match.group(1))
+                    switch_java = (current_version < 21)
+                except: switch_java = True
+            elif self.log.is_newer_than("1.17"):
+                try:
+                    current_version = int(match.group(1))
+                    switch_java = (current_version < 17)
+                except: switch_java = True
+            elif self.log.mod_loader == ModLoader.FORGE: switch_java = True
+            if switch_java:
+                current_version = match.group(1)
+                compatible_version = match.group(2)
+                builder.error(
+                    "incorrect_java_prism",
+                    current_version,
+                    compatible_version,
+                    compatible_version,
+                    " (download the `.msi` file)" if self.log.operating_system == OperatingSystem.WINDOWS else
+                    " (download the `.pkg` file)" if self.log.operating_system == OperatingSystem.MACOS else
+                    "",
+                    compatible_version
+                )
+            else: builder.error("java_comp_check")
+            found_crash_cause = True
         
         if not found_crash_cause and any(self.log.has_content(crash_32_bit_java) for crash_32_bit_java in [
             "Could not reserve enough space for ",
@@ -733,36 +765,6 @@ class IssueChecker:
             builder.error("online_launch_required", self.log.edit_instance)
             found_crash_cause = True
         
-        pattern = r"This instance is not compatible with Java version (\d+)\.\nPlease switch to one of the following Java versions for this instance:\nJava version (\d+)"
-        match = re.search(pattern, self.log._content)
-        if not match is None:
-            switch_java = False
-            if self.log.is_newer_than("1.20.5"):
-                try:
-                    current_version = int(match.group(1))
-                    switch_java = (current_version < 21)
-                except: switch_java = True
-            elif self.log.is_newer_than("1.17"):
-                try:
-                    current_version = int(match.group(1))
-                    switch_java = (current_version < 17)
-                except: switch_java = True
-            elif self.log.mod_loader == ModLoader.FORGE: switch_java = True
-            if switch_java:
-                current_version = match.group(1)
-                compatible_version = match.group(2)
-                builder.error(
-                    "incorrect_java_prism",
-                    current_version,
-                    compatible_version,
-                    compatible_version,
-                    " (download the `.msi` file)" if self.log.operating_system == OperatingSystem.WINDOWS else
-                    " (download the `.pkg` file)" if self.log.operating_system == OperatingSystem.MACOS else
-                    "",
-                    compatible_version
-                )
-            else: builder.error("java_comp_check")
-        
         if self.log.has_content("java.lang.ClassNotFoundException: org.apache.logging.log4j.spi.AbstractLogger"):
             builder.error("no_abstract_logger")
         
@@ -785,7 +787,7 @@ class IssueChecker:
             builder.error("old_mod_version", "PeepoPractice", "https://github.com/faluhub/peepoPractice/releases/latest/")
 
         if self.log.has_pattern(r"^Prism Launcher version: [1-7]"):
-            builder.error("old_prism_version")
+            builder.note("old_prism_version")
             if self.log.has_content("AppData/Roaming/PrismLauncher"): builder.add("update_prism_installer")
 
         match = re.search(r"Incompatible mod set found! READ THE BELOW LINES!(.*?$)", self.log._content, re.DOTALL)
@@ -995,6 +997,7 @@ class IssueChecker:
         if (not found_crash_cause
             and any(self.link.endswith(file_extension) for file_extension in [".log", ".txt", ".tdump"])
             and self.log.has_content("minecraft")
+            and not self.log.lines > 25000
         ):
             builder.info("upload_log_attachment")
 
@@ -1019,6 +1022,9 @@ class IssueChecker:
                 found_crash_cause = True
             elif self.log.has_mod("beachfilter"):
                 builder.error("old_mod_crash", "beachfilter", "https://github.com/DuncanRuns/BeachFilter-Mod/releases/latest/")
+                found_crash_cause = True
+            elif self.log.has_mod("fsg-wrapper-mod"):
+                builder.error("old_mod_crash", "fsg wrapper", "https://github.com/DuncanRuns/FSG-Wrapper-Mod/releases/latest/")
                 found_crash_cause = True
             elif self.log.minecraft_version == "1.16.1":
                 builder.error("downgrade_atum", experimental=True)

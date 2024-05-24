@@ -150,6 +150,8 @@ class Log:
         if self.has_content("Operating System: Windows"): return OperatingSystem.WINDOWS
         if self.has_content("Operating System: Mac OS"): return OperatingSystem.MACOS
 
+        if self.has_content("/Applications/"): return OperatingSystem.MACOS
+
         return None
     
     @cached_property
@@ -341,7 +343,7 @@ class Log:
 
         if self.is_newer_than("1.18"):
             min_limit_0 += 5000
-            min_limit_1 += 3400
+            min_limit_1 += 3000
             min_limit_2 += 1300
         elif self.is_newer_than("1.14"):
             min_limit_0 += 2800
@@ -467,6 +469,7 @@ class Log:
             r"Minecraft has crashed!.*",
             r"A mod crashed on startup!\n.*",
             r"Encountered an unexpected exception\n.*",
+            r"Unhandled game exception\n.*",
         ]
         for crash_pattern in crash_patterns:
             match = re.search(crash_pattern, log, re.DOTALL)
@@ -515,7 +518,7 @@ class Log:
         
         if self.minecraft_folder is None: return False
         
-        if not self.minecraft_folder.split("/.minecraft")[0][-1].isdigit():
+        if not self.minecraft_folder.replace(self.minecraft_version, "").split("/.minecraft")[0][-1].isdigit():
             return True
         
         return False
@@ -523,6 +526,9 @@ class Log:
     @cached_property
     def recommended_mods(self) -> list[str]:
         mods = []
+
+        if self.operating_system == OperatingSystem.MACOS:
+            mods.append("retino")
 
         if not self.is_newer_than("1.15"): return mods
         
