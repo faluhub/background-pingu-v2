@@ -1023,6 +1023,9 @@ class IssueChecker:
             elif self.log.has_mod("beachfilter"):
                 builder.error("old_mod_crash", "beachfilter", "https://github.com/DuncanRuns/BeachFilter-Mod/releases/latest/")
                 found_crash_cause = True
+            elif self.log.has_mod("fsg-wrapper-mod"):
+                builder.error("old_mod_crash", "fsg wrapper", "https://github.com/DuncanRuns/FSG-Wrapper-Mod/releases/latest/")
+                found_crash_cause = True
             elif self.log.minecraft_version == "1.16.1":
                 builder.error("downgrade_atum", experimental=True)
 
