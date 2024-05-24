@@ -518,7 +518,7 @@ class Log:
         
         if self.minecraft_folder is None: return False
         
-        if not self.minecraft_folder.split("/.minecraft")[0][-1].isdigit():
+        if not self.minecraft_folder.replace(self.minecraft_version, "").split("/.minecraft")[0][-1].isdigit():
             return True
         
         return False
