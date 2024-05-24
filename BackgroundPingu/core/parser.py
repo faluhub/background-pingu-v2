@@ -343,7 +343,7 @@ class Log:
 
         if self.is_newer_than("1.18"):
             min_limit_0 += 5000
-            min_limit_1 += 3400
+            min_limit_1 += 3000
             min_limit_2 += 1300
         elif self.is_newer_than("1.14"):
             min_limit_0 += 2800
