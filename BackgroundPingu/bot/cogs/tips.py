@@ -104,6 +104,16 @@ In general, it's a good idea to watch top runs and top runners' streams to get a
         text = """https://youtu.be/VL8Syekw4Q0"""
         return await ctx.respond(text)
 
+    @commands.slash_command(name="mac", description="Gives links to tutorials for Minecraft Speedrunning on a Mac.")
+    async def mac(self, ctx: discord.ApplicationContext):
+        text = """[**Mac speedrunning discord**](https://discord.gg/sczfsdE39W)
+
+Mac eye measuring tutorial: https://discord.com/channels/83066801105145856/405839885509984256/1173097881985617920
+Mac wall/multi instancing by Slackow: https://discord.com/channels/83066801105145856/405839885509984256/1243768413571125249
+
+Speedrunning on Mac setup tutorial: https://www.youtube.com/watch?v=GomIeW5xdBM"""
+        return await ctx.respond(text)
+
     @commands.slash_command(name="1_16_1", description="Explains why using 1.16.1 is standard and recommended for Minecraft speedrunning.")
     async def one_sixteen_one(self, ctx: discord.ApplicationContext):
         text = "1.16.1 gives 4x more pearls and 3x more string from piglin barters on average compared to later versions. This, as well as not having piglin brutes, means that using 1.16.1 is standard and recommended for Minecraft speedrunning. You can play later versions if you wish (the category is 1.16+) but it will put you at a severe disadvantage. This only applies for RSG Any%, not SSG (which uses 1.16.5 for the current seed) or other category extensions."
