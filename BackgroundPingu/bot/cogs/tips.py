@@ -140,12 +140,12 @@ Watch the 1st video for a rough overview, the 2nd and 3rd for more information a
 
     @commands.slash_command(name="julti", description="Gives a link to a Julti tutorial.")
     async def julti(self, ctx: discord.ApplicationContext):
-        text = "https://youtu.be/QSEkkmwjhW8"
+        text = "https://youtu.be/_8gQkgZcTKo"
         return await ctx.respond(text)
 
     @commands.slash_command(name="wall", description="Gives a link to a Julti tutorial.")
     async def wall(self, ctx: discord.ApplicationContext):
-        text = "https://youtu.be/QSEkkmwjhW8"
+        text = "https://youtu.be/_8gQkgZcTKo"
         return await ctx.respond(text)
 
     @commands.slash_command(name="modcheck", description="Gives a link to ModCheck.")
