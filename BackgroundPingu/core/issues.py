@@ -576,6 +576,16 @@ class IssueChecker:
                 builder.error("rong_modloader", "Quilt", "Forge")
                 found_crash_cause = True
         
+        all_modloaders = [
+            ModLoader.FABRIC,
+            ModLoader.FORGE,
+            ModLoader.QUILT,
+        ]
+        found_modloaders = [modloader.value for modloader in all_modloaders if self.log.has_library(modloader.value)]
+        if len(found_modloaders) > 1:
+            builder.error("multiple_modloaders", "`, `".join(found_modloaders), self.log.edit_instance)
+            found_crash_cause = True
+
         if not self.log.max_allocated is None:
             min_limit_0, min_limit_1, min_limit_2 = self.log.recommended_min_allocated
             if self.log.has_content("java.lang.OutOfMemoryError"):
