@@ -2,6 +2,13 @@ import re, requests, enum
 from packaging import version
 from cached_property import cached_property
 
+class LogType(enum.Enum):
+    FULL_LOG = "full log"
+    THREAD_DUMP = "thread dump"
+    CRASH_REPORT = "crash-report"
+    HS_ERR_PID_LOG = "hs_err_pid log"
+    LATEST_LOG = "latest.log"
+
 class OperatingSystem(enum.IntEnum):
     WINDOWS = enum.auto()
     LINUX = enum.auto()
@@ -75,7 +82,7 @@ class Log:
     
     @cached_property
     def fabric_mods(self) -> list[str]:
-        if self.type == "thread dump": return []
+        if self.type == LogType.THREAD_DUMP: return []
 
         excluded_prefixes = [
             "java ",
@@ -236,26 +243,26 @@ class Log:
             return "MultiMC"
 
         return None
-    
+
     @cached_property
-    def type(self) -> str:
+    def type(self) -> LogType:
         if any([self._content.startswith(launcher) for launcher in self.launchers]):
-            return "full log"
+            return LogType.FULL_LOG
 
         if any(self.has_content(thread_dump) for thread_dump in [
             "-- Thread Dump --",
             "\nFull thread dump"
         ]):
-            return "thread dump"
+            return LogType.THREAD_DUMP
 
         if self._content.startswith("---- Minecraft Crash Report ----"):
-            return "crash-report"
+            return LogType.CRASH_REPORT
 
         if self.has_content("---------------  T H R E A D  ---------------"):
-            return "hs_err_pid log"
+            return LogType.HS_ERR_PID_LOG
 
         if self._content.startswith("["):
-            return "latest.log"
+            return LogType.LATEST_LOG
 
         return None
 
@@ -425,11 +432,15 @@ class Log:
         min_recomm = int(round(min_recomm + diff / 7, -2))
         max_recomm = int(round(max_recomm - diff / 7, -2))
 
-        return (
-            "allocate_ram_guide_mmc" if self.is_multimc_or_fork else "allocate_ram_guide",
-            min_recomm,
-            max_recomm
-        )
+        if self.is_multimc_or_fork:
+            return (
+                "allocate_ram_guide_mmc",
+                min_recomm,
+                max_recomm,
+                "Prism" if self.is_prism else "MultiMC",
+            )
+        else:
+            return ("allocate_ram_guide", min_recomm, max_recomm)
 
     @cached_property
     def java_update_guide(self) -> str:
