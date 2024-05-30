@@ -432,11 +432,15 @@ class Log:
         min_recomm = int(round(min_recomm + diff / 7, -2))
         max_recomm = int(round(max_recomm - diff / 7, -2))
 
-        return (
-            "allocate_ram_guide_mmc" if self.is_multimc_or_fork else "allocate_ram_guide",
-            min_recomm,
-            max_recomm
-        )
+        if self.is_multimc_or_fork:
+            return (
+                "allocate_ram_guide_mmc",
+                min_recomm,
+                max_recomm,
+                "Prism" if self.is_prism else "MultiMC",
+            )
+        else:
+            return ("allocate_ram_guide", min_recomm, max_recomm)
 
     @cached_property
     def java_update_guide(self) -> str:
