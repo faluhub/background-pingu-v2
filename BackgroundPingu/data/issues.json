@@ -15,7 +15,7 @@
     "add.exitcode_1073741819_4": "- Remove all mods to see if one of them is causing the crash.",
     "add.exitcode_1073741819_5": "- Update/downgrade your graphics drivers.",
     "add.fabric_guide_mmc": "You can {} Fabric by doing `Edit Instance > Version > Install Fabric` in `MultiMC`.",
-    "add.fabric_guide_prism": "You can {} Fabric by doing `Edit > Version > Install Fabric` in `Prism`.",
+    "add.fabric_guide_prism": "You can {} Fabric by doing `Edit > Version > Install Loader > Fabric` in `Prism`.",
     "add.incompatible_srigt_alternative": "Alternatively, you can use `Fabric Loader 0.14.14`.",
     "add.intell_hd2000_info": "For more information about this issue and possible solutions, please refer to [**this page**](https://prismlauncher.org/wiki/getting-started/installing-java/#a-note-about-intel-hd-20003000-on-windows-10).",
     "add.java_override_warning": "Note that your instance's `Java` settings seem to override global `Java` settings, so you'll need to select `Java` there (or disable the override).",
