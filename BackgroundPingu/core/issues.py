@@ -213,7 +213,7 @@ class IssueChecker:
         if self.log.type in [
             LogType.HS_ERR_PID_LOG,
             LogType.CRASH_REPORT,
-            LogType.LATEST_LOG,
+            LogType.THREAD_DUMP,
         ]: footer += f" {self.log.type.value}"
         elif self.log.type == LogType.LATEST_LOG:
             footer += " latest.log"
