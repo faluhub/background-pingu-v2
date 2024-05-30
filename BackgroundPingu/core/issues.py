@@ -1,7 +1,7 @@
 import semver, re, requests
 from packaging import version
 from BackgroundPingu.bot.main import BackgroundPingu
-from BackgroundPingu.core.parser import Log, ModLoader, OperatingSystem
+from BackgroundPingu.core.parser import Log, ModLoader, OperatingSystem, LogType
 
 class IssueBuilder:
     def __init__(self, bot: BackgroundPingu, log: Log) -> None:
@@ -210,10 +210,12 @@ class IssueChecker:
         elif is_mcsr_log: footer += " RSG"
         elif not self.log.mod_loader is None: footer += f" {self.log.mod_loader.value}"
         
-        if self.log.type == "hs_err_pid log": footer += " hs_err_pid log"
-        elif self.log.type == "crash-report": footer += " crash-report"
-        elif self.log.type == "thread dump": footer += " thread dump"
-        elif self.log.type == "latest.log":
+        if self.log.type in [
+            LogType.HS_ERR_PID_LOG,
+            LogType.CRASH_REPORT,
+            LogType.LATEST_LOG,
+        ]: footer += f" {self.log.type.value}"
+        elif self.log.type == LogType.LATEST_LOG:
             footer += " latest.log"
             if self.log.stacktrace or self.log.exitcode: footer += " crash"
         elif self.log.stacktrace or self.log.exitcode: footer += " crash"
@@ -1006,7 +1008,7 @@ class IssueChecker:
             found_crash_cause = True
         
         if (not found_crash_cause and self.log.is_multimc_or_fork
-            and not self.log.type in ["full log", "thread dump"]
+            and not self.log.type in [LogType.FULL_LOG, LogType.THREAD_DUMP]
         ):
             builder.info("send_full_log", self.log.launcher, self.log.edit_instance)
 
