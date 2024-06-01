@@ -1038,8 +1038,12 @@ class IssueChecker:
             elif self.log.has_mod("fsg-wrapper-mod"):
                 builder.error("old_mod_crash", "fsg wrapper", "https://github.com/DuncanRuns/FSG-Wrapper-Mod/releases/latest/")
                 found_crash_cause = True
-            elif self.log.minecraft_version == "1.16.1":
-                builder.error("downgrade_atum", experimental=True)
+            elif self.log.has_content("java.lang.ClassNotFoundException: me.voidxwalker.autoreset.Atum"):
+                builder.error(
+                    "downgrade_atum",
+                    experimental=(self.log.minecraft_version != "1.16.1")
+                )
+                found_crash_cause = True
 
         if not found_crash_cause:
             wrong_mods = []
