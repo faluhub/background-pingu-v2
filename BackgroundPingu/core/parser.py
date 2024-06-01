@@ -8,6 +8,7 @@ class LogType(enum.Enum):
     CRASH_REPORT = "crash-report"
     HS_ERR_PID_LOG = "hs_err_pid log"
     LATEST_LOG = "latest.log"
+    LAUNCHER_LOG = "launcher log"
 
 class OperatingSystem(enum.IntEnum):
     WINDOWS = enum.auto()
@@ -163,6 +164,8 @@ class Log:
     
     @cached_property
     def minecraft_version(self) -> str:
+        if self.type == LogType.LAUNCHER_LOG: return None
+
         for pattern in [
             r"Loading Minecraft (\S+) with Fabric Loader",
             r"Minecraft Version ID: (\S+)",
@@ -257,9 +260,12 @@ class Log:
 
         if self._content.startswith("---- Minecraft Crash Report ----"):
             return LogType.CRASH_REPORT
-
+        
         if self.has_content("---------------  T H R E A D  ---------------"):
             return LogType.HS_ERR_PID_LOG
+
+        if self.has_content(" D | "):
+            return LogType.LAUNCHER_LOG
 
         if self._content.startswith("["):
             return LogType.LATEST_LOG
@@ -275,7 +281,7 @@ class Log:
         return self.launcher in ["Prism", "PolyMC"]
 
     @cached_property
-    def edit_instance(self) -> bool:
+    def edit_instance(self) -> str:
         return "" if self.is_prism else " Instance"
     
     @cached_property
@@ -519,7 +525,7 @@ class Log:
         ]:
             if self.has_mod(ranked_mod): return True
         
-        if self.has_content("com.mcsr.projectelo."): return True
+        if self.has_content("com.mcsrranked"): return True
         
         return False
     

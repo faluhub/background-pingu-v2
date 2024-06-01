@@ -214,6 +214,7 @@ class IssueChecker:
             LogType.HS_ERR_PID_LOG,
             LogType.CRASH_REPORT,
             LogType.THREAD_DUMP,
+            LogType.LAUNCHER_LOG,
         ]: footer += f" {self.log.type.value}"
         elif self.log.type == LogType.LATEST_LOG:
             footer += " latest.log"
@@ -777,9 +778,6 @@ class IssueChecker:
             builder.error("online_launch_required", self.log.edit_instance)
             found_crash_cause = True
         
-        if self.log.has_content("java.lang.ClassNotFoundException: org.apache.logging.log4j.spi.AbstractLogger"):
-            builder.error("no_abstract_logger")
-        
         if self.log.has_content("ClassLoaders$AppClassLoader cannot be cast to class java.net.URLClassLoader"):
             builder.error("forge_too_new_java")
             found_crash_cause = True
@@ -917,13 +915,17 @@ class IssueChecker:
                 builder.error("legacy_fabric_modpack")
                 found_crash_cause = True
             else:
-                builder.warning("no_mappings", self.log.edit_instance)
+                builder.warning("no_mappings", self.log.edit_instance, experimental=True)
 
         if (not self.log.loader_mc_version is None
             and not self.log.minecraft_version is None
             and self.log.minecraft_version != self.log.loader_mc_version
         ):
-            builder.error("minecraft_version_mismatch", "Forge" if self.log.mod_loader == ModLoader.FORGE else "Intermediary Mappings", self.log.edit_instance)
+            builder.error(
+                "minecraft_version_mismatch",
+                "Forge" if self.log.mod_loader == ModLoader.FORGE else "Intermediary Mappings",
+                self.log.edit_instance,
+            )
             found_crash_cause = True
         
         if not found_crash_cause and self.log.has_content("ERROR]: Mixin apply for mod fabric-networking-api-v1 failed"):
@@ -1018,7 +1020,7 @@ class IssueChecker:
             found_crash_cause = True
         
         if (not found_crash_cause and self.log.is_multimc_or_fork
-            and not self.log.type in [LogType.FULL_LOG, LogType.THREAD_DUMP]
+            and not self.log.type in [LogType.FULL_LOG, LogType.THREAD_DUMP, LogType.LAUNCHER_LOG]
         ):
             builder.info("send_full_log", self.log.launcher, self.log.edit_instance)
 
