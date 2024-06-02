@@ -578,11 +578,11 @@ class IssueChecker:
                 found_crash_cause = True
         
         all_modloaders = [
-            ModLoader.FABRIC,
-            ModLoader.FORGE,
-            ModLoader.QUILT,
+            "fabric-loader",
+            ModLoader.FORGE.value,
+            "quilt-loader",
         ]
-        found_modloaders = [modloader.value for modloader in all_modloaders if self.log.has_library(modloader.value)]
+        found_modloaders = [modloader for modloader in all_modloaders if self.log.has_library(modloader)]
         if len(found_modloaders) > 1:
             builder.error("multiple_modloaders", "`, `".join(found_modloaders), self.log.edit_instance)
             found_crash_cause = True
@@ -797,8 +797,11 @@ class IssueChecker:
             builder.error("old_mod_version", "PeepoPractice", "https://github.com/faluhub/peepoPractice/releases/latest/")
 
         if self.log.has_pattern(r"^Prism Launcher version: [1-7]"):
-            builder.note("old_prism_version")
-            if self.log.has_content("AppData/Roaming/PrismLauncher"): builder.add("update_prism_installer")
+            if self.log.has_pattern(r"^Prism Launcher version: [8-8]"):
+                builder.note("semi_old_prism_version")
+            else:
+                builder.note("old_prism_version")
+                if self.log.has_content("AppData/Roaming/PrismLauncher"): builder.add("update_prism_installer")
 
         match = re.search(r"Incompatible mod set found! READ THE BELOW LINES!(.*?$)", self.log._content, re.DOTALL)
         if not match is None:
