@@ -178,7 +178,7 @@ Don't forget to check the FAQ in the readme!
     async def allowedmods(self, ctx: discord.ApplicationContext):
         text = """If you use Optifine (allowed only in pre-1.15), please read the [**detailed mod rules**](<http://bombch.us/DOOK>).
 The allowed mods can be found and downloaded [**here**](<https://mods.tildejustin.dev/> ).
-All other mods, including Fabric API, are banned[.](https://cdn.discordapp.com/attachments/433058639956410383/1210046023196606605/image.png)"""
+All other mods, including Fabric API, are banned[.](https://imgur.com/b9S5RWp)"""
         return await ctx.respond(text)
 
     @commands.slash_command(name="piedirectory", description="Gives the useful pie directories.")
