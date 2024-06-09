@@ -370,10 +370,18 @@ class IssueChecker:
         
         if not found_crash_cause:
             if self.log.has_pattern(r"require the use of Java 1(7|6)"):
-                builder.error("need_new_java_mc", 17).add("java_update_guide")
+                builder.error(
+                    "need_new_java_mc",
+                    17,
+                    f", but you're using `Java {self.log.major_java_version}`" if not self.log.major_java_version is None else "",
+                ).add("java_update_guide")
                 found_crash_cause = True
             if self.log.is_newer_than("1.20.5") and self.log.major_java_version < 21:
-                builder.error("need_new_java_mc", 21).add("java_update_guide")
+                builder.error(
+                    "need_new_java_mc",
+                    21,
+                    f", but you're using `Java {self.log.major_java_version}`" if not self.log.major_java_version is None else "",
+                ).add("java_update_guide")
                 found_crash_cause = True
         
         if not found_crash_cause and len(wrong_not_needed_mods) == 0:
@@ -390,11 +398,19 @@ class IssueChecker:
                         needed_java_version = parsed_version
                 except: pass
             if not needed_java_version is None:
-                builder.error("need_new_java", needed_java_version).add(self.log.java_update_guide)
+                builder.error(
+                    "need_new_java",
+                    needed_java_version,
+                    f", but you're using `Java {self.log.major_java_version}`" if not self.log.major_java_version is None else "",
+                ).add(self.log.java_update_guide)
                 if self.log.is_prism: builder.add("prism_java_compat_check")
                 found_crash_cause = True
             elif self.log.has_content("java.lang.UnsupportedClassVersionError: net/minecraft/class_310"):
-                builder.error("need_new_java", 17).add("k4_setup_guide")
+                builder.error(
+                    "need_new_java",
+                    17,
+                    f", but you're using `Java {self.log.major_java_version}`" if not self.log.major_java_version is None else "",
+                ).add("k4_setup_guide")
                 found_crash_cause = True
         
         pattern = r"This instance is not compatible with Java version (\d+)\.\nPlease switch to one of the following Java versions for this instance:\nJava version (\d+)"
