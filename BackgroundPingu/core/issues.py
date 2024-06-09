@@ -105,7 +105,6 @@ class IssueChecker:
         self.assume_as_latest = [
             "sodiummac",
             "krypton",
-            "sodium-fabric-mc1.16.5-0.2.0+build.4",
             "optifine",
             "sodium-extra",
             "biomethreadlocalfix",
