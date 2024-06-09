@@ -476,8 +476,12 @@ class IssueChecker:
             builder.note("not_using_java_17", self.log.major_java_version).add(self.log.java_update_guide)
             if self.log.is_prism: builder.add("prism_java_compat_check")
 
-        elif self.log.launcher == "MultiMC" and self.log.operating_system == OperatingSystem.MACOS and not self.log.has_content("32-bit architecture"):
-            builder.note("use_prism").add("mac_setup_guide")
+        if self.log.operating_system == OperatingSystem.MACOS and not self.log.has_content("32-bit architecture"):
+            if self.log.launcher == "MultiMC":
+                builder.note("mac_use_prism").add("mac_setup_guide")
+            elif self.log.is_prism and self.log.has_content("using 64 (x86_64) architecture"):
+                builder.note("mac_use_arm_java")
+                if not found_crash_cause: builder.add(self.log.java_update_guide).add("prism_java_compat_check")
         
         if (self.log.mod_loader in [ModLoader.FORGE, None]
             and any(self.log.has_content(delete_launcher_cache_crash) for delete_launcher_cache_crash in [
