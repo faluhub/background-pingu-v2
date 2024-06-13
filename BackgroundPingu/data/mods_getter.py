@@ -4,6 +4,13 @@ ignored = []
 
 def get_mods(start: bool=True):
     """I hate python semver. If it wasn't for that I wouldn't have to do all this..."""
+
+    def format_version(version: str) -> str:
+        if version.count(".") == 1: version += ".0"
+        if version.count(".") != 2:
+            print(f"[mods_getter] potentially invalid version while downloading mod metadata: {version}")
+        return version
+    
     if start: print("Getting mods...")
     path = "./BackgroundPingu/data/mods.json"
     mods = []
@@ -24,7 +31,7 @@ def get_mods(start: bool=True):
             item["incompatible"] = item.pop("incompatibilities", [])
             for fi in item["files"]:
                 fi.pop("hash", "")
-                fi["game_versions"] = [f"=={a}" for a in fi.pop("target_version")]
+                fi["game_versions"] = [f"=={format_version(a)}" for a in fi.pop("target_version")]
                 fi["name"] = fi["url"].split("/")[-1]
                 fi["page"] = fi.pop("url")
             mods.append(item)

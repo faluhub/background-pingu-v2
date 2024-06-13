@@ -105,7 +105,6 @@ class IssueChecker:
         self.assume_as_latest = [
             "sodiummac",
             "krypton",
-            "sodium-fabric-mc1.16.5-0.2.0+build.4",
             "optifine",
             "sodium-extra",
             "biomethreadlocalfix",
@@ -214,6 +213,7 @@ class IssueChecker:
             LogType.HS_ERR_PID_LOG,
             LogType.CRASH_REPORT,
             LogType.THREAD_DUMP,
+            LogType.LAUNCHER_LOG,
         ]: footer += f" {self.log.type.value}"
         elif self.log.type == LogType.LATEST_LOG:
             footer += " latest.log"
@@ -370,10 +370,18 @@ class IssueChecker:
         
         if not found_crash_cause:
             if self.log.has_pattern(r"require the use of Java 1(7|6)"):
-                builder.error("need_new_java_mc", 17).add("java_update_guide")
+                builder.error(
+                    "need_new_java_mc",
+                    17,
+                    f", but you're using `Java {self.log.major_java_version}`" if not self.log.major_java_version is None else "",
+                ).add("java_update_guide")
                 found_crash_cause = True
             if self.log.is_newer_than("1.20.5") and self.log.major_java_version < 21:
-                builder.error("need_new_java_mc", 21).add("java_update_guide")
+                builder.error(
+                    "need_new_java_mc",
+                    21,
+                    f", but you're using `Java {self.log.major_java_version}`" if not self.log.major_java_version is None else "",
+                ).add("java_update_guide")
                 found_crash_cause = True
         
         if not found_crash_cause and len(wrong_not_needed_mods) == 0:
@@ -390,11 +398,19 @@ class IssueChecker:
                         needed_java_version = parsed_version
                 except: pass
             if not needed_java_version is None:
-                builder.error("need_new_java", needed_java_version).add(self.log.java_update_guide)
+                builder.error(
+                    "need_new_java",
+                    needed_java_version,
+                    f", but you're using `Java {self.log.major_java_version}`" if not self.log.major_java_version is None else "",
+                ).add(self.log.java_update_guide)
                 if self.log.is_prism: builder.add("prism_java_compat_check")
                 found_crash_cause = True
             elif self.log.has_content("java.lang.UnsupportedClassVersionError: net/minecraft/class_310"):
-                builder.error("need_new_java", 17).add("k4_setup_guide")
+                builder.error(
+                    "need_new_java",
+                    17,
+                    f", but you're using `Java {self.log.major_java_version}`" if not self.log.major_java_version is None else "",
+                ).add("k4_setup_guide")
                 found_crash_cause = True
         
         pattern = r"This instance is not compatible with Java version (\d+)\.\nPlease switch to one of the following Java versions for this instance:\nJava version (\d+)"
@@ -476,8 +492,12 @@ class IssueChecker:
             builder.note("not_using_java_17", self.log.major_java_version).add(self.log.java_update_guide)
             if self.log.is_prism: builder.add("prism_java_compat_check")
 
-        elif self.log.launcher == "MultiMC" and self.log.operating_system == OperatingSystem.MACOS and not self.log.has_content("32-bit architecture"):
-            builder.note("use_prism").add("mac_setup_guide")
+        if self.log.operating_system == OperatingSystem.MACOS and not self.log.has_content("32-bit architecture"):
+            if self.log.launcher == "MultiMC":
+                builder.note("mac_use_prism").add("mac_setup_guide")
+            elif self.log.is_prism and self.log.has_content("using 64 (x86_64) architecture"):
+                builder.note("mac_use_arm_java")
+                if not found_crash_cause: builder.add(self.log.java_update_guide).add("prism_java_compat_check")
         
         if (self.log.mod_loader in [ModLoader.FORGE, None]
             and any(self.log.has_content(delete_launcher_cache_crash) for delete_launcher_cache_crash in [
@@ -577,11 +597,11 @@ class IssueChecker:
                 found_crash_cause = True
         
         all_modloaders = [
-            ModLoader.FABRIC,
-            ModLoader.FORGE,
-            ModLoader.QUILT,
+            "fabric-loader",
+            ModLoader.FORGE.value,
+            "quilt-loader",
         ]
-        found_modloaders = [modloader.value for modloader in all_modloaders if self.log.has_library(modloader.value)]
+        found_modloaders = [modloader for modloader in all_modloaders if self.log.has_library(modloader)]
         if len(found_modloaders) > 1:
             builder.error("multiple_modloaders", "`, `".join(found_modloaders), self.log.edit_instance)
             found_crash_cause = True
@@ -777,9 +797,6 @@ class IssueChecker:
             builder.error("online_launch_required", self.log.edit_instance)
             found_crash_cause = True
         
-        if self.log.has_content("java.lang.ClassNotFoundException: org.apache.logging.log4j.spi.AbstractLogger"):
-            builder.error("no_abstract_logger")
-        
         if self.log.has_content("ClassLoaders$AppClassLoader cannot be cast to class java.net.URLClassLoader"):
             builder.error("forge_too_new_java")
             found_crash_cause = True
@@ -799,8 +816,11 @@ class IssueChecker:
             builder.error("old_mod_version", "PeepoPractice", "https://github.com/faluhub/peepoPractice/releases/latest/")
 
         if self.log.has_pattern(r"^Prism Launcher version: [1-7]"):
-            builder.note("old_prism_version")
-            if self.log.has_content("AppData/Roaming/PrismLauncher"): builder.add("update_prism_installer")
+            if self.log.has_pattern(r"^Prism Launcher version: [8-8]"):
+                builder.note("semi_old_prism_version")
+            else:
+                builder.note("old_prism_version")
+                if self.log.has_content("AppData/Roaming/PrismLauncher"): builder.add("update_prism_installer")
 
         match = re.search(r"Incompatible mod set found! READ THE BELOW LINES!(.*?$)", self.log._content, re.DOTALL)
         if not match is None:
@@ -917,13 +937,17 @@ class IssueChecker:
                 builder.error("legacy_fabric_modpack")
                 found_crash_cause = True
             else:
-                builder.warning("no_mappings", self.log.edit_instance)
+                builder.warning("no_mappings", self.log.edit_instance, experimental=True)
 
         if (not self.log.loader_mc_version is None
             and not self.log.minecraft_version is None
             and self.log.minecraft_version != self.log.loader_mc_version
         ):
-            builder.error("minecraft_version_mismatch", "Forge" if self.log.mod_loader == ModLoader.FORGE else "Intermediary Mappings", self.log.edit_instance)
+            builder.error(
+                "minecraft_version_mismatch",
+                "Forge" if self.log.mod_loader == ModLoader.FORGE else "Intermediary Mappings",
+                self.log.edit_instance,
+            )
             found_crash_cause = True
         
         if not found_crash_cause and self.log.has_content("ERROR]: Mixin apply for mod fabric-networking-api-v1 failed"):
@@ -1018,7 +1042,7 @@ class IssueChecker:
             found_crash_cause = True
         
         if (not found_crash_cause and self.log.is_multimc_or_fork
-            and not self.log.type in [LogType.FULL_LOG, LogType.THREAD_DUMP]
+            and not self.log.type in [LogType.FULL_LOG, LogType.THREAD_DUMP, LogType.LAUNCHER_LOG]
         ):
             builder.info("send_full_log", self.log.launcher, self.log.edit_instance)
 
@@ -1038,8 +1062,12 @@ class IssueChecker:
             elif self.log.has_mod("fsg-wrapper-mod"):
                 builder.error("old_mod_crash", "fsg wrapper", "https://github.com/DuncanRuns/FSG-Wrapper-Mod/releases/latest/")
                 found_crash_cause = True
-            elif self.log.minecraft_version == "1.16.1":
-                builder.error("downgrade_atum", experimental=True)
+            elif self.log.has_content("java.lang.ClassNotFoundException: me.voidxwalker.autoreset.Atum"):
+                builder.error(
+                    "downgrade_atum",
+                    experimental=(self.log.minecraft_version != "1.16.1")
+                )
+                found_crash_cause = True
 
         if not found_crash_cause:
             wrong_mods = []
@@ -1068,7 +1096,7 @@ class IssueChecker:
                         mod_name = ""
                         for part in mod_name_parts:
                             part0 = part
-                            for c in [".", "fabric", "forge", "quilt", "v", "mc", "mod", "backport", "snapshot", "build", "prism"]: part = part.replace(c, "")
+                            for c in [".", "fabric", "forge", "quilt", "v", "mc", "mod", "backport", "snapshot", "build", "prism", "minecraft"]: part = part.replace(c, "")
                             for c in range(10): part = part.replace(str(c), "")
                             if part == "": break
                             elif len(part) > 1: mod_name += part0
