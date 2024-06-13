@@ -30,7 +30,8 @@ class Tips(Cog):
 
     @commands.slash_command(name="rankedfaq", description="Sends a link to the MCSR Ranked Tech Support FAQ document.")
     async def rankedfaq(self, ctx: discord.ApplicationContext):
-        text = "You can find MCSR Ranked Tech Support FAQ document here: https://bit.ly/rankedfaq."
+        text = """You can find MCSR Ranked Tech Support FAQ document here: https://bit.ly/rankedfaq.
+*Note that it may contain outdated information.*"""
         return await ctx.respond(text)
 
     @commands.slash_command(name="ahk", description="Gives a guide to rebind keys using AutoHotkey.", aliases=["rebind"])
@@ -93,15 +94,18 @@ In general, it's a good idea to watch top runs and top runners' streams to get a
 
     @commands.slash_command(name="ninjabrainbot", description="Gives a guide to using Ninjabrain Bot.")
     async def ninjabrainbot(self, ctx: discord.ApplicationContext):
-        return await ctx.respond("https://youtu.be/8Z0tk_Z24WA")
+        text = "https://youtu.be/8Z0tk_Z24WA"
+        return await ctx.respond(text)
 
     @commands.slash_command(name="prism", description="Gives a link to download PrismLauncher.")
     async def prism(self, ctx: discord.ApplicationContext):
-        return await ctx.respond("You can download the Prism Launcher here: https://prismlauncher.org/")
+        text = """Prism Launcher is a more updated fork of MultiMC. You can download it here: https://prismlauncher.org/"""
+        return await ctx.respond(text)
 
     @commands.slash_command(name="setup", description="Gives a link to a tutorial to setup Minecraft Speedrunning.")
     async def setup(self, ctx: discord.ApplicationContext):
-        text = """https://youtu.be/VL8Syekw4Q0"""
+        text = """:warning: Using Java 21 instead of 19.0.1 is completely fine.
+https://youtu.be/VL8Syekw4Q0"""
         return await ctx.respond(text)
 
     @commands.slash_command(name="mac", description="Gives links to tutorials for Minecraft Speedrunning on a Mac.")
@@ -116,7 +120,7 @@ Speedrunning on Mac setup tutorial: https://www.youtube.com/watch?v=GomIeW5xdBM"
 
     @commands.slash_command(name="1_16_1", description="Explains why using 1.16.1 is standard and recommended for Minecraft speedrunning.")
     async def one_sixteen_one(self, ctx: discord.ApplicationContext):
-        text = "1.16.1 gives 4x more pearls and 3x more string from piglin barters on average compared to later versions. This, as well as not having piglin brutes, means that using 1.16.1 is standard and recommended for Minecraft speedrunning. You can play later versions if you wish (the category is 1.16+) but it will put you at a severe disadvantage. This only applies for RSG Any%, not SSG (which uses 1.16.5 for the current seed) or other category extensions."
+        text = "1.16.1 gives 4x more pearls and 3x more string from piglin barters on average compared to later versions. This, as well as not having piglin brutes, means that using 1.16.1 is standard and recommended for Minecraft speedrunning. You can play later versions if you wish (the category is 1.16+) but it will put you at a severe disadvantage. This only applies for RSG Any%, not SSG (which uses different versions) or other category extensions."
         return await ctx.respond(text)
 
     @commands.slash_command(name="mapless", description="Gives links to mapless tutorials.")
@@ -183,9 +187,8 @@ All other mods, including Fabric API, are banned[.](https://imgur.com/b9S5RWp)""
 
     @commands.slash_command(name="piedirectory", description="Gives the useful pie directories.")
     async def piedirectory(self, ctx: discord.ApplicationContext):
-        text = """Common pie-chart directories:
-Mapless / Preemptive: `root.gameRenderer.level.entities`
-Village / Fortress: `root.tick.level.entities.blockEntities`"""
+        text = """Common piechart directories:
+1) Mapless / Preemptive: ```root.gameRenderer.level.entities```2) Village / Fortress: ```root.tick.level.entities.blockEntities```"""
         return await ctx.respond(text)
 
     @commands.slash_command(name="standardsettings", description="Explains what StandardSettings is.")
