@@ -1096,7 +1096,7 @@ class IssueChecker:
                         mod_name = ""
                         for part in mod_name_parts:
                             part0 = part
-                            for c in [".", "fabric", "forge", "quilt", "v", "mc", "mod", "backport", "snapshot", "build", "prism"]: part = part.replace(c, "")
+                            for c in [".", "fabric", "forge", "quilt", "v", "mc", "mod", "backport", "snapshot", "build", "prism", "minecraft"]: part = part.replace(c, "")
                             for c in range(10): part = part.replace(str(c), "")
                             if part == "": break
                             elif len(part) > 1: mod_name += part0
