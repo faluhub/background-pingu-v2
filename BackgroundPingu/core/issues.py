@@ -541,10 +541,8 @@ class IssueChecker:
                         if highest_srigt_ver is None or ver > highest_srigt_ver:
                             highest_srigt_ver = ver
             if not highest_srigt_ver is None and highest_srigt_ver < version.parse("13.3") and self.log.fabric_version > version.parse("0.14.14"):
-                    builder.error("incompatible_srigt")
-                    if not self.log.minecraft_version == "1.16.1":
-                        builder.add("incompatible_srigt_alternative")
-                    found_crash_cause = True
+                builder.error("incompatible_srigt")
+                found_crash_cause = True
             
             if self.log.fabric_version.__str__() in ["0.14.15", "0.14.16"]:
                 builder.error("broken_fabric")
