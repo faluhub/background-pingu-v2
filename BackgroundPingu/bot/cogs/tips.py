@@ -29,7 +29,7 @@ class Tips(Cog):
         return await ctx.respond(text)
 
     @commands.slash_command(name="mcsr", description="Gives an explanation that MCSR != Ranked.")
-    async def rankedfaq(self, ctx: discord.ApplicationContext):
+    async def mcsr(self, ctx: discord.ApplicationContext):
         text = """"MCSR" is short for "minecraft speedrunning", and is usually used to refer to the minecraft speedrunning community.
 If you're referring to the mod that allows people to speedrun 1v1, that's "MCSR Ranked" or "Ranked" for short <:Okayge:796454436427005984>"""
         return await ctx.respond(text)
