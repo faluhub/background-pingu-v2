@@ -28,6 +28,12 @@ class Tips(Cog):
         text = "Please follow this image in order to send a log[:](https://cdn.discordapp.com/attachments/531598137790562305/575381000398569493/unknown.png)"
         return await ctx.respond(text)
 
+    @commands.slash_command(name="mcsr", description="Gives an explanation that MCSR != Ranked.")
+    async def rankedfaq(self, ctx: discord.ApplicationContext):
+        text = """"MCSR" is short for "minecraft speedrunning", and is usually used to refer to the minecraft speedrunning community.
+If you're referring to the mod that allows people to speedrun 1v1, that's "MCSR Ranked" or "Ranked" for short <:Okayge:796454436427005984>"""
+        return await ctx.respond(text)
+
     @commands.slash_command(name="rankedfaq", description="Sends a link to the MCSR Ranked Tech Support FAQ document.")
     async def rankedfaq(self, ctx: discord.ApplicationContext):
         text = """You can find MCSR Ranked Tech Support FAQ document here: https://bit.ly/rankedfaq.
