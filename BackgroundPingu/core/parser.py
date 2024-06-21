@@ -129,7 +129,7 @@ class Log:
             parts = self.java_version.split(".")
             try:
                 if not parts[0] == "1": return int(parts[0])
-                return int(parts[1])
+                if len(parts) > 1: return int(parts[1])
             except ValueError: pass
         
         match = re.search(r"\s*- java (\d+)", self._content)
@@ -142,6 +142,7 @@ class Log:
     def minecraft_folder(self) -> str:
         match = re.compile(r"Minecraft folder is:\n(.*)\n").search(self._content)
         if not match is None: return match.group(1).strip()
+
         return None
     
     @cached_property
@@ -153,10 +154,11 @@ class Log:
                 return OperatingSystem.LINUX
             return OperatingSystem.WINDOWS
         
-        if self.has_content("-natives-windows.jar"): return OperatingSystem.WINDOWS
-        
         if self.has_content("Operating System: Windows"): return OperatingSystem.WINDOWS
         if self.has_content("Operating System: Mac OS"): return OperatingSystem.MACOS
+        if self.has_content("Operating System: Linux"): return OperatingSystem.LINUX
+        
+        if self.has_content("-natives-windows.jar"): return OperatingSystem.WINDOWS
 
         if self.has_content("/Applications/"): return OperatingSystem.MACOS
 
@@ -301,7 +303,7 @@ class Log:
             return ModLoader.FABRIC
         
         match = re.search(r"Client brand changed to '(\S+)'", self._content)
-        if match:
+        if not match is None:
             for loader in ModLoader:
                 if loader.value.lower() in match.group(1).lower():
                     return loader
