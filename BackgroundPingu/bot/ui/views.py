@@ -18,7 +18,13 @@ class Paginator(View):
             next_button.disabled = len(self._messages) == 1
         upload_button = self.get_item("upload")
         if isinstance(upload_button, Button):
-            upload_button.disabled = self.uploaded or self.builder.has("top_info", "uploaded_log") or self.builder.has("top_info", "uploaded_log_2") or self.builder.has("error", "leaked_session_id_token")
+            upload_button.disabled = (
+                self.uploaded
+                or self.builder.has("top_info", "uploaded_log")
+                or self.builder.has("top_info", "uploaded_log_2")
+                or self.builder.has("error", "leaked_session_id_token")
+                or self.builder.has("error", "502_bad_gateway")
+            )
     
     async def edit_message(self, interaction: discord.Interaction):
         embed = interaction.message.embeds[0]
