@@ -823,6 +823,11 @@ class IssueChecker:
                 builder.note("old_prism_version")
                 if self.log.has_content("AppData/Roaming/PrismLauncher"): builder.add("update_prism_installer")
 
+        match = re.search(r"MultiMC version: 0\.7\.0-(\d{4})", self.log._content)
+        if not match is None and self.log.operating_system == OperatingSystem.WINDOWS:
+            if match.group(1) < "3863":
+                builder.note("semi_old_mmc_version")
+
         match = re.search(r"Incompatible mod set found! READ THE BELOW LINES!(.*?$)", self.log._content, re.DOTALL)
         if not match is None:
             found_crash_cause = True
