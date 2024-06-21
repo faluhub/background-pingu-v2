@@ -290,11 +290,24 @@ class IssueChecker:
                     "s" if len(outdated_mods) > 1 else "",
                     "`, `".join([mod for mod in outdated_mods.keys()]),
                 ).add("update_mods").add("modcheck_v1_warning")
-        else:
-            for mod_name, link in outdated_mods.items():
-                builder.note("outdated_mod", mod_name, link)
-            for missing_mod in missing_mods:
-                builder.warning("missing_mod", missing_mod[0], missing_mod[1])
+        elif len(outdated_mods) + len(missing_mods) > 0:
+            if len(outdated_mods) > 0:
+                builder.note(
+                    "outdated_mods_linked",
+                    len(outdated_mods),
+                    "s" if len(outdated_mods) > 1 else "",
+                    "s" if len(outdated_mods) > 1 else "",
+                    ", ".join(f"[**{name}**]({link})" for name, link in outdated_mods.items()),
+                )
+            if len(missing_mods) > 0:
+                builder.warning(
+                    "missing_mods_linked",
+                    len(missing_mods),
+                    "s" if len(missing_mods) > 1 else "",
+                    "them" if len(missing_mods) > 1 else "it",
+                    ", ".join(f"[**{name}**]({link})" for name, link in missing_mods),
+                )
+            builder.add("update_mods").add("modcheck_v1_warning")
 
         for key, value in all_incompatible_mods.items():
             for incompatible_mod in value:
