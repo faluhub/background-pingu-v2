@@ -1052,6 +1052,14 @@ class IssueChecker:
         if self.log.lines == 25000:
             builder.error("mclogs_cutoff")
         
+        try:
+            if self.log._content.splitlines()[-1].startswith("[23:5"):
+                builder.error("midnight_bug") # for the first log part
+        except IndexError: pass
+        
+        if self.log.has_pattern(r"^\[00:") and not self.log.has_content("Setting user:"):
+            builder.error("midnight_bug") # for the second log part
+        
         if (not found_crash_cause
             and any(self.link.endswith(file_extension) for file_extension in [".log", ".txt", ".tdump"])
             and self.log.has_content("minecraft")

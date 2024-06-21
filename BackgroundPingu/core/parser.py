@@ -178,6 +178,7 @@ class Log:
             r"/com/mojang/minecraft/(\S+?)/",
             r"/net/minecraftforge/forge/(\S+?)-",
             r"--version, (\S+),",
+            r"minecraft server version (\S+)\n",
         ]:
             match = re.compile(pattern).search(self._content)
             if not match is None:
