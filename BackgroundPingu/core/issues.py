@@ -187,6 +187,10 @@ class IssueChecker:
     def check(self) -> IssueBuilder:
         builder = IssueBuilder(self.bot, self.log)
 
+        if self.log.has_pattern(r"^__PINGU__ERROR__502_BAD_GATEWAY__"):
+            builder.error("502_bad_gateway")
+            return builder
+
         is_mcsr_log = any(self.log.has_mod(mcsr_mod) for mcsr_mod in self.mcsr_mods) or self.log.minecraft_version == "1.16.1"
         found_crash_cause = False
         illegal_mods = []
