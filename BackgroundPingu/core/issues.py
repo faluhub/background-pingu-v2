@@ -1,7 +1,7 @@
 import semver, re, requests
 from packaging import version
 from BackgroundPingu.bot.main import BackgroundPingu
-from BackgroundPingu.core.parser import Log, ModLoader, OperatingSystem, LogType
+from BackgroundPingu.core.parser import Log, ModLoader, OperatingSystem, LogType, Launcher
 
 class IssueBuilder:
     def __init__(self, bot: BackgroundPingu, log: Log) -> None:
@@ -187,6 +187,10 @@ class IssueChecker:
     def check(self) -> IssueBuilder:
         builder = IssueBuilder(self.bot, self.log)
 
+        if self.log.has_pattern(r"^__PINGU__ERROR__502_BAD_GATEWAY__"):
+            builder.error("502_bad_gateway")
+            return builder
+
         is_mcsr_log = any(self.log.has_mod(mcsr_mod) for mcsr_mod in self.mcsr_mods) or self.log.minecraft_version == "1.16.1"
         found_crash_cause = False
         illegal_mods = []
@@ -200,7 +204,7 @@ class IssueChecker:
         if self.log.operating_system == OperatingSystem.MACOS: footer += " MacOS"
         elif self.log.operating_system == OperatingSystem.LINUX: footer += " Linux"
 
-        if not self.log.launcher is None: footer += f" {self.log.launcher}"
+        if not self.log.launcher is None: footer += f" {self.log.launcher.value}"
         
         if not self.log.minecraft_version is None: footer += f" {self.log.minecraft_version}"
 
@@ -290,11 +294,24 @@ class IssueChecker:
                     "s" if len(outdated_mods) > 1 else "",
                     "`, `".join([mod for mod in outdated_mods.keys()]),
                 ).add("update_mods").add("modcheck_v1_warning")
-        else:
-            for mod_name, link in outdated_mods.items():
-                builder.note("outdated_mod", mod_name, link)
-            for missing_mod in missing_mods:
-                builder.warning("missing_mod", missing_mod[0], missing_mod[1])
+        elif len(outdated_mods) + len(missing_mods) > 0:
+            if len(outdated_mods) > 0:
+                builder.note(
+                    "outdated_mods_linked",
+                    len(outdated_mods),
+                    "s" if len(outdated_mods) > 1 else "",
+                    "s" if len(outdated_mods) > 1 else "",
+                    ", ".join(f"[**{name}**]({link})" for name, link in outdated_mods.items()),
+                )
+            if len(missing_mods) > 0:
+                builder.warning(
+                    "missing_mods_linked",
+                    len(missing_mods),
+                    "s" if len(missing_mods) > 1 else "",
+                    "them" if len(missing_mods) > 1 else "it",
+                    ", ".join(f"[**{name}**]({link})" for name, link in missing_mods),
+                )
+            builder.add("update_mods").add("modcheck_v1_warning")
 
         for key, value in all_incompatible_mods.items():
             for incompatible_mod in value:
@@ -376,7 +393,10 @@ class IssueChecker:
                     f", but you're using `Java {self.log.major_java_version}`" if not self.log.major_java_version is None else "",
                 ).add("java_update_guide")
                 found_crash_cause = True
-            if self.log.is_newer_than("1.20.5") and self.log.major_java_version < 21:
+            if (self.log.is_newer_than("1.20.5")
+                and not self.log.major_java_version is None
+                and self.log.major_java_version < 21
+            ):
                 builder.error(
                     "need_new_java_mc",
                     21,
@@ -475,7 +495,7 @@ class IssueChecker:
             found_crash_cause = True
         
         if self.log.has_content("mcwrap.py"):
-            if self.log.launcher is None or self.log.launcher == "MultiMC" or not self.log.has_content("mac-lwjgl-fix"):
+            if self.log.launcher is None or self.log.launcher == Launcher.MULTIMC or not self.log.has_content("mac-lwjgl-fix"):
                 builder.error("m1_multimc_hack").add("mac_setup_guide")
         
         elif not found_crash_cause and any(self.log.has_pattern(using_32_bit_java) for using_32_bit_java in [
@@ -493,7 +513,7 @@ class IssueChecker:
             if self.log.is_prism: builder.add("prism_java_compat_check")
 
         if self.log.operating_system == OperatingSystem.MACOS and not self.log.has_content("32-bit architecture"):
-            if self.log.launcher == "MultiMC":
+            if self.log.launcher == Launcher.MULTIMC:
                 builder.note("mac_use_prism").add("mac_setup_guide")
             elif self.log.is_prism and self.log.has_content("using 64 (x86_64) architecture"):
                 builder.note("mac_use_arm_java")
@@ -512,6 +532,9 @@ class IssueChecker:
         
         if self.log.has_content("[LWJGL] Platform/architecture mismatch detected for module: org.lwjgl"):
             builder.error("try_changing_lwjgl_version", self.log.edit_instance)
+        
+        if self.log.has_content("(Silent Mode)"):
+            builder.error("try_changing_lwjgl_version", self.log.edit_instance, experimental=True)
         
         if any(self.log.has_content(new_java_old_fabric) for new_java_old_fabric in [
             "java.lang.IllegalArgumentException: Unsupported class file major version ",
@@ -541,10 +564,8 @@ class IssueChecker:
                         if highest_srigt_ver is None or ver > highest_srigt_ver:
                             highest_srigt_ver = ver
             if not highest_srigt_ver is None and highest_srigt_ver < version.parse("13.3") and self.log.fabric_version > version.parse("0.14.14"):
-                    builder.error("incompatible_srigt")
-                    if not self.log.minecraft_version == "1.16.1":
-                        builder.add("incompatible_srigt_alternative")
-                    found_crash_cause = True
+                builder.error("incompatible_srigt")
+                found_crash_cause = True
             
             if self.log.fabric_version.__str__() in ["0.14.15", "0.14.16"]:
                 builder.error("broken_fabric")
@@ -560,7 +581,7 @@ class IssueChecker:
                 if self.log.is_newer_than("1.14"): builder.add("fabric_guide_prism" if self.log.is_prism else "fabric_guide_mmc", "update")
         
         if len(self.log.mods) == 0 and self.log.has_content(".mrpack\n"):
-            builder.error("using_modpack_as_mod", self.log.launcher if self.log.launcher is not None else "your launcher")
+            builder.error("using_modpack_as_mod", self.log.launcher.value if self.log.launcher is not None else "your launcher")
 
         if len(self.log.mods) > 0 and self.log.mod_loader == ModLoader.VANILLA:
             if any(self.log.has_library(loader) for loader in ["forge", "fabric", "quilt"]):
@@ -718,7 +739,7 @@ class IssueChecker:
             if self.log.has_content("Failed to locate library:"):
                 builder.error("builtin_lib_crash",
                               system_arg,
-                              self.log.launcher if self.log.launcher is not None else "your launcher",
+                              self.log.launcher.value if self.log.launcher is not None else "your launcher",
                               " > Tweaks" if self.log.is_prism else "")
                 found_crash_cause = True
             elif any(self.log.has_content_in_stacktrace(lib) for lib in ["GLFW", "OpenAL"]):
@@ -821,6 +842,11 @@ class IssueChecker:
             else:
                 builder.note("old_prism_version")
                 if self.log.has_content("AppData/Roaming/PrismLauncher"): builder.add("update_prism_installer")
+
+        match = re.search(r"MultiMC version: 0\.7\.0-(\d{4})", self.log._content)
+        if not match is None and self.log.operating_system == OperatingSystem.WINDOWS:
+            if match.group(1) < "3863":
+                builder.note("semi_old_mmc_version")
 
         match = re.search(r"Incompatible mod set found! READ THE BELOW LINES!(.*?$)", self.log._content, re.DOTALL)
         if not match is None:
@@ -1025,10 +1051,18 @@ class IssueChecker:
             if "C:/Program Files" in self.log.minecraft_folder:
                 builder.note("program_files")
             if "Rar$" in self.log.minecraft_folder:
-                builder.error("need_to_extract_from_zip", self.log.launcher if not self.log.launcher is None else "the launcher")
+                builder.error("need_to_extract_from_zip", self.log.launcher.value if not self.log.launcher is None else "the launcher")
 
         if self.log.lines == 25000:
             builder.error("mclogs_cutoff")
+        
+        try:
+            if self.log._content.splitlines()[-1].startswith("[23:5"):
+                builder.error("midnight_bug") # for the first log part
+        except IndexError: pass
+        
+        if self.log.has_pattern(r"^\[00:") and not self.log.has_content("Setting user:"):
+            builder.error("midnight_bug") # for the second log part
         
         if (not found_crash_cause
             and any(self.link.endswith(file_extension) for file_extension in [".log", ".txt", ".tdump"])
@@ -1044,7 +1078,7 @@ class IssueChecker:
         if (not found_crash_cause and self.log.is_multimc_or_fork
             and not self.log.type in [LogType.FULL_LOG, LogType.THREAD_DUMP, LogType.LAUNCHER_LOG]
         ):
-            builder.info("send_full_log", self.log.launcher, self.log.edit_instance)
+            builder.info("send_full_log", self.log.launcher.value, self.log.edit_instance)
 
         pattern = r"\[Integrated Watchdog/ERROR\]:? This crash report has been saved to: (.*\.txt)"
         match = re.search(pattern, self.log._content)

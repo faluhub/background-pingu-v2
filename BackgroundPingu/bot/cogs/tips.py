@@ -28,6 +28,12 @@ class Tips(Cog):
         text = "Please follow this image in order to send a log[:](https://cdn.discordapp.com/attachments/531598137790562305/575381000398569493/unknown.png)"
         return await ctx.respond(text)
 
+    @commands.slash_command(name="mcsr", description="Gives an explanation that MCSR != Ranked.")
+    async def mcsr(self, ctx: discord.ApplicationContext):
+        text = """"MCSR" is short for "minecraft speedrunning", and is usually used to refer to the minecraft speedrunning community.
+If you're referring to the mod that allows people to speedrun 1v1, that's "MCSR Ranked" or "Ranked" for short <:Okayge:796454436427005984>"""
+        return await ctx.respond(text)
+
     @commands.slash_command(name="rankedfaq", description="Sends a link to the MCSR Ranked Tech Support FAQ document.")
     async def rankedfaq(self, ctx: discord.ApplicationContext):
         text = """You can find MCSR Ranked Tech Support FAQ document here: https://bit.ly/rankedfaq.
@@ -160,7 +166,7 @@ Watch the 1st video for a rough overview, the 2nd and 3rd for more information a
     @commands.slash_command(name="1_16mods", description="Gives an explanation of 1.16 mods.")
     async def one_sixteen_mods(self, ctx: discord.ApplicationContext):
         text = """Download the mods here: <https://mods.tildejustin.dev/>
-All other mods are banned[.](https://i.imgur.com/qqBXObV.png)"""
+All other mods are banned[.](https://i.imgur.com/rkRBoRw.png)"""
         return await ctx.respond(text)
 
     @commands.slash_command(name="areessgee", description="Gives a link to AreEssGee.")
@@ -182,7 +188,7 @@ Don't forget to check the FAQ in the readme!
     async def allowedmods(self, ctx: discord.ApplicationContext):
         text = """If you use Optifine (allowed only in pre-1.15), please read the [**detailed mod rules**](<http://bombch.us/DOOK>).
 The allowed mods can be found and downloaded [**here**](<https://mods.tildejustin.dev/> ).
-All other mods, including Fabric API, are banned[.](https://imgur.com/b9S5RWp)"""
+All other mods, including Fabric API, are banned[.](https://cdn.discordapp.com/attachments/433058639956410383/1251953904363769876/image.png)"""
         return await ctx.respond(text)
 
     @commands.slash_command(name="piedirectory", description="Gives the useful pie directories.")
