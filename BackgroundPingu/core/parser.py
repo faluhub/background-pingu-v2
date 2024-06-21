@@ -2,6 +2,11 @@ import re, requests, enum
 from packaging import version
 from cached_property import cached_property
 
+class OperatingSystem(enum.IntEnum):
+    WINDOWS = enum.auto()
+    LINUX = enum.auto()
+    MACOS = enum.auto()
+
 class LogType(enum.Enum):
     FULL_LOG = "full log"
     THREAD_DUMP = "thread dump"
@@ -10,10 +15,14 @@ class LogType(enum.Enum):
     LATEST_LOG = "latest.log"
     LAUNCHER_LOG = "launcher log"
 
-class OperatingSystem(enum.IntEnum):
-    WINDOWS = enum.auto()
-    LINUX = enum.auto()
-    MACOS = enum.auto()
+class Launcher(enum.Enum):
+    OFFICIAL_LAUNCHER = "Official Launcher"
+    MULTIMC = "MultiMC"
+    PRISM = "Prism"
+    POLYMC = "PolyMC"
+    POLLYMC = "PollyMC"
+    MANYMC = "ManyMC"
+    ULTIMMC = "UltimMC"
 
 class ModLoader(enum.Enum):
     FABRIC = "Fabric"
@@ -53,13 +62,6 @@ class Log:
         self._content = content
         self._lower_content = self._content.lower()
         self.lines = self._content.count("\n") + 1
-        self.launchers = [
-            "MultiMC",
-            "Prism",
-            "PolyMC",
-            "ManyMC",
-            "UltimMC"
-        ]
     
     @staticmethod
     def from_link(link: str):
@@ -223,12 +225,16 @@ class Log:
         return None
     
     @cached_property
-    def launcher(self) -> str:
-        result = self._content.split(" ", 1)[0]
-        if result in self.launchers: return result
+    def launcher(self) -> Launcher:
+        for launcher in Launcher:
+            if self._lower_content.startswith(launcher.value.lower()):
+                return launcher
         
-        for launcher in self.launchers:
-            if self.has_content(f"/{launcher}/") or self.has_content(f"\\{launcher}\\") or self.has_content(f"org.{launcher}."):
+        for launcher in Launcher:
+            if (self.has_content(f"/{launcher.value}/")
+                or self.has_content(f"\\{launcher.value}\\")
+                or self.has_content(f"org.{launcher.value}.")
+            ):
                 return launcher
         
         if any(self.has_content(prism) for prism in [
@@ -236,22 +242,22 @@ class Log:
             "/PrismLauncher",
             "\\PrismLauncher",
         ]):
-            return "Prism"
+            return Launcher.PRISM
         
         if (self.has_content("\\AppData\\Roaming\\.minecraft")
             or self.has_content("/AppData/Roaming/.minecraft")
             or self.has_pattern(r"-Xmx(\d+)G")
         ):
-            return "Official Launcher"
+            return Launcher.OFFICIAL_LAUNCHER
         
         if self.max_allocated == 1024:
-            return "MultiMC"
+            return Launcher.MULTIMC
 
         return None
 
     @cached_property
     def type(self) -> LogType:
-        if any([self._content.startswith(launcher) for launcher in self.launchers]):
+        if any([self._content.startswith(launcher.value) for launcher in Launcher]):
             return LogType.FULL_LOG
 
         if any(self.has_content(thread_dump) for thread_dump in [
@@ -276,11 +282,11 @@ class Log:
 
     @cached_property
     def is_multimc_or_fork(self) -> bool:
-        return not self.launcher is None and self.launcher != "Official Launcher"
+        return not self.launcher is None and self.launcher != Launcher.OFFICIAL_LAUNCHER
 
     @cached_property
     def is_prism(self) -> bool:
-        return self.launcher in ["Prism", "PolyMC"]
+        return self.launcher in [Launcher.PRISM, Launcher.POLYMC, Launcher.POLLYMC]
 
     @cached_property
     def edit_instance(self) -> str:
@@ -452,7 +458,7 @@ class Log:
 
     @cached_property
     def java_update_guide(self) -> str:
-        if self.launcher == "Official Launcher":
+        if self.launcher == Launcher.OFFICIAL_LAUNCHER:
             if self.operating_system == OperatingSystem.MACOS: return "mac_setup_guide"
             return "k4_setup_guide"
 
@@ -558,7 +564,7 @@ class Log:
         mods.append("lithium")
         if not self.is_newer_than("1.20"): mods.append("starlight")
 
-        if self.launcher != "Official Launcher" and not self.is_newer_than("1.17"):
+        if self.launcher != Launcher.OFFICIAL_LAUNCHER and not self.is_newer_than("1.17"):
             mods.append("voyager")
         
         if self.is_newer_than("1.17"):

@@ -1,7 +1,7 @@
 import semver, re, requests
 from packaging import version
 from BackgroundPingu.bot.main import BackgroundPingu
-from BackgroundPingu.core.parser import Log, ModLoader, OperatingSystem, LogType
+from BackgroundPingu.core.parser import Log, ModLoader, OperatingSystem, LogType, Launcher
 
 class IssueBuilder:
     def __init__(self, bot: BackgroundPingu, log: Log) -> None:
@@ -200,7 +200,7 @@ class IssueChecker:
         if self.log.operating_system == OperatingSystem.MACOS: footer += " MacOS"
         elif self.log.operating_system == OperatingSystem.LINUX: footer += " Linux"
 
-        if not self.log.launcher is None: footer += f" {self.log.launcher}"
+        if not self.log.launcher is None: footer += f" {self.log.launcher.value}"
         
         if not self.log.minecraft_version is None: footer += f" {self.log.minecraft_version}"
 
@@ -478,7 +478,7 @@ class IssueChecker:
             found_crash_cause = True
         
         if self.log.has_content("mcwrap.py"):
-            if self.log.launcher is None or self.log.launcher == "MultiMC" or not self.log.has_content("mac-lwjgl-fix"):
+            if self.log.launcher is None or self.log.launcher == Launcher.MULTIMC or not self.log.has_content("mac-lwjgl-fix"):
                 builder.error("m1_multimc_hack").add("mac_setup_guide")
         
         elif not found_crash_cause and any(self.log.has_pattern(using_32_bit_java) for using_32_bit_java in [
@@ -496,7 +496,7 @@ class IssueChecker:
             if self.log.is_prism: builder.add("prism_java_compat_check")
 
         if self.log.operating_system == OperatingSystem.MACOS and not self.log.has_content("32-bit architecture"):
-            if self.log.launcher == "MultiMC":
+            if self.log.launcher == Launcher.MULTIMC:
                 builder.note("mac_use_prism").add("mac_setup_guide")
             elif self.log.is_prism and self.log.has_content("using 64 (x86_64) architecture"):
                 builder.note("mac_use_arm_java")
@@ -561,7 +561,7 @@ class IssueChecker:
                 if self.log.is_newer_than("1.14"): builder.add("fabric_guide_prism" if self.log.is_prism else "fabric_guide_mmc", "update")
         
         if len(self.log.mods) == 0 and self.log.has_content(".mrpack\n"):
-            builder.error("using_modpack_as_mod", self.log.launcher if self.log.launcher is not None else "your launcher")
+            builder.error("using_modpack_as_mod", self.log.launcher.value if self.log.launcher is not None else "your launcher")
 
         if len(self.log.mods) > 0 and self.log.mod_loader == ModLoader.VANILLA:
             if any(self.log.has_library(loader) for loader in ["forge", "fabric", "quilt"]):
@@ -719,7 +719,7 @@ class IssueChecker:
             if self.log.has_content("Failed to locate library:"):
                 builder.error("builtin_lib_crash",
                               system_arg,
-                              self.log.launcher if self.log.launcher is not None else "your launcher",
+                              self.log.launcher.value if self.log.launcher is not None else "your launcher",
                               " > Tweaks" if self.log.is_prism else "")
                 found_crash_cause = True
             elif any(self.log.has_content_in_stacktrace(lib) for lib in ["GLFW", "OpenAL"]):
@@ -1031,7 +1031,7 @@ class IssueChecker:
             if "C:/Program Files" in self.log.minecraft_folder:
                 builder.note("program_files")
             if "Rar$" in self.log.minecraft_folder:
-                builder.error("need_to_extract_from_zip", self.log.launcher if not self.log.launcher is None else "the launcher")
+                builder.error("need_to_extract_from_zip", self.log.launcher.value if not self.log.launcher is None else "the launcher")
 
         if self.log.lines == 25000:
             builder.error("mclogs_cutoff")
@@ -1050,7 +1050,7 @@ class IssueChecker:
         if (not found_crash_cause and self.log.is_multimc_or_fork
             and not self.log.type in [LogType.FULL_LOG, LogType.THREAD_DUMP, LogType.LAUNCHER_LOG]
         ):
-            builder.info("send_full_log", self.log.launcher, self.log.edit_instance)
+            builder.info("send_full_log", self.log.launcher.value, self.log.edit_instance)
 
         pattern = r"\[Integrated Watchdog/ERROR\]:? This crash report has been saved to: (.*\.txt)"
         match = re.search(pattern, self.log._content)
