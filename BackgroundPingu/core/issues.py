@@ -529,6 +529,9 @@ class IssueChecker:
         if self.log.has_content("[LWJGL] Platform/architecture mismatch detected for module: org.lwjgl"):
             builder.error("try_changing_lwjgl_version", self.log.edit_instance)
         
+        if self.log.has_content("(Silent Mode)"):
+            builder.error("try_changing_lwjgl_version", self.log.edit_instance, experimental=True)
+        
         if any(self.log.has_content(new_java_old_fabric) for new_java_old_fabric in [
             "java.lang.IllegalArgumentException: Unsupported class file major version ",
             "java.lang.IllegalArgumentException: Class file major version "
