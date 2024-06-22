@@ -73,8 +73,8 @@ class Log:
         res = requests.get(link, timeout=5)
         if res.status_code == 200:
             return Log(res.text.replace("\r", ""))
-        elif res.status_code == 502:
-            return Log("__PINGU__ERROR__502_BAD_GATEWAY__")
+        elif res.status_code != 404:
+            return Log(f"__PINGU__DOWNLOAD_ERROR__{res.status_code}__")
         return None
 
     @cached_property

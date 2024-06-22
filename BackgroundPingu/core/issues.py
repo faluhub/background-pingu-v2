@@ -187,8 +187,10 @@ class IssueChecker:
     def check(self) -> IssueBuilder:
         builder = IssueBuilder(self.bot, self.log)
 
-        if self.log.has_pattern(r"^__PINGU__ERROR__502_BAD_GATEWAY__"):
-            builder.error("502_bad_gateway")
+        if self.log.has_pattern(r"^__PINGU__DOWNLOAD_ERROR__(\d+)__"):
+            # when updating it, also update upload_button.disabled in views.py
+            match = re.search(r"^__PINGU__DOWNLOAD_ERROR__(\d+)__", self.log._content)
+            builder.error("failed_to_download_log", match.group(1))
             return builder
 
         is_mcsr_log = any(self.log.has_mod(mcsr_mod) for mcsr_mod in self.mcsr_mods) or self.log.minecraft_version == "1.16.1"
