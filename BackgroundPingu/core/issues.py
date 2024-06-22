@@ -1125,12 +1125,19 @@ class IssueChecker:
                 else:
                     for mod in self.log.whatever_mods:
                         mod_name = mod.lower().replace(".jar", "")
+                        if not self.log.minecraft_version is None: mod_name = mod_name.replace(self.log.minecraft_version, "")
                         for c in ["+", "_", "=", ",", " "]: mod_name = mod_name.replace(c, "-")
                         mod_name_parts = mod_name.split("-")
                         mod_name = ""
                         for part in mod_name_parts:
                             part0 = part
-                            for c in [".", "fabric", "forge", "quilt", "v", "mc", "mod", "backport", "snapshot", "build", "prism", "minecraft"]: part = part.replace(c, "")
+                            for c in [
+                                "fabric", "forge", "quilt",
+                                "mod", "backport", "snapshot",
+                                "build", "prism", "minecraft",
+                                ".", "v", "mc",
+                            ]:
+                                part = part.replace(c, "")
                             for c in range(10): part = part.replace(str(c), "")
                             if part == "": break
                             elif len(part) > 1: mod_name += part0
