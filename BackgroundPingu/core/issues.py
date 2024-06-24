@@ -346,7 +346,7 @@ class IssueChecker:
                 )
         
         if self.log.operating_system == OperatingSystem.MACOS:
-            if self.log.has_mod("sodium-1.16.1-v1") or self.log.has_mod("sodium-1.16.1-v2"):
+            if self.log.has_mod("sodium") and not self.log.has_mod("sodiummac"):
                 builder.error("not_using_mac_sodium")
         
         wrong_not_needed_mods = []
@@ -529,8 +529,14 @@ class IssueChecker:
         ])):
             builder.error("delete_launcher_cache")
 
-        if self.log.has_content("[LWJGL] Failed to load a library. Possible solutions:") and self.log.is_newer_than("1.20"):
-            builder.error("update_mmc")
+        if ((self.log.is_newer_than("1.20") or not self.log.is_newer_than("1.1"))
+            and self.log.has_content("[LWJGL] Failed to load a library. Possible solutions:") # so it works on snapshots too
+        ):
+            if self.log.launcher == Launcher.MULTIMC:
+                builder.error("update_mmc")
+                found_crash_cause = True
+            else:
+                builder.error("update_mmc", experimental=True)
         
         if self.log.has_content("[LWJGL] Platform/architecture mismatch detected for module: org.lwjgl"):
             builder.error("try_changing_lwjgl_version", self.log.edit_instance)
@@ -555,7 +561,7 @@ class IssueChecker:
             builder.error("old_fabric_crash").add("fabric_guide_prism" if self.log.is_prism else "fabric_guide_mmc", "update")
             found_crash_cause = True
         
-        elif self.log.mod_loader == ModLoader.FABRIC and not self.log.fabric_version is None:
+        elif not self.log.fabric_version is None:
             highest_srigt_ver = None
             for mod in self.log.mods:
                 if "speedrunigt" in mod.lower():
@@ -775,6 +781,10 @@ class IssueChecker:
             builder.error("sodium_config_crash")
             found_crash_cause = True
         
+        if self.log.has_content_in_stacktrace("me.voidxwalker.options.extra.ExtraOptions.lambda$load"):
+            builder.error("corrupted_mod_config", "extra-options")
+            found_crash_cause = True
+        
         pattern = r"Uncaught exception in thread \"Thread-\d+\"\njava\.util\.ConcurrentModificationException: null"
         if "java.util.ConcurrentModificationException" in re.sub(pattern, "", self.log._content):
             if self.log.short_version == "1.16" and not self.log.has_mod("voyager"):
@@ -845,9 +855,9 @@ class IssueChecker:
                 builder.note("old_prism_version")
                 if self.log.has_content("AppData/Roaming/PrismLauncher"): builder.add("update_prism_installer")
 
-        match = re.search(r"MultiMC version: 0\.7\.0-(\d{4})", self.log._content)
+        match = re.search(r"MultiMC version: 0\.7\.0-(.{4})", self.log._content)
         if not match is None and self.log.operating_system == OperatingSystem.WINDOWS:
-            if match.group(1) < "3863":
+            if match.group(1) < "3863" or match.group(1) == "stab":
                 builder.note("semi_old_mmc_version")
 
         match = re.search(r"Incompatible mod set found! READ THE BELOW LINES!(.*?$)", self.log._content, re.DOTALL)
