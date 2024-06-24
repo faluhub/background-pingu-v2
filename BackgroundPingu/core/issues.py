@@ -918,9 +918,13 @@ class IssueChecker:
                 builder.error("ranked_rong_mods", f"a mod `{ranked_rong_mods[0]}` that is", "it")
         
         if self.log.has_mod("optifine"):
-            if self.log.has_mod("worldpreview"):
-                builder.error("incompatible_mod", "Optifine", "WorldPreview")
-                found_crash_cause = True
+            for mod in [
+                "WorldPreview",
+                "Starlight",
+            ]:
+                if self.log.has_mod(mod):
+                    builder.error("incompatible_mod", "Optifine", mod)
+                    found_crash_cause = True
             if self.log.has_mod("z-buffer-fog") and self.log.is_newer_than("1.14"):
                 builder.error("incompatible_mod", "Optifine", "z-buffer-fog")
                 found_crash_cause = True
