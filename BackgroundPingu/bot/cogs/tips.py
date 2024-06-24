@@ -197,6 +197,11 @@ All other mods, including Fabric API, are banned[.](https://cdn.discordapp.com/a
 1) Mapless / Preemptive: ```root.gameRenderer.level.entities```2) Village / Fortress: ```root.tick.level.entities.blockEntities```"""
         return await ctx.respond(text)
 
+    @commands.slash_command(name="perch", description="Gives the command to force the dragon to perch.")
+    async def perch(self, ctx: discord.ApplicationContext):
+        text = """1.13+:```/data merge entity @e[type=ender_dragon,limit=1] {DragonPhase:2}```1.11-1.12:```/entitydata @e[type=ender_dragon] {DragonPhase:2}```1.9-1.10:```/entitydata @e[type=EnderDragon] {DragonPhase:3}```"""
+        return await ctx.respond(text)
+
     @commands.slash_command(name="standardsettings", description="Explains what StandardSettings is.")
     async def standardsettings(self, ctx: discord.ApplicationContext):
         text = """If your settings reset whenever you create a world, you are probably using StandardSettings <https://github.com/Slackow/StandardSettings>
