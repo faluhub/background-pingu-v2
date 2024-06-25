@@ -803,10 +803,12 @@ class IssueChecker:
         if is_mcsr_log and any(self.log.has_content(snowman_crash) for snowman_crash in [
             "Cannot invoke \"net.minecraft.class_1657.method_7325()\"",
             "Cannot invoke \"net.minecraft.class_4184.method_19326()\"",
-            "because \"☃\" is null",
         ]):
             builder.error("snowman_crash")
             found_crash_cause = True
+        
+        if is_mcsr_log and not found_crash_cause and self.log.has_content("because \"☃\" is null"):
+            builder.error("snowman_crash", experimental=True)
         
         if self.log.has_pattern(r"Description: Exception in server tick loop[\s\n]*java\.lang\.IllegalStateException: Lock is no longer valid"):
             builder.error("wp_3_plus_crash")
@@ -918,12 +920,9 @@ class IssueChecker:
                 builder.error("ranked_rong_mods", f"a mod `{ranked_rong_mods[0]}` that is", "it")
         
         if self.log.has_mod("optifine"):
-            for mod in [
-                "WorldPreview",
-                "Starlight",
-            ]:
-                if self.log.has_mod(mod):
-                    builder.error("incompatible_mod", "Optifine", mod)
+            for incompatible_mod in ["WorldPreview", "Starlight"]:
+                if self.log.has_mod(incompatible_mod):
+                    builder.error("incompatible_mod", "Optifine", incompatible_mod)
                     found_crash_cause = True
             if self.log.has_mod("z-buffer-fog") and self.log.is_newer_than("1.14"):
                 builder.error("incompatible_mod", "Optifine", "z-buffer-fog")
