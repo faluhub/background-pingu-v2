@@ -49,7 +49,7 @@ class Log:
         # just replacing pc_username with "" is a bad idea
         # for instance, if it's "Alex", it could also replace it in the mod "Alex Caves", which would leak it
 
-        pattern = r"Session ID is token:.{30,}?\n"
+        pattern = r"Session ID is token:.{50,}?\n"
         if re.search(pattern, content) is not None:
             replacement = "Session ID is (redacted))\n"
             content = re.sub(pattern, replacement, content)

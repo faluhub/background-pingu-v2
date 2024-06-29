@@ -705,8 +705,8 @@ class IssueChecker:
             found_crash_cause = True
         
         elif (not found_crash_cause
-            and (self.log.has_content("A fatal error has been detected by the Java Runtime Environment") or self.log.has_content("EXCEPTION_ACCESS_VIOLATION"))
             and self.log.stacktrace is None
+            and (self.log.has_content("A fatal error has been detected by the Java Runtime Environment") or self.log.has_content("EXCEPTION_ACCESS_VIOLATION"))
         ):
             builder.error("eav_crash", experimental=True)
             if self.log.has_pattern(r"  \[ntdll\.dll\+(0x[0-9a-f]+)\]"):
@@ -721,7 +721,9 @@ class IssueChecker:
                 builder.add("eav_crash_1.3")
             builder.add("eav_crash_2")
             builder.add("eav_crash_3")
-            if len(self.log.whatever_mods) == 0 or self.log.has_mod("speedrunigt") or self.log.has_mod("mcsrranked"): builder.add("eav_crash_srigt")
+            if ((len(self.log.whatever_mods) == 0 or self.log.has_mod("speedrunigt") or self.log.has_mod("mcsrranked"))
+                and self.log.operating_system != OperatingSystem.MACOS
+            ): builder.add("eav_crash_srigt")
             builder.add("eav_crash_disclaimer")
             if self.log.stacktrace is None: found_crash_cause = True
         
@@ -810,6 +812,10 @@ class IssueChecker:
         if is_mcsr_log and not found_crash_cause and self.log.has_content("because \"☃\" is null"):
             builder.error("snowman_crash", experimental=True)
         
+        if self.log.has_content("Cannot invoke \"net.minecraft.class_1170.method_3833()\" because the return value of \"net.minecraft.class_1170.method_6428(int)\" is null"):
+            builder.error("invalid_biome_id_crash")
+            found_crash_cause = True
+        
         if self.log.has_pattern(r"Description: Exception in server tick loop[\s\n]*java\.lang\.IllegalStateException: Lock is no longer valid"):
             builder.error("wp_3_plus_crash")
             found_crash_cause = True
@@ -870,8 +876,8 @@ class IssueChecker:
             ranked_rong_versions = []
             ranked_anticheat = match.group(1).strip().replace("\t","")
 
-            if self.log.has_pattern(r"You should delete these from Minecraft.\s*?Process exited with code 1."):
-                builder.error("ranked_fabric_0_15_x").add("fabric_guide_prism" if self.log.is_prism else "fabric_guide_mmc", "downgrade")
+            if self.log.has_pattern(r"You should delete these from Minecraft.\s*?Process "):
+                builder.error("ranked_fabric_0_15_x")
             
             ranked_anticheat_split = ranked_anticheat.split("These Fabric Mods are whitelisted but different version! Make sure to update these!")
             if len(ranked_anticheat_split) > 1:
@@ -956,7 +962,8 @@ class IssueChecker:
         
         if self.log.has_normal_mod("continuity") and self.log.has_mod("sodium") and not self.log.has_mod("indium"):
             builder.error("missing_dependency", "continuity", "indium")
-            found_crash_cause = True
+            if self.log.has_content("Cannot invoke \"net.fabricmc.fabric.api.renderer.v1.Renderer.meshBuilder()\""):
+                found_crash_cause = True
         elif self.log.has_content("Cannot invoke \"net.fabricmc.fabric.api.renderer.v1.Renderer.meshBuilder()\""):
             builder.error("missing_dependency_2", "indium")
             found_crash_cause = True
