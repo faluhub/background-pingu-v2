@@ -19,10 +19,7 @@ class Launcher(enum.Enum):
     OFFICIAL_LAUNCHER = "Official Launcher"
     MULTIMC = "MultiMC"
     PRISM = "Prism"
-    POLYMC = "PolyMC"
-    POLLYMC = "PollyMC"
-    MANYMC = "ManyMC"
-    ULTIMMC = "UltimMC"
+    MODRINTH = "Modrinth App"
 
 class ModLoader(enum.Enum):
     FABRIC = "Fabric"
@@ -229,23 +226,37 @@ class Log:
     
     @cached_property
     def launcher(self) -> Launcher:
-        for launcher in Launcher:
-            if self._lower_content.startswith(launcher.value.lower()):
-                return launcher
+        for prism_name in [
+            "prism",
+            "polymc",
+            "pollymc",
+        ]:
+            if self.has_pattern(rf"^{prism_name}"):
+                return Launcher.PRISM
+            if any(self.has_content(prism) for prism in [
+                f"org.{prism_name}",
+                f"/{prism_name}",
+                f"\\{prism_name}",
+            ]):
+                return Launcher.PRISM
         
-        for launcher in Launcher:
-            if (self.has_content(f"/{launcher.value}/")
-                or self.has_content(f"\\{launcher.value}\\")
-                or self.has_content(f"org.{launcher.value}.")
-            ):
-                return launcher
+        for multimc_name in [
+            "multimc",
+            "ultimmc",
+        ]:
+            if self.has_pattern(rf"^{multimc_name}"):
+                return Launcher.MULTIMC
+            if any(self.has_content(multimc) for multimc in [
+                f"org.{multimc_name}",
+                f"/{multimc_name}",
+                f"\\{multimc_name}",
+            ]):
+                return Launcher.MULTIMC
         
-        if any(self.has_content(prism) for prism in [
-            "org.prismlauncher.",
-            "/PrismLauncher",
-            "\\PrismLauncher",
+        if any(self.has_content(modrinth) for modrinth in [
+            "com.modrinth.theseus",
         ]):
-            return Launcher.PRISM
+            return Launcher.MODRINTH
         
         if (self.has_content("\\AppData\\Roaming\\.minecraft")
             or self.has_content("/AppData/Roaming/.minecraft")
@@ -289,7 +300,7 @@ class Log:
 
     @cached_property
     def is_prism(self) -> bool:
-        return self.launcher in [Launcher.PRISM, Launcher.POLYMC, Launcher.POLLYMC]
+        return self.launcher == Launcher.PRISM
 
     @cached_property
     def edit_instance(self) -> str:
