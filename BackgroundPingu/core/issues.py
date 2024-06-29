@@ -187,8 +187,10 @@ class IssueChecker:
     def check(self) -> IssueBuilder:
         builder = IssueBuilder(self.bot, self.log)
 
-        if self.log.has_pattern(r"^__PINGU__ERROR__502_BAD_GATEWAY__"):
-            builder.error("502_bad_gateway")
+        if self.log.has_pattern(r"^__PINGU__DOWNLOAD_ERROR__(\d+)__"):
+            # when updating it, also update upload_button.disabled in views.py
+            match = re.search(r"^__PINGU__DOWNLOAD_ERROR__(\d+)__", self.log._content)
+            if not match is None: builder.error("failed_to_download_log", match.group(1))
             return builder
 
         is_mcsr_log = any(self.log.has_mod(mcsr_mod) for mcsr_mod in self.mcsr_mods) or self.log.minecraft_version == "1.16.1"
@@ -344,7 +346,7 @@ class IssueChecker:
                 )
         
         if self.log.operating_system == OperatingSystem.MACOS:
-            if self.log.has_mod("sodium-1.16.1-v1") or self.log.has_mod("sodium-1.16.1-v2"):
+            if self.log.has_mod("sodium") and not self.log.has_mod("sodiummac"):
                 builder.error("not_using_mac_sodium")
         
         wrong_not_needed_mods = []
@@ -527,8 +529,14 @@ class IssueChecker:
         ])):
             builder.error("delete_launcher_cache")
 
-        if self.log.has_content("[LWJGL] Failed to load a library. Possible solutions:") and self.log.is_newer_than("1.20"):
-            builder.error("update_mmc")
+        if ((self.log.is_newer_than("1.20") or not self.log.is_newer_than("1.1"))
+            and self.log.has_content("[LWJGL] Failed to load a library. Possible solutions:") # so it works on snapshots too
+        ):
+            if self.log.launcher == Launcher.MULTIMC:
+                builder.error("update_mmc")
+                found_crash_cause = True
+            else:
+                builder.error("update_mmc", experimental=True)
         
         if self.log.has_content("[LWJGL] Platform/architecture mismatch detected for module: org.lwjgl"):
             builder.error("try_changing_lwjgl_version", self.log.edit_instance)
@@ -553,7 +561,7 @@ class IssueChecker:
             builder.error("old_fabric_crash").add("fabric_guide_prism" if self.log.is_prism else "fabric_guide_mmc", "update")
             found_crash_cause = True
         
-        elif self.log.mod_loader == ModLoader.FABRIC and not self.log.fabric_version is None:
+        elif not self.log.fabric_version is None:
             highest_srigt_ver = None
             for mod in self.log.mods:
                 if "speedrunigt" in mod.lower():
@@ -697,8 +705,8 @@ class IssueChecker:
             found_crash_cause = True
         
         elif (not found_crash_cause
-            and (self.log.has_content("A fatal error has been detected by the Java Runtime Environment") or self.log.has_content("EXCEPTION_ACCESS_VIOLATION"))
             and self.log.stacktrace is None
+            and (self.log.has_content("A fatal error has been detected by the Java Runtime Environment") or self.log.has_content("EXCEPTION_ACCESS_VIOLATION"))
         ):
             builder.error("eav_crash", experimental=True)
             if self.log.has_pattern(r"  \[ntdll\.dll\+(0x[0-9a-f]+)\]"):
@@ -713,7 +721,9 @@ class IssueChecker:
                 builder.add("eav_crash_1.3")
             builder.add("eav_crash_2")
             builder.add("eav_crash_3")
-            if len(self.log.whatever_mods) == 0 or self.log.has_mod("speedrunigt") or self.log.has_mod("mcsrranked"): builder.add("eav_crash_srigt")
+            if ((len(self.log.whatever_mods) == 0 or self.log.has_mod("speedrunigt") or self.log.has_mod("mcsrranked"))
+                and self.log.operating_system != OperatingSystem.MACOS
+            ): builder.add("eav_crash_srigt")
             builder.add("eav_crash_disclaimer")
             if self.log.stacktrace is None: found_crash_cause = True
         
@@ -773,6 +783,10 @@ class IssueChecker:
             builder.error("sodium_config_crash")
             found_crash_cause = True
         
+        if self.log.has_content_in_stacktrace("me.voidxwalker.options.extra.ExtraOptions.lambda$load"):
+            builder.error("corrupted_mod_config", "extra-options")
+            found_crash_cause = True
+        
         pattern = r"Uncaught exception in thread \"Thread-\d+\"\njava\.util\.ConcurrentModificationException: null"
         if "java.util.ConcurrentModificationException" in re.sub(pattern, "", self.log._content):
             if self.log.short_version == "1.16" and not self.log.has_mod("voyager"):
@@ -791,9 +805,15 @@ class IssueChecker:
         if is_mcsr_log and any(self.log.has_content(snowman_crash) for snowman_crash in [
             "Cannot invoke \"net.minecraft.class_1657.method_7325()\"",
             "Cannot invoke \"net.minecraft.class_4184.method_19326()\"",
-            "because \"☃\" is null",
         ]):
             builder.error("snowman_crash")
+            found_crash_cause = True
+        
+        if is_mcsr_log and not found_crash_cause and self.log.has_content("because \"☃\" is null"):
+            builder.error("snowman_crash", experimental=True)
+        
+        if self.log.has_content("Cannot invoke \"net.minecraft.class_1170.method_3833()\" because the return value of \"net.minecraft.class_1170.method_6428(int)\" is null"):
+            builder.error("invalid_biome_id_crash")
             found_crash_cause = True
         
         if self.log.has_pattern(r"Description: Exception in server tick loop[\s\n]*java\.lang\.IllegalStateException: Lock is no longer valid"):
@@ -843,9 +863,9 @@ class IssueChecker:
                 builder.note("old_prism_version")
                 if self.log.has_content("AppData/Roaming/PrismLauncher"): builder.add("update_prism_installer")
 
-        match = re.search(r"MultiMC version: 0\.7\.0-(\d{4})", self.log._content)
+        match = re.search(r"MultiMC version: 0\.7\.0-(.{4})", self.log._content)
         if not match is None and self.log.operating_system == OperatingSystem.WINDOWS:
-            if match.group(1) < "3863":
+            if match.group(1) < "3863" or match.group(1) == "stab":
                 builder.note("semi_old_mmc_version")
 
         match = re.search(r"Incompatible mod set found! READ THE BELOW LINES!(.*?$)", self.log._content, re.DOTALL)
@@ -856,8 +876,8 @@ class IssueChecker:
             ranked_rong_versions = []
             ranked_anticheat = match.group(1).strip().replace("\t","")
 
-            if self.log.has_pattern(r"You should delete these from Minecraft.\s*?Process exited with code 1."):
-                builder.error("ranked_fabric_0_15_x").add("fabric_guide_prism" if self.log.is_prism else "fabric_guide_mmc", "downgrade")
+            if self.log.has_pattern(r"You should delete these from Minecraft.\s*?Process "):
+                builder.error("ranked_fabric_0_15_x")
             
             ranked_anticheat_split = ranked_anticheat.split("These Fabric Mods are whitelisted but different version! Make sure to update these!")
             if len(ranked_anticheat_split) > 1:
@@ -906,9 +926,10 @@ class IssueChecker:
                 builder.error("ranked_rong_mods", f"a mod `{ranked_rong_mods[0]}` that is", "it")
         
         if self.log.has_mod("optifine"):
-            if self.log.has_mod("worldpreview"):
-                builder.error("incompatible_mod", "Optifine", "WorldPreview")
-                found_crash_cause = True
+            for incompatible_mod in ["WorldPreview", "Starlight"]:
+                if self.log.has_mod(incompatible_mod):
+                    builder.error("incompatible_mod", "Optifine", incompatible_mod)
+                    found_crash_cause = True
             if self.log.has_mod("z-buffer-fog") and self.log.is_newer_than("1.14"):
                 builder.error("incompatible_mod", "Optifine", "z-buffer-fog")
                 found_crash_cause = True
@@ -941,7 +962,8 @@ class IssueChecker:
         
         if self.log.has_normal_mod("continuity") and self.log.has_mod("sodium") and not self.log.has_mod("indium"):
             builder.error("missing_dependency", "continuity", "indium")
-            found_crash_cause = True
+            if self.log.has_content("Cannot invoke \"net.fabricmc.fabric.api.renderer.v1.Renderer.meshBuilder()\""):
+                found_crash_cause = True
         elif self.log.has_content("Cannot invoke \"net.fabricmc.fabric.api.renderer.v1.Renderer.meshBuilder()\""):
             builder.error("missing_dependency_2", "indium")
             found_crash_cause = True
@@ -1125,12 +1147,19 @@ class IssueChecker:
                 else:
                     for mod in self.log.whatever_mods:
                         mod_name = mod.lower().replace(".jar", "")
+                        if not self.log.minecraft_version is None: mod_name = mod_name.replace(self.log.minecraft_version, "")
                         for c in ["+", "_", "=", ",", " "]: mod_name = mod_name.replace(c, "-")
                         mod_name_parts = mod_name.split("-")
                         mod_name = ""
                         for part in mod_name_parts:
                             part0 = part
-                            for c in [".", "fabric", "forge", "quilt", "v", "mc", "mod", "backport", "snapshot", "build", "prism", "minecraft"]: part = part.replace(c, "")
+                            for c in [
+                                "fabric", "forge", "quilt",
+                                "mod", "backport", "snapshot",
+                                "build", "prism", "minecraft",
+                                ".", "v", "mc",
+                            ]:
+                                part = part.replace(c, "")
                             for c in range(10): part = part.replace(str(c), "")
                             if part == "": break
                             elif len(part) > 1: mod_name += part0

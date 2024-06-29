@@ -19,10 +19,7 @@ class Launcher(enum.Enum):
     OFFICIAL_LAUNCHER = "Official Launcher"
     MULTIMC = "MultiMC"
     PRISM = "Prism"
-    POLYMC = "PolyMC"
-    POLLYMC = "PollyMC"
-    MANYMC = "ManyMC"
-    ULTIMMC = "UltimMC"
+    MODRINTH = "Modrinth App"
 
 class ModLoader(enum.Enum):
     FABRIC = "Fabric"
@@ -52,7 +49,7 @@ class Log:
         # just replacing pc_username with "" is a bad idea
         # for instance, if it's "Alex", it could also replace it in the mod "Alex Caves", which would leak it
 
-        pattern = r"Session ID is token:.{30,}?\n"
+        pattern = r"Session ID is token:.{50,}?\n"
         if re.search(pattern, content) is not None:
             replacement = "Session ID is (redacted))\n"
             content = re.sub(pattern, replacement, content)
@@ -73,8 +70,8 @@ class Log:
         res = requests.get(link, timeout=5)
         if res.status_code == 200:
             return Log(res.text.replace("\r", ""))
-        elif res.status_code == 502:
-            return Log("__PINGU__ERROR__502_BAD_GATEWAY__")
+        elif res.status_code != 404:
+            return Log(f"__PINGU__DOWNLOAD_ERROR__{res.status_code}__")
         return None
 
     @cached_property
@@ -229,23 +226,37 @@ class Log:
     
     @cached_property
     def launcher(self) -> Launcher:
-        for launcher in Launcher:
-            if self._lower_content.startswith(launcher.value.lower()):
-                return launcher
+        for prism_name in [
+            "prism",
+            "polymc",
+            "pollymc",
+        ]:
+            if self.has_pattern(rf"^{prism_name}"):
+                return Launcher.PRISM
+            if any(self.has_content(prism) for prism in [
+                f"org.{prism_name}",
+                f"/{prism_name}",
+                f"\\{prism_name}",
+            ]):
+                return Launcher.PRISM
         
-        for launcher in Launcher:
-            if (self.has_content(f"/{launcher.value}/")
-                or self.has_content(f"\\{launcher.value}\\")
-                or self.has_content(f"org.{launcher.value}.")
-            ):
-                return launcher
+        for multimc_name in [
+            "multimc",
+            "ultimmc",
+        ]:
+            if self.has_pattern(rf"^{multimc_name}"):
+                return Launcher.MULTIMC
+            if any(self.has_content(multimc) for multimc in [
+                f"org.{multimc_name}",
+                f"/{multimc_name}",
+                f"\\{multimc_name}",
+            ]):
+                return Launcher.MULTIMC
         
-        if any(self.has_content(prism) for prism in [
-            "org.prismlauncher.",
-            "/PrismLauncher",
-            "\\PrismLauncher",
+        if any(self.has_content(modrinth) for modrinth in [
+            "com.modrinth.theseus",
         ]):
-            return Launcher.PRISM
+            return Launcher.MODRINTH
         
         if (self.has_content("\\AppData\\Roaming\\.minecraft")
             or self.has_content("/AppData/Roaming/.minecraft")
@@ -289,7 +300,7 @@ class Log:
 
     @cached_property
     def is_prism(self) -> bool:
-        return self.launcher in [Launcher.PRISM, Launcher.POLYMC, Launcher.POLLYMC]
+        return self.launcher == Launcher.PRISM
 
     @cached_property
     def edit_instance(self) -> str:
@@ -647,4 +658,34 @@ class Log:
             )
     
     def __str__(self) -> str:
-        return f"mods={self.mods}\nfabric_mods={self.fabric_mods}\njava_version={self.java_version}\nmajor_java_version={self.major_java_version}\nminecraft_folder={self.minecraft_folder}\noperating_system={self.operating_system}\nminecraft_version={self.minecraft_version}\nfabric_version={self.fabric_version}\nlauncher={self.launcher}\nis_prism={self.is_prism}\nis_multimc_or_fork={self.is_multimc_or_fork}\nmod_loader={self.mod_loader}\njava_arguments={self.java_arguments}\nmax_allocated={self.max_allocated}"
+        return f"""
+mods={self.mods}
+fabric_mods={self.fabric_mods}
+java_version={self.java_version}
+major_java_version={self.major_java_version}
+minecraft_folder={self.minecraft_folder}
+operating_system={self.operating_system}
+minecraft_version={self.minecraft_version}
+parsed_mc_version={self.parsed_mc_version}
+loader_mc_version={self.loader_mc_version}
+short_version={self.short_version}
+fabric_version={self.fabric_version}
+launcher={self.launcher}
+type={self.type}
+is_multimc_or_fork={self.is_multimc_or_fork}
+is_prism={self.is_prism}
+edit_instance={self.edit_instance}
+mod_loader={self.mod_loader}
+java_arguments={self.java_arguments}
+max_allocated={self.max_allocated}
+recommended_min_allocated={self.recommended_min_allocated}
+recommended_max_allocated={self.recommended_max_allocated}
+ram_guide={self.ram_guide}
+java_update_guide={self.java_update_guide}
+stacktrace={self.stacktrace}
+exitcode={self.exitcode}
+is_ssg_log={self.is_ssg_log}
+is_ranked_log={self.is_ranked_log}
+is_not_wall_log={self.is_not_wall_log}
+recommended_mods={self.recommended_mods}
+""".strip()

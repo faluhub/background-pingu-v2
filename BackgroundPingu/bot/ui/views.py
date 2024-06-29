@@ -23,7 +23,7 @@ class Paginator(View):
                 or self.builder.has("top_info", "uploaded_log")
                 or self.builder.has("top_info", "uploaded_log_2")
                 or self.builder.has("error", "leaked_session_id_token")
-                or self.builder.has("error", "502_bad_gateway")
+                or self.builder.has("error", "failed_to_download_log")
             )
     
     async def edit_message(self, interaction: discord.Interaction):

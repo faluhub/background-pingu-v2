@@ -1,4 +1,4 @@
-import discord, re, traceback
+import discord, re, traceback, random
 from discord import commands
 from discord.ext.commands import Cog
 from datetime import datetime
@@ -18,14 +18,18 @@ class Core(Cog):
             "embed": None,
             "view": None
         }
-        link_pattern = r"https:\/\/(?:api\.)?paste\.ee\/.\/\w+|https:\/\/mclo\.gs\/\w+|https?:\/\/[\w\-_\/.]+\.(?:txt|log|tdump)\?ex=[^&]+&is=[^&]+&hm=[^&]+&|https?:\/\/[\w\-_\/.]+\.(?:txt|log)"
+        link_pattern = r"https:\/\/(?:api\.)?paste\.ee\/.\/\w+|https:\/\/mclo\.gs\/\w+|https?:\/\/[\w\-_\/.]+\.(?:txt|log|tdump)\?ex=[^&]+&is=[^&]+&hm=[^&]+&|https?:\/\/[\w\-_\/.]+\.(?:txt|log|tdump)"
         matches = re.findall(link_pattern, msg.content)
         if len(msg.attachments) > 0:
             for attachment in msg.attachments:
                 matches.append(attachment.url)
+        if len(matches) > 3: matches = random.sample(matches, 3)
+
         logs = [(match.split("?ex")[0], parser.Log.from_link(match)) for match in matches]
-        logs = [(match, log) for (match, log) in logs if not log is None]
-        # logs.append(("message", parser.Log(msg.content)))
+        logs = [(link, log) for (link, log) in logs if not log is None]
+        logs = sorted(logs, key=lambda x: len(x[1]._content), reverse=True) # check the longest logs first
+        if include_content: logs.append(("message", parser.Log(msg.content))) # check the message itself (last)
+        
         for link, log in logs:
             try:
                 results = issues.IssueChecker(self.bot, log, link, msg.guild.id if not msg.guild is None else None).check()
@@ -39,12 +43,6 @@ class Core(Cog):
                 result["text"] = f"```\n{error}\n```\n<@810863994985250836>, <@695658634436411404> :bug:"
                 found_result = True
             if found_result: break
-        if not found_result and include_content:
-            results = issues.IssueChecker(self.bot, parser.Log(msg.content), "message", msg.guild.id if not msg.guild is None else None).check()
-            if results.has_values():
-                messages = results.build()
-                result["embed"] = await self.build_embed(results, messages, msg)
-                result["view"] = views.Paginator(messages, results, msg)
         return result
 
     async def build_embed(self, results: issues.IssueBuilder, messages: list[str], msg: discord.Message):
