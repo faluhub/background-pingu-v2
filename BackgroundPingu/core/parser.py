@@ -647,4 +647,34 @@ class Log:
             )
     
     def __str__(self) -> str:
-        return f"mods={self.mods}\nfabric_mods={self.fabric_mods}\njava_version={self.java_version}\nmajor_java_version={self.major_java_version}\nminecraft_folder={self.minecraft_folder}\noperating_system={self.operating_system}\nminecraft_version={self.minecraft_version}\nfabric_version={self.fabric_version}\nlauncher={self.launcher}\nis_prism={self.is_prism}\nis_multimc_or_fork={self.is_multimc_or_fork}\nmod_loader={self.mod_loader}\njava_arguments={self.java_arguments}\nmax_allocated={self.max_allocated}"
+        return f"""
+mods={self.mods}
+fabric_mods={self.fabric_mods}
+java_version={self.java_version}
+major_java_version={self.major_java_version}
+minecraft_folder={self.minecraft_folder}
+operating_system={self.operating_system}
+minecraft_version={self.minecraft_version}
+parsed_mc_version={self.parsed_mc_version}
+loader_mc_version={self.loader_mc_version}
+short_version={self.short_version}
+fabric_version={self.fabric_version}
+launcher={self.launcher}
+type={self.type}
+is_multimc_or_fork={self.is_multimc_or_fork}
+is_prism={self.is_prism}
+edit_instance={self.edit_instance}
+mod_loader={self.mod_loader}
+java_arguments={self.java_arguments}
+max_allocated={self.max_allocated}
+recommended_min_allocated={self.recommended_min_allocated}
+recommended_max_allocated={self.recommended_max_allocated}
+ram_guide={self.ram_guide}
+java_update_guide={self.java_update_guide}
+stacktrace={self.stacktrace}
+exitcode={self.exitcode}
+is_ssg_log={self.is_ssg_log}
+is_ranked_log={self.is_ranked_log}
+is_not_wall_log={self.is_not_wall_log}
+recommended_mods={self.recommended_mods}
+""".strip()
