@@ -345,8 +345,12 @@ class IssueChecker:
                     experimental = (self.log.minecraft_version != "1.16.1")
                 )
         
-        if self.log.operating_system == OperatingSystem.MACOS:
-            if self.log.has_mod("sodium") and not self.log.has_mod("sodiummac"):
+        if (self.log.operating_system == OperatingSystem.MACOS
+            and self.log.has_mod("sodium") and not self.log.has_mod("sodiummac")
+        ):
+            if self.log.minecraft_version is None:
+                builder.error("not_using_mac_sodium", experimental=True)
+            elif self.log.minecraft_version == "1.16.1":
                 builder.error("not_using_mac_sodium")
         
         wrong_not_needed_mods = []
