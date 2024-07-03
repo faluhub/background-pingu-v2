@@ -471,10 +471,14 @@ class Log:
             return ("allocate_ram_guide", min_recomm, max_recomm)
 
     @cached_property
+    def setup_guide(self) -> str:
+        if self.operating_system == OperatingSystem.MACOS: return "mac_setup_guide"
+        return "k4_setup_guide"
+
+    @cached_property
     def java_update_guide(self) -> str:
         if self.launcher == Launcher.OFFICIAL_LAUNCHER:
-            if self.operating_system == OperatingSystem.MACOS: return "mac_setup_guide"
-            return "k4_setup_guide"
+            return self.setup_guide
 
         return "java_update_guide"
     

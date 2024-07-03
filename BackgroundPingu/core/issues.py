@@ -345,6 +345,9 @@ class IssueChecker:
                     experimental = (self.log.minecraft_version != "1.16.1")
                 )
         
+        if is_mcsr_log and self.log.launcher == Launcher.MODRINTH:
+            builder.note("modrinth_app_illegal").add(self.log.setup_guide)
+        
         if (self.log.operating_system == OperatingSystem.MACOS
             and self.log.has_mod("sodium") and not self.log.has_mod("sodiummac")
         ):
@@ -436,7 +439,7 @@ class IssueChecker:
                     "need_new_java",
                     17,
                     f", but you're using `Java {self.log.major_java_version}`" if not self.log.major_java_version is None else "",
-                ).add("k4_setup_guide")
+                ).add(self.log.setup_guide)
                 found_crash_cause = True
         
         pattern = r"This instance is not compatible with Java version (\d+)\.\nPlease switch to one of the following Java versions for this instance:\nJava version (\d+)"
