@@ -164,6 +164,14 @@ class Log:
         if self.has_content("/Applications/"): return OperatingSystem.MACOS
 
         return None
+
+    @cached_property
+    def is_intel_mac(self) -> bool:
+        if not self.operating_system in [OperatingSystem.MACOS, None]: return False
+
+        if self.has_content("GL info: Intel"): return True
+
+        return False
     
     @cached_property
     def minecraft_version(self) -> str:

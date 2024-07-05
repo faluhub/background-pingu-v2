@@ -521,7 +521,7 @@ class IssueChecker:
             builder.note("not_using_java_17", self.log.major_java_version).add(self.log.java_update_guide)
             if self.log.is_prism: builder.add("prism_java_compat_check")
 
-        if self.log.operating_system == OperatingSystem.MACOS and not self.log.has_content("32-bit architecture"):
+        if self.log.operating_system == OperatingSystem.MACOS and not self.log.has_content("32-bit architecture") and not self.log.is_intel_mac:
             if self.log.launcher == Launcher.MULTIMC:
                 builder.note("mac_use_prism").add("mac_setup_guide")
             elif self.log.is_prism and self.log.has_content("using 64 (x86_64) architecture"):
