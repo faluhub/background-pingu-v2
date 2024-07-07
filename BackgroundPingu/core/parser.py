@@ -169,7 +169,9 @@ class Log:
     def is_intel_mac(self) -> bool:
         if not self.operating_system in [OperatingSystem.MACOS, None]: return False
 
-        if self.has_content("GL info: Intel"): return True
+        if any(self.has_content(intel) for intel in [
+            ": Intel",
+        ]): return True
 
         return False
     
