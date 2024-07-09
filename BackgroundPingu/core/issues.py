@@ -763,10 +763,6 @@ class IssueChecker:
         if is_mcsr_log and self.log.has_mod("fabric-api"):
             builder.warning("using_fabric_api")
         
-        if self.log.has_content("Couldn't extract native jar"):
-            builder.error("locked_libs")
-            found_crash_cause = True
-        
         if self.log.has_pattern(r"java\.io\.IOException: Directory \'(.+?)\' could not be created"):
             builder.error("try_admin_launch")
         
@@ -835,6 +831,10 @@ class IssueChecker:
 
         if self.log.has_content("Launched instance in offline mode") and self.log.has_content("(missing)\n"):
             builder.error("online_launch_required", self.log.edit_instance)
+            found_crash_cause = True
+        
+        elif self.log.has_content("Couldn't extract native jar"):
+            builder.error("locked_libs")
             found_crash_cause = True
         
         if self.log.has_content("ClassLoaders$AppClassLoader cannot be cast to class java.net.URLClassLoader"):
