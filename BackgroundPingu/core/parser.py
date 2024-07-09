@@ -486,6 +486,11 @@ class Log:
         return "k4_setup_guide"
 
     @cached_property
+    def fabric_guide(self) -> str:
+        if self.launcher == Launcher.PRISM: return "fabric_guide_prism"
+        return "fabric_guide_mmc"
+
+    @cached_property
     def java_update_guide(self) -> str:
         if self.launcher == Launcher.OFFICIAL_LAUNCHER:
             return self.setup_guide

@@ -548,8 +548,7 @@ class IssueChecker:
             "java.lang.IllegalArgumentException: Class file major version "
         ]):
             mod_loader = self.log.mod_loader.value if self.log.mod_loader.value is not None else "mod"
-            builder.error("new_java_old_fabric_crash", mod_loader, mod_loader)
-            if self.log.is_newer_than("1.14"): builder.add("fabric_guide_prism" if self.log.is_prism else "fabric_guide_mmc", "update")
+            builder.error("new_java_old_fabric_crash", mod_loader, mod_loader).add(self.log.fabric_guide, "update")
             found_crash_cause = True
             
         elif any(self.log.has_content(crash) for crash in [
@@ -557,7 +556,7 @@ class IssueChecker:
             "java.lang.ClassNotFoundException: com.llamalad7.mixinextras",
             "java.lang.NoClassDefFoundError: com/redlimerl/speedrunigt",
         ]):
-            builder.error("old_fabric_crash").add("fabric_guide_prism" if self.log.is_prism else "fabric_guide_mmc", "update")
+            builder.error("old_fabric_crash").add(self.log.fabric_guide, "update")
             found_crash_cause = True
         
         elif not self.log.fabric_version is None:
@@ -575,17 +574,13 @@ class IssueChecker:
                 found_crash_cause = True
             
             if self.log.fabric_version.__str__() in ["0.14.15", "0.14.16"]:
-                builder.error("broken_fabric")
-                if self.log.is_newer_than("1.14"): builder.add("fabric_guide_prism" if self.log.is_prism else "fabric_guide_mmc", "update")
+                builder.error("broken_fabric").add(self.log.fabric_guide, "update")
             elif self.log.fabric_version < version.parse("0.13.3"):
-                builder.error("really_old_fabric")
-                if self.log.is_newer_than("1.14"): builder.add("fabric_guide_prism" if self.log.is_prism else "fabric_guide_mmc", "update")
+                builder.error("really_old_fabric").add(self.log.fabric_guide, "update")
             elif self.log.fabric_version < version.parse("0.14.14"):
-                builder.warning("relatively_old_fabric")
-                if self.log.is_newer_than("1.14"): builder.add("fabric_guide_prism" if self.log.is_prism else "fabric_guide_mmc", "update")
+                builder.warning("relatively_old_fabric").add(self.log.fabric_guide, "update")
             elif self.log.fabric_version < version.parse("0.15.0"):
-                builder.note("old_fabric")
-                if self.log.is_newer_than("1.14"): builder.add("fabric_guide_prism" if self.log.is_prism else "fabric_guide_mmc", "update")
+                builder.note("old_fabric").add(self.log.fabric_guide, "update")
         
         if len(self.log.mods) == 0 and self.log.has_content(".mrpack\n"):
             builder.error("using_modpack_as_mod", self.log.launcher.value if self.log.launcher is not None else "your launcher")
@@ -595,12 +590,12 @@ class IssueChecker:
                 builder.error("broken_loader", self.log.edit_instance)
             else:
                 builder.error("no_loader")
-                if self.log.is_newer_than("1.14"): builder.add("fabric_guide_prism" if self.log.is_prism else "fabric_guide_mmc", "install")
+                if self.log.is_newer_than("1.14"): builder.add(self.log.fabric_guide, "install")
         
         if not self.log.mod_loader in [None, ModLoader.FABRIC, ModLoader.VANILLA]:
             if is_mcsr_log:
                 builder.error("using_other_loader_mcsr", self.log.mod_loader.value)
-                if self.log.is_newer_than("1.14"): builder.add("fabric_guide_prism" if self.log.is_prism else "fabric_guide_mmc", "install")
+                if self.log.is_newer_than("1.14"): builder.add(self.log.fabric_guide, "install")
                 found_crash_cause = True
             else:
                 builder.note("using_other_loader", self.log.mod_loader.value)
