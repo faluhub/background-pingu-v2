@@ -1082,11 +1082,11 @@ class IssueChecker:
             builder.error("mclogs_cutoff")
         
         try:
-            if self.log._content.splitlines()[-1].startswith("[23:5"):
+            if not found_crash_cause and self.log._content.splitlines()[-1].startswith("[23:5"):
                 builder.error("midnight_bug") # for the first log part
         except IndexError: pass
         
-        if self.log.has_pattern(r"^\[00:") and not any(self.log.has_content(starting_mc) for starting_mc in [
+        if not found_crash_cause and self.log.has_pattern(r"^\[00:") and not any(self.log.has_content(starting_mc) for starting_mc in [
             "Setting user:",
             "Loading Minecraft",
         ]):
