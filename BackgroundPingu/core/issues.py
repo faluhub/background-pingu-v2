@@ -527,14 +527,6 @@ class IssueChecker:
             elif self.log.is_prism and self.log.has_content("using 64 (x86_64) architecture"):
                 builder.note("mac_use_arm_java")
                 if not found_crash_cause: builder.add(self.log.java_update_guide).add("prism_java_compat_check")
-        
-        if (self.log.mod_loader in [ModLoader.FORGE, None]
-            and any(self.log.has_content(delete_launcher_cache_crash) for delete_launcher_cache_crash in [
-                "Caused by: java.lang.NoSuchMethodError: 'boolean net.minecraftforge.",
-                "Unable to detect the forge installer!",
-                "Reason:\nOne or more subtasks failed"
-        ])):
-            builder.error("delete_launcher_cache")
 
         if ((self.log.is_newer_than("1.20") or not self.log.is_newer_than("1.1"))
             and self.log.has_content("[LWJGL] Failed to load a library. Possible solutions:") # so it works on snapshots too
@@ -548,7 +540,7 @@ class IssueChecker:
         if self.log.has_content("[LWJGL] Platform/architecture mismatch detected for module: org.lwjgl"):
             builder.error("try_changing_lwjgl_version", self.log.edit_instance)
         
-        if self.log.has_content("(Silent Mode)"):
+        if self.log.has_pattern(r"Switching to No Sound\s*\(Silent Mode\)") and not self.log.is_newer_than("1.13"):
             builder.error("try_changing_lwjgl_version", self.log.edit_instance, experimental=True)
         
         if any(self.log.has_content(new_java_old_fabric) for new_java_old_fabric in [
@@ -874,6 +866,15 @@ class IssueChecker:
         if not match is None and self.log.operating_system == OperatingSystem.WINDOWS:
             if match.group(1) < "3863" or match.group(1) == "stab":
                 builder.note("semi_old_mmc_version")
+        
+        if (self.log.mod_loader in [ModLoader.FORGE, None]
+            and not found_crash_cause
+            and any(self.log.has_content(delete_launcher_cache_crash) for delete_launcher_cache_crash in [
+                "Caused by: java.lang.NoSuchMethodError: 'boolean net.minecraftforge.",
+                "Unable to detect the forge installer!",
+                "Reason:\nOne or more subtasks failed"
+        ])):
+            builder.error("delete_launcher_cache")
 
         match = re.search(r"Incompatible mod set found! READ THE BELOW LINES!(.*?$)", self.log._content, re.DOTALL)
         if not match is None:
