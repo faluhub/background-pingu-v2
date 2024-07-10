@@ -306,7 +306,7 @@ class Log:
 
     @cached_property
     def is_multimc_or_fork(self) -> bool:
-        return not self.launcher is None and self.launcher != Launcher.OFFICIAL_LAUNCHER
+        return self.launcher in [Launcher.MULTIMC, Launcher.PRISM]
 
     @cached_property
     def is_prism(self) -> bool:
