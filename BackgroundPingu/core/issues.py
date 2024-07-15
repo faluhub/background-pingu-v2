@@ -372,6 +372,11 @@ class IssueChecker:
                     if mod in installed_mod.lower():
                         wrong_not_needed_mods.append(mod)
             
+            if len(wrong_mods) == 0:
+                for mod in self.java_17_mods:
+                    if self.log.has_content_in_stacktrace(mod):
+                        wrong_mods.append(mod)
+            
             if len(wrong_mods) > 0:
                 wrong_mods += wrong_outdated_mods
                 builder.error(
