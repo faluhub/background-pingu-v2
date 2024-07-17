@@ -782,6 +782,10 @@ class IssueChecker:
             builder.error("corrupted_mod_config", "extra-options")
             found_crash_cause = True
         
+        if self.log.has_content_in_stacktrace("return value of \"me.duncanruns.fsgmod.FSGModConfig.getInstance()\" is null"):
+            builder.error("corrupted_mod_config", "fsgmod")
+            found_crash_cause = True
+        
         pattern = r"Uncaught exception in thread \"Thread-\d+\"\njava\.util\.ConcurrentModificationException: null"
         if "java.util.ConcurrentModificationException" in re.sub(pattern, "", self.log._content):
             if self.log.short_version == "1.16" and not self.log.has_mod("voyager"):
@@ -1019,6 +1023,7 @@ class IssueChecker:
                 else: wrong_mod = mod_name
                 builder.error("corrupted_mod_config", wrong_mod)
                 found_crash_cause = True
+        
         pattern = r"Error analyzing \[(.*?)\]: java\.util\.zip\.ZipException: zip END header not found"
         match = re.search(pattern, self.log._content)
         if not match is None:
