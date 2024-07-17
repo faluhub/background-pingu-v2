@@ -164,6 +164,16 @@ class Log:
         if self.has_content("/Applications/"): return OperatingSystem.MACOS
 
         return None
+
+    @cached_property
+    def is_intel_mac(self) -> bool:
+        if not self.operating_system in [OperatingSystem.MACOS, None]: return False
+
+        if any(self.has_content(intel) for intel in [
+            ": Intel",
+        ]): return True
+
+        return False
     
     @cached_property
     def minecraft_version(self) -> str:
@@ -296,7 +306,7 @@ class Log:
 
     @cached_property
     def is_multimc_or_fork(self) -> bool:
-        return not self.launcher is None and self.launcher != Launcher.OFFICIAL_LAUNCHER
+        return self.launcher in [Launcher.MULTIMC, Launcher.PRISM]
 
     @cached_property
     def is_prism(self) -> bool:
@@ -471,10 +481,19 @@ class Log:
             return ("allocate_ram_guide", min_recomm, max_recomm)
 
     @cached_property
+    def setup_guide(self) -> str:
+        if self.operating_system == OperatingSystem.MACOS: return "mac_setup_guide"
+        return "k4_setup_guide"
+
+    @cached_property
+    def fabric_guide(self) -> str:
+        if self.launcher == Launcher.PRISM: return "fabric_guide_prism"
+        return "fabric_guide_mmc"
+
+    @cached_property
     def java_update_guide(self) -> str:
         if self.launcher == Launcher.OFFICIAL_LAUNCHER:
-            if self.operating_system == OperatingSystem.MACOS: return "mac_setup_guide"
-            return "k4_setup_guide"
+            return self.setup_guide
 
         return "java_update_guide"
     
