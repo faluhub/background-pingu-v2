@@ -785,6 +785,10 @@ class IssueChecker:
             builder.error("corrupted_mod_config", "fsgmod")
             found_crash_cause = True
         
+        if self.log.has_content_in_stacktrace("Tried to stop SeedQueue off-thread!"):
+            builder.error("mcsr_corrupted_mods_config", experimental=True)
+            found_crash_cause = True
+        
         pattern = r"Uncaught exception in thread \"Thread-\d+\"\njava\.util\.ConcurrentModificationException: null"
         if "java.util.ConcurrentModificationException" in re.sub(pattern, "", self.log._content):
             if self.log.short_version == "1.16" and not self.log.has_mod("voyager"):
@@ -1012,17 +1016,6 @@ class IssueChecker:
         if not found_crash_cause and self.log.has_content("ERROR]: Mixin apply for mod fabric-networking-api-v1 failed"):
             builder.error("delete_dot_fabric")
         
-        if not found_crash_cause and self.log.has_content("com.google.gson.stream.MalformedJsonException"):
-            pattern = r"due to errors, provided by '([\w\-+]+)'"
-            match = re.search(pattern, self.log._content)
-            if not match is None:
-                mod_name = match.group(1)
-                wrong_mod = [mod for mod in self.log.whatever_mods if mod_name.lower() in mod.lower()]
-                if len(wrong_mod) > 0: wrong_mod = wrong_mod[0]
-                else: wrong_mod = mod_name
-                builder.error("corrupted_mod_config", wrong_mod)
-                found_crash_cause = True
-        
         pattern = r"Error analyzing \[(.*?)\]: java\.util\.zip\.ZipException: zip END header not found"
         match = re.search(pattern, self.log._content)
         if not match is None:
@@ -1144,6 +1137,14 @@ class IssueChecker:
             builder.info("upload_log_attachment")
 
         if not found_crash_cause:
+            if any(self.log.has_content(corrupted_config) for corrupted_config in [
+                "com.google.gson.stream.MalformedJsonException",
+                "Cannot invoke \"com.google.gson.JsonObject.entrySet()\"",
+            ]):
+                corrupted_config = True
+            else:
+                corrupted_config = False
+            
             wrong_mods = []
             for pattern in [
                 r"ERROR]: Mixin apply for mod ([\w\-+]+) failed",
@@ -1185,7 +1186,19 @@ class IssueChecker:
                         if len(mod_name) > 2 and mod_name in self.log.stacktrace:
                             if not mod in wrong_mods: wrong_mods.append(mod)
             
-            if any(mayasmod in " ".join(wrong_mods) for mayasmod in [
+            if corrupted_config:
+                if any("speedrunapi" in mod for mod in wrong_mods):
+                    builder.error("mcsr_corrupted_mods_config")
+                elif len(wrong_mods) > 1:
+                    builder.error(
+                        "corrupted_mods_config",
+                        "; ".join(wrong_mods[:12]),
+                    )
+                elif len(wrong_mods) > 0:
+                    builder.error("corrupted_mod_config", wrong_mods[0])
+                else:
+                    builder.error("unknown_corrupted_mod_config", experimental=True)
+            elif any(mayasmod in " ".join(wrong_mods) for mayasmod in [
                 "peepopractice",
                 "areessgee",
             ]) and self.server_id != 1070838405925179392:
