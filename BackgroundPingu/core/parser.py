@@ -420,10 +420,18 @@ class Log:
             min_limit_1 *= 1.3
             min_limit_2 *= 1.3
         
+        if self.has_mod("seedqueue"):
+            min_limit_0 += 15000
+            min_limit_1 += 2000
+            min_limit_2 += 1000
+        
         return (min_limit_0, min_limit_1, min_limit_2)
     
     @cached_property
     def recommended_max_allocated(self) -> tuple[int, int, int]:
+        if self.has_mod("seedqueue"):
+            return (None, None, None)
+        
         max_limit_0, max_limit_1, max_limit_2 = 0, 0, 0
 
         if self.is_newer_than("1.18"):
@@ -463,12 +471,19 @@ class Log:
         return (max_limit_0, max_limit_1, max_limit_2)
 
     @cached_property
-    def ram_guide(self) -> tuple[str, int, int]:
+    def ram_guide(self) -> tuple[str, str, str, str]:
         min_recomm = self.recommended_min_allocated[1]
         max_recomm = self.recommended_max_allocated[2]
-        diff = max_recomm - min_recomm
-        min_recomm = int(round(min_recomm + diff / 7, -2))
-        max_recomm = int(round(max_recomm - diff / 7, -2))
+
+        if min_recomm is None or max_recomm is None:
+            if min_recomm is None: min_recomm = "?"
+            else: min_recomm = str(int(round(min_recomm, -2)))
+            if max_recomm is None: max_recomm = "?"
+            else: max_recomm = str(int(round(max_recomm, -2)))
+        else:
+            diff = max_recomm - min_recomm
+            min_recomm = str(int(round(min_recomm + diff / 7, -2)))
+            max_recomm = str(int(round(max_recomm - diff / 7, -2)))
 
         if self.is_multimc_or_fork:
             return (

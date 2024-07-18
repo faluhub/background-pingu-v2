@@ -634,20 +634,22 @@ class IssueChecker:
             builder.error("multiple_modloaders", "`, `".join(found_modloaders), self.log.edit_instance)
             found_crash_cause = True
 
-        if not self.log.max_allocated is None:
-            min_limit_0, min_limit_1, min_limit_2 = self.log.recommended_min_allocated
-            if self.log.has_content("java.lang.OutOfMemoryError"):
-                builder.error("too_little_ram_crash").add(*self.log.ram_guide)
-                found_crash_cause = True
-            elif self.log.max_allocated < min_limit_1 and self.log.has_content(" -805306369") and self.log.stacktrace is None:
-                builder.error("too_little_ram_crash", experimental=True).add(*self.log.ram_guide)
-            elif self.log.max_allocated < min_limit_0 and self.log.has_content(" -805306369") and self.log.stacktrace is None:
-                builder.note("too_little_ram_crash", experimental=True).add(*self.log.ram_guide)
-            elif self.log.max_allocated < min_limit_2:
-                builder.warning("too_little_ram").add(*self.log.ram_guide)
-            elif self.log.max_allocated < min_limit_1:
-                builder.note("too_little_ram").add(*self.log.ram_guide)
-            if is_mcsr_log and not self.log.is_newer_than("1.18"):
+        if self.log.has_pattern("java.lang.OutOfMemoryError"):
+            builder.error("too_little_ram_crash").add(*self.log.ram_guide)
+            found_crash_cause = True
+        elif not self.log.max_allocated is None:
+            if not any(temp is None for temp in self.log.recommended_min_allocated):
+                min_limit_0, min_limit_1, min_limit_2 = self.log.recommended_min_allocated
+                if self.log.max_allocated < min_limit_1 and self.log.has_content(" -805306369") and self.log.stacktrace is None:
+                    builder.error("too_little_ram_crash", experimental=True).add(*self.log.ram_guide)
+                elif self.log.max_allocated < min_limit_0 and self.log.has_content(" -805306369") and self.log.stacktrace is None:
+                    builder.note("too_little_ram_crash", experimental=True).add(*self.log.ram_guide)
+                elif self.log.max_allocated < min_limit_2:
+                    builder.warning("too_little_ram").add(*self.log.ram_guide)
+                elif self.log.max_allocated < min_limit_1:
+                    builder.note("too_little_ram").add(*self.log.ram_guide)
+            
+            if is_mcsr_log and not any(temp is None for temp in self.log.recommended_max_allocated):
                 max_limit_0, max_limit_1, max_limit_2 = self.log.recommended_max_allocated
                 if self.log.max_allocated > max_limit_0:
                     builder.error("too_much_ram").add(*self.log.ram_guide)
@@ -655,9 +657,6 @@ class IssueChecker:
                     builder.warning("too_much_ram").add(*self.log.ram_guide)
                 elif self.log.max_allocated > max_limit_2:
                     builder.note("too_much_ram").add(*self.log.ram_guide)
-        elif self.log.has_content("OutOfMemoryError"):
-            builder.error("too_little_ram_crash").add(*self.log.ram_guide)
-            found_crash_cause = True
 
         if self.log.has_content("There is not enough space on the disk"):
             builder.error("out_of_disk_space")
