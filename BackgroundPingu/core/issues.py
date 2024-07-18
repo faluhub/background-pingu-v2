@@ -634,7 +634,7 @@ class IssueChecker:
             builder.error("multiple_modloaders", "`, `".join(found_modloaders), self.log.edit_instance)
             found_crash_cause = True
 
-        if self.log.has_pattern("java.lang.OutOfMemoryError"):
+        if self.log.has_content("java.lang.OutOfMemoryError"):
             builder.error("too_little_ram_crash").add(*self.log.ram_guide)
             found_crash_cause = True
         elif not self.log.max_allocated is None:
@@ -1137,7 +1137,7 @@ class IssueChecker:
             builder.info("upload_log_attachment")
 
         if not found_crash_cause:
-            if any(self.log.has_content(corrupted_config) for corrupted_config in [
+            if any(self.log.has_content_in_stacktrace(corrupted_config) for corrupted_config in [
                 "com.google.gson.stream.MalformedJsonException",
                 "Cannot invoke \"com.google.gson.JsonObject.entrySet()\"",
             ]):
