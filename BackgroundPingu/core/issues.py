@@ -634,20 +634,22 @@ class IssueChecker:
             builder.error("multiple_modloaders", "`, `".join(found_modloaders), self.log.edit_instance)
             found_crash_cause = True
 
-        if not self.log.max_allocated is None:
-            min_limit_0, min_limit_1, min_limit_2 = self.log.recommended_min_allocated
-            if self.log.has_content("java.lang.OutOfMemoryError"):
-                builder.error("too_little_ram_crash").add(*self.log.ram_guide)
-                found_crash_cause = True
-            elif self.log.max_allocated < min_limit_1 and self.log.has_content(" -805306369") and self.log.stacktrace is None:
-                builder.error("too_little_ram_crash", experimental=True).add(*self.log.ram_guide)
-            elif self.log.max_allocated < min_limit_0 and self.log.has_content(" -805306369") and self.log.stacktrace is None:
-                builder.note("too_little_ram_crash", experimental=True).add(*self.log.ram_guide)
-            elif self.log.max_allocated < min_limit_2:
-                builder.warning("too_little_ram").add(*self.log.ram_guide)
-            elif self.log.max_allocated < min_limit_1:
-                builder.note("too_little_ram").add(*self.log.ram_guide)
-            if is_mcsr_log and not self.log.is_newer_than("1.18"):
+        if self.log.has_content("java.lang.OutOfMemoryError"):
+            builder.error("too_little_ram_crash").add(*self.log.ram_guide)
+            found_crash_cause = True
+        elif not self.log.max_allocated is None:
+            if not any(temp is None for temp in self.log.recommended_min_allocated):
+                min_limit_0, min_limit_1, min_limit_2 = self.log.recommended_min_allocated
+                if self.log.max_allocated < min_limit_1 and self.log.has_content(" -805306369") and self.log.stacktrace is None:
+                    builder.error("too_little_ram_crash", experimental=True).add(*self.log.ram_guide)
+                elif self.log.max_allocated < min_limit_0 and self.log.has_content(" -805306369") and self.log.stacktrace is None:
+                    builder.note("too_little_ram_crash", experimental=True).add(*self.log.ram_guide)
+                elif self.log.max_allocated < min_limit_2:
+                    builder.warning("too_little_ram").add(*self.log.ram_guide)
+                elif self.log.max_allocated < min_limit_1:
+                    builder.note("too_little_ram").add(*self.log.ram_guide)
+            
+            if is_mcsr_log and not any(temp is None for temp in self.log.recommended_max_allocated):
                 max_limit_0, max_limit_1, max_limit_2 = self.log.recommended_max_allocated
                 if self.log.max_allocated > max_limit_0:
                     builder.error("too_much_ram").add(*self.log.ram_guide)
@@ -655,9 +657,6 @@ class IssueChecker:
                     builder.warning("too_much_ram").add(*self.log.ram_guide)
                 elif self.log.max_allocated > max_limit_2:
                     builder.note("too_much_ram").add(*self.log.ram_guide)
-        elif self.log.has_content("OutOfMemoryError"):
-            builder.error("too_little_ram_crash").add(*self.log.ram_guide)
-            found_crash_cause = True
 
         if self.log.has_content("There is not enough space on the disk"):
             builder.error("out_of_disk_space")
@@ -784,6 +783,10 @@ class IssueChecker:
         
         if self.log.has_content_in_stacktrace("return value of \"me.duncanruns.fsgmod.FSGModConfig.getInstance()\" is null"):
             builder.error("corrupted_mod_config", "fsgmod")
+            found_crash_cause = True
+        
+        if self.log.has_content_in_stacktrace("Tried to stop SeedQueue off-thread!"):
+            builder.error("mcsr_corrupted_mods_config", experimental=True)
             found_crash_cause = True
         
         pattern = r"Uncaught exception in thread \"Thread-\d+\"\njava\.util\.ConcurrentModificationException: null"
@@ -1013,17 +1016,6 @@ class IssueChecker:
         if not found_crash_cause and self.log.has_content("ERROR]: Mixin apply for mod fabric-networking-api-v1 failed"):
             builder.error("delete_dot_fabric")
         
-        if not found_crash_cause and self.log.has_content("com.google.gson.stream.MalformedJsonException"):
-            pattern = r"due to errors, provided by '([\w\-+]+)'"
-            match = re.search(pattern, self.log._content)
-            if not match is None:
-                mod_name = match.group(1)
-                wrong_mod = [mod for mod in self.log.whatever_mods if mod_name.lower() in mod.lower()]
-                if len(wrong_mod) > 0: wrong_mod = wrong_mod[0]
-                else: wrong_mod = mod_name
-                builder.error("corrupted_mod_config", wrong_mod)
-                found_crash_cause = True
-        
         pattern = r"Error analyzing \[(.*?)\]: java\.util\.zip\.ZipException: zip END header not found"
         match = re.search(pattern, self.log._content)
         if not match is None:
@@ -1062,7 +1054,10 @@ class IssueChecker:
             builder.add("eav_crash_1").add("eav_crash_1.1").add("eav_crash_1.2").add("eav_crash_1.3")
             builder.add("exitcode_1073741819_2")
             if self.log.lines < 500:
-                if self.log.has_mod("sodium") and not self.log.has_mod("sodiummac"): builder.add(f"exitcode_1073741819_3")
+                if (self.log.has_mod("sodium")
+                    and not self.log.has_mod("sodiummac")
+                    and self.log.minecraft_version in ["1.16.1", None]
+                ): builder.add(f"exitcode_1073741819_3")
                 builder.add(f"exitcode_1073741819_4")
             builder.add("exitcode_1073741819_5").add("exitcode_1073741819_1")
 
@@ -1101,22 +1096,10 @@ class IssueChecker:
             "Loading Minecraft",
         ]):
             builder.error("midnight_bug") # for the second log part
-        
-        if (not found_crash_cause
-            and any(self.link.endswith(file_extension) for file_extension in [".log", ".txt", ".tdump"])
-            and self.log.has_content("minecraft")
-            and not self.log.lines > 25000
-        ):
-            builder.info("upload_log_attachment")
 
         if self.log.has_content("Missing or unsupported mandatory dependencies"):
             builder.error("forge_missing_dependencies")
             found_crash_cause = True
-        
-        if (not found_crash_cause and self.log.is_multimc_or_fork
-            and not self.log.type in [LogType.FULL_LOG, LogType.THREAD_DUMP, LogType.LAUNCHER_LOG]
-        ):
-            builder.info("send_full_log", self.log.launcher.value, self.log.edit_instance)
 
         pattern = r"\[Integrated Watchdog/ERROR\]:? This crash report has been saved to: (.*\.txt)"
         match = re.search(pattern, self.log._content)
@@ -1140,8 +1123,28 @@ class IssueChecker:
                     experimental=(self.log.minecraft_version != "1.16.1")
                 )
                 found_crash_cause = True
+        
+        if (not found_crash_cause and self.log.is_multimc_or_fork
+            and not self.log.type in [LogType.FULL_LOG, LogType.THREAD_DUMP, LogType.LAUNCHER_LOG]
+        ):
+            builder.info("send_full_log", self.log.launcher.value, self.log.edit_instance)
+        
+        if (not found_crash_cause
+            and any(self.link.endswith(file_extension) for file_extension in [".log", ".txt", ".tdump"])
+            and self.log.has_content("minecraft")
+            and not self.log.lines > 25000
+        ):
+            builder.info("upload_log_attachment")
 
         if not found_crash_cause:
+            if any(self.log.has_content_in_stacktrace(corrupted_config) for corrupted_config in [
+                "com.google.gson.stream.MalformedJsonException",
+                "Cannot invoke \"com.google.gson.JsonObject.entrySet()\"",
+            ]):
+                corrupted_config = True
+            else:
+                corrupted_config = False
+            
             wrong_mods = []
             for pattern in [
                 r"ERROR]: Mixin apply for mod ([\w\-+]+) failed",
@@ -1183,7 +1186,19 @@ class IssueChecker:
                         if len(mod_name) > 2 and mod_name in self.log.stacktrace:
                             if not mod in wrong_mods: wrong_mods.append(mod)
             
-            if any(mayasmod in " ".join(wrong_mods) for mayasmod in [
+            if corrupted_config:
+                if any("speedrunapi" in mod for mod in wrong_mods):
+                    builder.error("mcsr_corrupted_mods_config")
+                elif len(wrong_mods) > 1:
+                    builder.error(
+                        "corrupted_mods_config",
+                        "; ".join(wrong_mods[:12]),
+                    )
+                elif len(wrong_mods) > 0:
+                    builder.error("corrupted_mod_config", wrong_mods[0])
+                else:
+                    builder.error("unknown_corrupted_mod_config", experimental=True)
+            elif any(mayasmod in " ".join(wrong_mods) for mayasmod in [
                 "peepopractice",
                 "areessgee",
             ]) and self.server_id != 1070838405925179392:
