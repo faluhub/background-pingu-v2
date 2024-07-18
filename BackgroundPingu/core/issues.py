@@ -1101,22 +1101,10 @@ class IssueChecker:
             "Loading Minecraft",
         ]):
             builder.error("midnight_bug") # for the second log part
-        
-        if (not found_crash_cause
-            and any(self.link.endswith(file_extension) for file_extension in [".log", ".txt", ".tdump"])
-            and self.log.has_content("minecraft")
-            and not self.log.lines > 25000
-        ):
-            builder.info("upload_log_attachment")
 
         if self.log.has_content("Missing or unsupported mandatory dependencies"):
             builder.error("forge_missing_dependencies")
             found_crash_cause = True
-        
-        if (not found_crash_cause and self.log.is_multimc_or_fork
-            and not self.log.type in [LogType.FULL_LOG, LogType.THREAD_DUMP, LogType.LAUNCHER_LOG]
-        ):
-            builder.info("send_full_log", self.log.launcher.value, self.log.edit_instance)
 
         pattern = r"\[Integrated Watchdog/ERROR\]:? This crash report has been saved to: (.*\.txt)"
         match = re.search(pattern, self.log._content)
@@ -1140,6 +1128,18 @@ class IssueChecker:
                     experimental=(self.log.minecraft_version != "1.16.1")
                 )
                 found_crash_cause = True
+        
+        if (not found_crash_cause and self.log.is_multimc_or_fork
+            and not self.log.type in [LogType.FULL_LOG, LogType.THREAD_DUMP, LogType.LAUNCHER_LOG]
+        ):
+            builder.info("send_full_log", self.log.launcher.value, self.log.edit_instance)
+        
+        if (not found_crash_cause
+            and any(self.link.endswith(file_extension) for file_extension in [".log", ".txt", ".tdump"])
+            and self.log.has_content("minecraft")
+            and not self.log.lines > 25000
+        ):
+            builder.info("upload_log_attachment")
 
         if not found_crash_cause:
             wrong_mods = []
