@@ -1062,7 +1062,10 @@ class IssueChecker:
             builder.add("eav_crash_1").add("eav_crash_1.1").add("eav_crash_1.2").add("eav_crash_1.3")
             builder.add("exitcode_1073741819_2")
             if self.log.lines < 500:
-                if self.log.has_mod("sodium") and not self.log.has_mod("sodiummac"): builder.add(f"exitcode_1073741819_3")
+                if (self.log.has_mod("sodium")
+                    and not self.log.has_mod("sodiummac")
+                    and self.log.minecraft_version in ["1.16.1", None]
+                ): builder.add(f"exitcode_1073741819_3")
                 builder.add(f"exitcode_1073741819_4")
             builder.add("exitcode_1073741819_5").add("exitcode_1073741819_1")
 
