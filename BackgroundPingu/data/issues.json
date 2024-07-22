@@ -128,6 +128,7 @@
     "error.using_other_loader_mcsr": "You seem to be using MCSR mods, but you have `{}` installed, which is not allowed for speedrunning.",
     "error.using_ssrng": "You're using `ServerSideRNG`, which is now illegal and can cause issues. The server for it is down, so the mod is useless regardless and you should delete it.",
     "error.wp_3_plus_crash": "This seems to be a rare crash caused by `WorldPreview 3.0.0 - 4.0.1`. It should be fixed in `WorldPreview 4.0.2+`.",
+    "error.zgc_graalvm_crash": "Old `GraalVM` versions did not support `ZGC`. You should use a newer `GraalVM` version.",
     "info.leaked_username": "Your log has your PC username in it. You might want to delete it.",
     "info.log_spam": "Your log seems to have lines with random spam. It shouldn't cause any issues within Minecraft, and there aren't any known fixes.",
     "info.send_full_log": "Please send the full {} log from `Edit{} > Minecraft Log`.",

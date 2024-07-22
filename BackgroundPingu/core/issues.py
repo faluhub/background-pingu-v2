@@ -691,6 +691,10 @@ class IssueChecker:
         if self.log.has_content("Pixel format not accelerated"):
             builder.error("gl_pixel_format")
         
+        if self.log.has_content("Z garbage collector is not supported by Graal"):
+            builder.error("zgc_graalvm_crash")
+            found_crash_cause = True
+        
         if self.log.has_pattern(r"  \[(ig[0-9]+icd[0-9]+\.dll)[+ ](0x[0-9a-f]+)\]"):
             if self.log.has_content("speedrunigt") or self.log.has_mod("mcsrranked"):
                 builder.error("eav_crash", experimental=True).add("eav_crash_srigt")
