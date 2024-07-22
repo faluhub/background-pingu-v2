@@ -1126,6 +1126,10 @@ class IssueChecker:
                 )
                 found_crash_cause = True
         
+        if self.log.has_content_in_stacktrace("java.lang.NoSuchFieldError: freezePreview"):
+            builder.error("old_mod_crash", "SleepBackground", "https://mods.tildejustin.dev/")
+            found_crash_cause = True
+
         if (not found_crash_cause and self.log.is_multimc_or_fork
             and not self.log.type in [LogType.FULL_LOG, LogType.THREAD_DUMP, LogType.LAUNCHER_LOG]
         ):
