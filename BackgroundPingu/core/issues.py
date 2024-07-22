@@ -138,6 +138,8 @@ class IssueChecker:
             "fast-reset",
             "antigone",
             "mcsrranked",
+            "speedrunapi",
+            "seedqueue",
         ]
         self.general_mods = [
             "atum",
@@ -556,7 +558,7 @@ class IssueChecker:
             builder.error("new_java_old_fabric_crash", mod_loader, mod_loader).add(self.log.fabric_guide, "update")
             found_crash_cause = True
             
-        elif any(self.log.has_content(crash) for crash in [
+        elif any(self.log.has_content_in_stacktrace(crash) for crash in [
             "java.lang.ClassNotFoundException: can't find class com.llamalad7.mixinextras",
             "java.lang.ClassNotFoundException: com.llamalad7.mixinextras",
             "java.lang.NoClassDefFoundError: com/redlimerl/speedrunigt",
@@ -580,11 +582,11 @@ class IssueChecker:
             
             if self.log.fabric_version.__str__() in ["0.14.15", "0.14.16"]:
                 builder.error("broken_fabric").add(self.log.fabric_guide, "update")
-            elif self.log.fabric_version < version.parse("0.13.3"):
-                builder.error("really_old_fabric").add(self.log.fabric_guide, "update")
             elif self.log.fabric_version < version.parse("0.14.14"):
-                builder.warning("relatively_old_fabric").add(self.log.fabric_guide, "update")
+                builder.error("really_old_fabric").add(self.log.fabric_guide, "update")
             elif self.log.fabric_version < version.parse("0.15.0"):
+                builder.warning("relatively_old_fabric").add(self.log.fabric_guide, "update")
+            elif self.log.fabric_version < version.parse("0.16.0"):
                 builder.note("old_fabric").add(self.log.fabric_guide, "update")
         
         if len(self.log.mods) == 0 and self.log.has_content(".mrpack\n"):
@@ -640,9 +642,9 @@ class IssueChecker:
         elif not self.log.max_allocated is None:
             if not any(temp is None for temp in self.log.recommended_min_allocated):
                 min_limit_0, min_limit_1, min_limit_2 = self.log.recommended_min_allocated
-                if self.log.max_allocated < min_limit_1 and self.log.has_content(" -805306369") and self.log.stacktrace is None:
+                if self.log.max_allocated < min_limit_1 and self.log.exitcode == -805306369 and self.log.stacktrace is None:
                     builder.error("too_little_ram_crash", experimental=True).add(*self.log.ram_guide)
-                elif self.log.max_allocated < min_limit_0 and self.log.has_content(" -805306369") and self.log.stacktrace is None:
+                elif self.log.max_allocated < min_limit_0 and self.log.exitcode == -805306369 and self.log.stacktrace is None:
                     builder.note("too_little_ram_crash", experimental=True).add(*self.log.ram_guide)
                 elif self.log.max_allocated < min_limit_2:
                     builder.warning("too_little_ram").add(*self.log.ram_guide)
@@ -683,11 +685,29 @@ class IssueChecker:
         if self.log.has_content("Failed to download the assets index"):
             builder.error("assets_index_fail")
         
-        if self.log.has_content("NSWindow drag regions should only be invalidated on the Main Thread"):
+        if self.log.has_content("Terminating app due to uncaught exception 'NSInternalInconsistencyException'"):
             builder.error("mac_too_new_java")
         
-        if self.log.has_content("Pixel format not accelerated"):
+        if self.log.has_content_in_stacktrace("Pixel format not accelerated"):
             builder.error("gl_pixel_format")
+        
+        if self.log.has_content("Z garbage collector is not supported by Graal"):
+            builder.error("zgc_graalvm_crash")
+            found_crash_cause = True
+        
+        if self.log.has_content("Could not find or load main class"):
+            pattern = r"Could not find or load main class (.*)\n"
+            match = re.search(pattern, self.log._content)
+            if not match is None:
+                builder.error("wrong_java_arg", match.group(1))
+                found_crash_cause = True
+        
+        if self.log.has_content("[libopenal.so"):
+            if self.log.operating_system == OperatingSystem.LINUX:
+                builder.error("openal_crash")
+                found_crash_cause = True
+            else:
+                builder.error("openal_crash", experimental=True)
         
         if self.log.has_pattern(r"  \[(ig[0-9]+icd[0-9]+\.dll)[+ ](0x[0-9a-f]+)\]"):
             if self.log.has_content("speedrunigt") or self.log.has_mod("mcsrranked"):
@@ -731,11 +751,11 @@ class IssueChecker:
         if self.log.has_content("org.lwjgl.LWJGLException: Could not choose GLX13 config") or self.log.has_content("GLFW error 65545: GLX: Failed to find a suitable GLXFBConfig"):
             builder.error("outdated_nvidia_flatpack_driver", experimental=True)
         
-        if self.log.has_content("java.lang.NoSuchMethodError: sun.security.util.ManifestEntryVerifier.<init>(Ljava/util/jar/Manifest;)V"):
+        if self.log.has_content_in_stacktrace("java.lang.NoSuchMethodError: sun.security.util.ManifestEntryVerifier.<init>(Ljava/util/jar/Manifest;)V"):
             builder.error("forge_java_bug")
             found_crash_cause = True
         
-        if self.log.has_content("java.lang.IllegalStateException: GLFW error before init: [0x10008]Cocoa: Failed to find service port for display"):
+        if self.log.has_content_in_stacktrace("java.lang.IllegalStateException: GLFW error before init: [0x10008]Cocoa: Failed to find service port for display"):
             builder.error("incompatible_forge_mac")
             found_crash_cause = True
         
@@ -765,7 +785,7 @@ class IssueChecker:
         if self.log.has_pattern(r"java\.io\.IOException: Directory \'(.+?)\' could not be created"):
             builder.error("try_admin_launch")
         
-        if self.log.has_content("java.lang.NullPointerException: Cannot invoke \"net.minecraft.class_2680.method_26213()\" because \"state\" is null"):
+        if self.log.has_content_in_stacktrace("java.lang.NullPointerException: Cannot invoke \"net.minecraft.class_2680.method_26213()\" because \"state\" is null"):
             builder.error("old_sodium_crash")
             metadata = self.get_mod_metadata("sodium")
             if not metadata is None:
@@ -773,7 +793,7 @@ class IssueChecker:
                 if not latest_version is None:
                     builder.add("mod_download", metadata["name"], latest_version["page"])
             found_crash_cause = True
-        elif self.log.has_content("me.jellysquid.mods.sodium.client.SodiumClientMod.options"):
+        elif self.log.has_content_in_stacktrace("me.jellysquid.mods.sodium.client.SodiumClientMod.options"):
             builder.error("sodium_config_crash")
             found_crash_cause = True
         
@@ -796,7 +816,10 @@ class IssueChecker:
             elif self.log.has_content("[SEVERE] [ForgeModLoader] Unable to launch") and not self.log.has_mod("legacyjavafixer"):
                 builder.error("legacyjavafixer")
         
-        if self.log.has_content("java.lang.IllegalStateException: Adding Entity listener a second time") and self.log.has_content("me.jellysquid.mods.lithium.common.entity.tracker.nearby"):
+        if all(self.log.has_content_in_stacktrace(lithium_crash) for lithium_crash in [
+            "java.lang.IllegalStateException: Adding Entity listener a second time",
+            "me.jellysquid.mods.lithium.common.entity.tracker.nearby",
+        ]):
             builder.error("lithium_crash")
             found_crash_cause = True
         
@@ -804,17 +827,17 @@ class IssueChecker:
             builder.error("recipe_book_crash", experimental=True)
             # found_crash_cause = True
         
-        if is_mcsr_log and any(self.log.has_content(snowman_crash) for snowman_crash in [
+        if is_mcsr_log and any(self.log.has_content_in_stacktrace(snowman_crash) for snowman_crash in [
             "Cannot invoke \"net.minecraft.class_1657.method_7325()\"",
             "Cannot invoke \"net.minecraft.class_4184.method_19326()\"",
         ]):
             builder.error("snowman_crash")
             found_crash_cause = True
         
-        if is_mcsr_log and not found_crash_cause and self.log.has_content("because \"☃\" is null"):
+        if is_mcsr_log and not found_crash_cause and self.log.has_content_in_stacktrace("because \"☃\" is null"):
             builder.error("snowman_crash", experimental=True)
         
-        if self.log.has_content("Cannot invoke \"net.minecraft.class_1170.method_3833()\" because the return value of \"net.minecraft.class_1170.method_6428(int)\" is null"):
+        if self.log.has_content_in_stacktrace("Cannot invoke \"net.minecraft.class_1170.method_3833()\" because the return value of \"net.minecraft.class_1170.method_6428(int)\" is null"):
             builder.error("invalid_biome_id_crash")
             found_crash_cause = True
         
@@ -827,14 +850,6 @@ class IssueChecker:
                 if not latest_version is None:
                     builder.add("mod_download", metadata["name"], latest_version["page"])
             found_crash_cause = True
-        
-        if is_mcsr_log and any(self.log.has_content(log_spam) for log_spam in [
-            "Using missing texture, unable to load",
-            "Exception loading blockstate definition",
-            "Unable to load model",
-            "java.lang.NullPointerException: Cannot invoke \"com.mojang.authlib.minecraft.MinecraftProfileTexture.getHash()\" because \"?\" is null",
-            " to profiler if profiler tick hasn't started - missing "
-        ]): builder.info("log_spam")
 
         if self.log.has_content("Launched instance in offline mode") and self.log.has_content("(missing)\n"):
             builder.error("online_launch_required", self.log.edit_instance)
@@ -967,7 +982,7 @@ class IssueChecker:
                     builder.error("incompatible_mod", "PeepoPractice", incompatible_mod)
                     found_crash_cause = True
 
-        if self.log.has_content("Mixin apply for mod areessgee failed areessgee.mixins.json:nether.StructureFeatureMixin from mod areessgee -> net.minecraft.class_3195"):
+        if self.log.has_content_in_stacktrace("Mixin apply for mod areessgee failed areessgee.mixins.json:nether.StructureFeatureMixin from mod areessgee -> net.minecraft.class_3195"):
             builder.error("incompatible_mod", "AreEssGee", "PeepoPractice")
             found_crash_cause = True
         
@@ -979,7 +994,7 @@ class IssueChecker:
             builder.error("missing_dependency", "continuity", "indium")
             if self.log.has_content("Cannot invoke \"net.fabricmc.fabric.api.renderer.v1.Renderer.meshBuilder()\""):
                 found_crash_cause = True
-        elif self.log.has_content("Cannot invoke \"net.fabricmc.fabric.api.renderer.v1.Renderer.meshBuilder()\""):
+        elif self.log.has_content_in_stacktrace("Cannot invoke \"net.fabricmc.fabric.api.renderer.v1.Renderer.meshBuilder()\""):
             builder.error("missing_dependency_2", "indium")
             found_crash_cause = True
         
@@ -987,11 +1002,11 @@ class IssueChecker:
             builder.error("incompatible_mod", "WorldPreview", "carpet")
             found_crash_cause = True
         
-        if self.log.has_content("java.lang.ClassNotFoundException: dev.tildejustin.stateoutput.State"):
+        if self.log.has_content_in_stacktrace("java.lang.ClassNotFoundException: dev.tildejustin.stateoutput.State"):
             builder.error("old_wp_with_stateoutput")
             found_crash_cause = True
         
-        if not found_crash_cause and self.log.has_content("java.lang.StackOverflowError") and self.log.has_content("$atum$createDesiredWorld"):
+        if not found_crash_cause and self.log.has_content_in_stacktrace("java.lang.StackOverflowError") and self.log.has_content("$atum$createDesiredWorld"):
             builder.error("stack_overflow_crash")
             found_crash_cause = True
         
@@ -1027,7 +1042,7 @@ class IssueChecker:
         if all(self.log.has_content(text) for text in [
             "net.minecraft.class_148: Feature placement",
             "java.lang.ArrayIndexOutOfBoundsException",
-            "StarLightInterface"
+            "StarLightInterface",
         ]):
             builder.error("starlight_crash")
             found_crash_cause = True
@@ -1117,13 +1132,17 @@ class IssueChecker:
             elif self.log.has_mod("fsg-wrapper-mod"):
                 builder.error("old_mod_crash", "fsg wrapper", "https://github.com/DuncanRuns/FSG-Wrapper-Mod/releases/latest/")
                 found_crash_cause = True
-            elif self.log.has_content("java.lang.ClassNotFoundException: me.voidxwalker.autoreset.Atum"):
+            elif self.log.has_content_in_stacktrace("java.lang.ClassNotFoundException: me.voidxwalker.autoreset.Atum"):
                 builder.error(
                     "downgrade_atum",
                     experimental=(self.log.minecraft_version != "1.16.1")
                 )
                 found_crash_cause = True
         
+        if self.log.has_content_in_stacktrace("java.lang.NoSuchFieldError: freezePreview"):
+            builder.error("old_mod_crash", "SleepBackground", "https://mods.tildejustin.dev/")
+            found_crash_cause = True
+
         if (not found_crash_cause and self.log.is_multimc_or_fork
             and not self.log.type in [LogType.FULL_LOG, LogType.THREAD_DUMP, LogType.LAUNCHER_LOG]
         ):
