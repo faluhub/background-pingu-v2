@@ -21,3 +21,9 @@ This project is licensed under the MIT License. See the [LICENSE](LICENSE) file 
 ## Contact
 
 For any suggestions or questions about the Background Pingu bot, you can reach out to `maskers` on Discord.
+
+## Important Links
+
+- [Privacy Policy](./PRIVACY_POLICY.md)
+- [Terms of Service](./TERMS_OF_SERVICE.md)
+- [License](./LICENSE)
