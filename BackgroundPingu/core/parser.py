@@ -420,18 +420,10 @@ class Log:
             min_limit_1 *= 1.3
             min_limit_2 *= 1.3
         
-        if self.has_mod("seedqueue"):
-            min_limit_0 += 15000
-            min_limit_1 += 2000
-            min_limit_2 += 1000
-        
         return (min_limit_0, min_limit_1, min_limit_2)
     
     @cached_property
     def recommended_max_allocated(self) -> tuple[int, int, int]:
-        if self.has_mod("seedqueue"):
-            return (None, None, None)
-        
         max_limit_0, max_limit_1, max_limit_2 = 0, 0, 0
 
         if self.is_newer_than("1.18"):
@@ -441,7 +433,7 @@ class Log:
         elif self.is_newer_than("1.14"):
             max_limit_0 += 10000
             max_limit_1 += 4500
-            max_limit_2 += 3200
+            max_limit_2 += 3100
         else:
             max_limit_0 += 8000
             max_limit_1 += 3200
@@ -468,10 +460,35 @@ class Log:
             max_limit_1 *= 1.3
             max_limit_2 *= 1.3
         
+        if self.has_mod("seedqueue"):
+            max_limit_0, max_limit_1 = None, None
+        
         return (max_limit_0, max_limit_1, max_limit_2)
 
     @cached_property
+    def seedqueue_ram(self) -> tuple[int, int]:
+        min_ram, max_ram = 170, 250
+
+        if self.has_java_argument("shenandoah"):
+            min_ram *= 0.8
+            max_ram *= 0.8
+        
+        if self.has_java_argument("zgc"):
+            min_ram *= 1.2
+            max_ram *= 1.2
+
+        return (min_ram, max_ram)
+
+    @cached_property
     def ram_guide(self) -> tuple[str, str, str, str]:
+        if self.has_mod("seedqueue"):
+            sq_min, sq_max = self.seedqueue_ram
+            sq_min = int(round(sq_min, -1))
+            sq_max = int(round(sq_max, -1))
+            seedqueue = f" + `{sq_min}-{sq_max}` MB per instance"
+        else:
+            seedqueue = ""
+        
         min_recomm = self.recommended_min_allocated[1]
         max_recomm = self.recommended_max_allocated[2]
 
@@ -490,10 +507,11 @@ class Log:
                 "allocate_ram_guide_mmc",
                 min_recomm,
                 max_recomm,
+                seedqueue,
                 "Prism" if self.is_prism else "MultiMC",
             )
         else:
-            return ("allocate_ram_guide", min_recomm, max_recomm)
+            return ("allocate_ram_guide", min_recomm, max_recomm, seedqueue)
 
     @cached_property
     def setup_guide(self) -> str:

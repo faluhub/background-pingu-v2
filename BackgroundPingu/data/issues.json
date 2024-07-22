@@ -1,6 +1,6 @@
 {
-    "add.allocate_ram_guide": "You should allocate `{}`-`{}` MB. Check out [**this document**](https://docs.google.com/document/d/1aPF1lyBAfPWyeHIH80F8JJw8rvvy6lRm0WJ2xxSrRh8/edit#heading=h.owelqvpsehpw) for a guide on how to fix it.",
-    "add.allocate_ram_guide_mmc": "You should allocate `{}`-`{}` MB by going to `Settings > Java` in `{}`.",
+    "add.allocate_ram_guide": "You should allocate `{}-{}` MB{}. Check out [**this document**](https://docs.google.com/document/d/1aPF1lyBAfPWyeHIH80F8JJw8rvvy6lRm0WJ2xxSrRh8/edit#heading=h.owelqvpsehpw) for a guide on how to fix it.",
+    "add.allocate_ram_guide_mmc": "You should allocate `{}-{}` MB{} by going to `Settings > Java` in `{}`.",
     "add.eav_crash_1": "- Concurrently running programs, such as `OBS` and `Discord`, that use the same graphics card as the game:",
     "add.eav_crash_1.1": "a) Having `Hardware Acceleration` enabled in `Discord`.",
     "add.eav_crash_1.2": "b) Using game capture instead of window capture in `OBS`.",
