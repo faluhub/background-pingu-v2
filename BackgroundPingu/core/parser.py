@@ -615,7 +615,7 @@ class Log:
         if self.launcher != Launcher.OFFICIAL_LAUNCHER and not self.is_newer_than("1.17"):
             mods.append("voyager")
         
-        if self.is_newer_than("1.17"):
+        if self.is_newer_than("1.17") and not self.is_ssg_log:
             mods.append("planifolia")
 
         if self.is_ssg_log:
