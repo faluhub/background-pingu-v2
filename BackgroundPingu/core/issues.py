@@ -580,11 +580,11 @@ class IssueChecker:
             
             if self.log.fabric_version.__str__() in ["0.14.15", "0.14.16"]:
                 builder.error("broken_fabric").add(self.log.fabric_guide, "update")
-            elif self.log.fabric_version < version.parse("0.13.3"):
-                builder.error("really_old_fabric").add(self.log.fabric_guide, "update")
             elif self.log.fabric_version < version.parse("0.14.14"):
-                builder.warning("relatively_old_fabric").add(self.log.fabric_guide, "update")
+                builder.error("really_old_fabric").add(self.log.fabric_guide, "update")
             elif self.log.fabric_version < version.parse("0.15.0"):
+                builder.warning("relatively_old_fabric").add(self.log.fabric_guide, "update")
+            elif self.log.fabric_version < version.parse("0.16.0"):
                 builder.note("old_fabric").add(self.log.fabric_guide, "update")
         
         if len(self.log.mods) == 0 and self.log.has_content(".mrpack\n"):
