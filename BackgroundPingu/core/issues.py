@@ -702,6 +702,13 @@ class IssueChecker:
                 builder.error("wrong_java_arg", match.group(1))
                 found_crash_cause = True
         
+        if self.log.has_content("[libopenal.so"):
+            if self.log.operating_system == OperatingSystem.LINUX:
+                builder.error("openal_crash")
+                found_crash_cause = True
+            else:
+                builder.error("openal_crash", experimental=True)
+        
         if self.log.has_pattern(r"  \[(ig[0-9]+icd[0-9]+\.dll)[+ ](0x[0-9a-f]+)\]"):
             if self.log.has_content("speedrunigt") or self.log.has_mod("mcsrranked"):
                 builder.error("eav_crash", experimental=True).add("eav_crash_srigt")
