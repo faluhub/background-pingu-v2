@@ -138,6 +138,8 @@ class IssueChecker:
             "fast-reset",
             "antigone",
             "mcsrranked",
+            "speedrunapi",
+            "seedqueue",
         ]
         self.general_mods = [
             "atum",
