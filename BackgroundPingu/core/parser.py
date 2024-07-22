@@ -394,10 +394,14 @@ class Log:
             min_limit_0 += 2800
             min_limit_1 += 1800
             min_limit_2 += 1200
-        else:
+        elif self.is_newer_than("1.1"):
             min_limit_0 += 2000
             min_limit_1 += 1500
-            min_limit_2 += 700
+            min_limit_2 += 800
+        else:
+            min_limit_0 += 5000
+            min_limit_1 += 1500
+            min_limit_2 += 1000
         
         mod_cnt = len(self.whatever_mods)
         if self.mod_loader == ModLoader.FORGE:
@@ -434,10 +438,14 @@ class Log:
             max_limit_0 += 10000
             max_limit_1 += 4500
             max_limit_2 += 3100
-        else:
+        elif self.is_newer_than("1.1"):
             max_limit_0 += 8000
             max_limit_1 += 3200
             max_limit_2 += 2200
+        else:
+            max_limit_0 += 12000
+            max_limit_1 += 7000
+            max_limit_2 += 5500
         
         mod_cnt = len(self.whatever_mods)
         if self.mod_loader == ModLoader.FORGE:
