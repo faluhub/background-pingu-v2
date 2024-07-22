@@ -740,6 +740,7 @@ java_arguments={self.java_arguments}
 max_allocated={self.max_allocated}
 recommended_min_allocated={self.recommended_min_allocated}
 recommended_max_allocated={self.recommended_max_allocated}
+seedqueue_ram={self.seedqueue_ram}
 ram_guide={self.ram_guide}
 setup_guide={self.setup_guide}
 fabric_guide={self.fabric_guide}
