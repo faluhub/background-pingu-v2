@@ -158,10 +158,21 @@ class Log:
         if self.has_content("Operating System: Windows"): return OperatingSystem.WINDOWS
         if self.has_content("Operating System: Mac OS"): return OperatingSystem.MACOS
         if self.has_content("Operating System: Linux"): return OperatingSystem.LINUX
-        
-        if self.has_content("-natives-windows.jar"): return OperatingSystem.WINDOWS
 
-        if self.has_content("/Applications/"): return OperatingSystem.MACOS
+        if any(self.has_content(windows) for windows in [
+            "-natives-windows.jar",
+            "/AppData/",
+        ]): return OperatingSystem.WINDOWS
+
+        if any(self.has_content(macos) for macos in [
+            "/Applications/",
+            "/Library/Application Support/",
+        ]): return OperatingSystem.MACOS
+
+        if any(self.has_content(linux) for linux in [
+            "/.local/share/",
+            "/.var/app/",
+        ]): return OperatingSystem.LINUX
 
         return None
 
