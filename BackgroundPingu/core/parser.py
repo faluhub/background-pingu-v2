@@ -646,8 +646,12 @@ class Log:
             mods.append("sodiummac")
         else:
             mods.append("sodium")
-        mods.append("lithium")
         if not self.is_newer_than("1.20"): mods.append("starlight")
+        mods += [
+            "lithium",
+            "speedrunapi",
+            "seedqueue",
+        ]
 
         if self.launcher != Launcher.OFFICIAL_LAUNCHER and not self.is_newer_than("1.17"):
             mods.append("voyager")
