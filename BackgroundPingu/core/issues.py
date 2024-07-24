@@ -354,9 +354,9 @@ class IssueChecker:
             and self.log.has_mod("sodium") and not self.log.has_mod("sodiummac")
         ):
             if self.log.minecraft_version is None:
-                builder.error("not_using_mac_sodium", experimental=True)
+                builder.warning("not_using_mac_sodium", experimental=True)
             elif self.log.minecraft_version == "1.16.1":
-                builder.error("not_using_mac_sodium")
+                builder.warning("not_using_mac_sodium")
         
         wrong_not_needed_mods = []
         if not self.log.major_java_version is None and self.log.major_java_version < 17:
