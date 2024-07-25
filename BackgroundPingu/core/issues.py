@@ -711,7 +711,7 @@ class IssueChecker:
                 builder.error("openal_crash", experimental=True)
         
         if self.log.has_pattern(r"  \[(ig[0-9]+icd[0-9]+\.dll)[+ ](0x[0-9a-f]+)\]"):
-            if self.log.has_content("speedrunigt") or self.log.has_mod("mcsrranked"):
+            if self.log.has_content("speedrunigt") or self.log.is_ranked_log:
                 builder.error("eav_crash", experimental=True).add("eav_crash_srigt")
             else:
                 builder.error("gl_pixel_format")
@@ -740,7 +740,7 @@ class IssueChecker:
                 builder.add("eav_crash_1.3")
             builder.add("eav_crash_2")
             builder.add("eav_crash_3")
-            if ((len(self.log.whatever_mods) == 0 or self.log.has_mod("speedrunigt") or self.log.has_mod("mcsrranked"))
+            if ((len(self.log.whatever_mods) == 0 or self.log.has_mod("speedrunigt") or self.log.is_ranked_log)
                 and self.log.operating_system != OperatingSystem.MACOS
             ): builder.add("eav_crash_srigt")
             builder.add("eav_crash_disclaimer")
@@ -838,8 +838,13 @@ class IssueChecker:
         if is_mcsr_log and not found_crash_cause and self.log.has_content_in_stacktrace("because \"☃\" is null"):
             builder.error("snowman_crash", experimental=True)
         
-        if self.log.has_content_in_stacktrace("Cannot invoke \"net.minecraft.class_1170.method_3833()\" because the return value of \"net.minecraft.class_1170.method_6428(int)\" is null"):
-            builder.error("invalid_biome_id_crash")
+        # first is supposedly biome id out of bounds crash
+        if any(self.log.has_content_in_stacktrace(legacy_crash_fix) for legacy_crash_fix in [
+            "Cannot invoke \"net.minecraft.class_1170.method_3833()\" because the return value of \"net.minecraft.class_1170.method_6428(int)\" is null",
+            "java.lang.RuntimeException: Already decorating",
+            "TickNextTick list out of synch",
+        ]):
+            builder.error("legacy_crash_fix").add("update_mods")
             found_crash_cause = True
         
         if self.log.has_pattern(r"Description: Exception in server tick loop[\s\n]*java\.lang\.IllegalStateException: Lock is no longer valid"):
