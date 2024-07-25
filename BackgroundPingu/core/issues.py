@@ -271,6 +271,7 @@ class IssueChecker:
             for recommended_mod in self.log.recommended_mods:
                 if not self.log.has_mod(recommended_mod):
                     metadata = self.get_mod_metadata(recommended_mod)
+                    if metadata is None: continue
                     latest_version = self.get_latest_version(metadata)
                     if latest_version is None: continue
                     missing_mods.append([recommended_mod, latest_version["page"]])
