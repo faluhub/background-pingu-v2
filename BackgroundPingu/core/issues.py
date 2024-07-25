@@ -1131,7 +1131,7 @@ class IssueChecker:
                 builder.error("old_mod_crash", "beachfilter", "https://github.com/DuncanRuns/BeachFilter-Mod/releases/latest/")
                 found_crash_cause = True
             elif self.log.has_mod("fsg-wrapper-mod"):
-                builder.error("old_mod_crash", "fsg wrapper", "https://github.com/DuncanRuns/FSG-Wrapper-Mod/releases/latest/")
+                builder.error("old_mod_crash", "fsg wrapper", "https://modrinth.com/mod/fsg-mod/versions/")
                 found_crash_cause = True
             elif self.log.has_content_in_stacktrace("java.lang.ClassNotFoundException: me.voidxwalker.autoreset.Atum"):
                 builder.error(
