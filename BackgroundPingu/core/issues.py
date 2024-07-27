@@ -271,6 +271,7 @@ class IssueChecker:
             for recommended_mod in self.log.recommended_mods:
                 if not self.log.has_mod(recommended_mod):
                     metadata = self.get_mod_metadata(recommended_mod)
+                    if metadata is None: continue
                     latest_version = self.get_latest_version(metadata)
                     if latest_version is None: continue
                     missing_mods.append([recommended_mod, latest_version["page"]])
@@ -354,9 +355,9 @@ class IssueChecker:
             and self.log.has_mod("sodium") and not self.log.has_mod("sodiummac")
         ):
             if self.log.minecraft_version is None:
-                builder.error("not_using_mac_sodium", experimental=True)
+                builder.warning("not_using_mac_sodium", experimental=True)
             elif self.log.minecraft_version == "1.16.1":
-                builder.error("not_using_mac_sodium")
+                builder.warning("not_using_mac_sodium")
         
         wrong_not_needed_mods = []
         if not self.log.major_java_version is None and self.log.major_java_version < 17:
@@ -710,7 +711,7 @@ class IssueChecker:
                 builder.error("openal_crash", experimental=True)
         
         if self.log.has_pattern(r"  \[(ig[0-9]+icd[0-9]+\.dll)[+ ](0x[0-9a-f]+)\]"):
-            if self.log.has_content("speedrunigt") or self.log.has_mod("mcsrranked"):
+            if self.log.has_content("speedrunigt") or self.log.is_ranked_log:
                 builder.error("eav_crash", experimental=True).add("eav_crash_srigt")
             else:
                 builder.error("gl_pixel_format")
@@ -739,7 +740,7 @@ class IssueChecker:
                 builder.add("eav_crash_1.3")
             builder.add("eav_crash_2")
             builder.add("eav_crash_3")
-            if ((len(self.log.whatever_mods) == 0 or self.log.has_mod("speedrunigt") or self.log.has_mod("mcsrranked"))
+            if ((len(self.log.whatever_mods) == 0 or self.log.has_mod("speedrunigt") or self.log.is_ranked_log)
                 and self.log.operating_system != OperatingSystem.MACOS
             ): builder.add("eav_crash_srigt")
             builder.add("eav_crash_disclaimer")
@@ -837,8 +838,13 @@ class IssueChecker:
         if is_mcsr_log and not found_crash_cause and self.log.has_content_in_stacktrace("because \"☃\" is null"):
             builder.error("snowman_crash", experimental=True)
         
-        if self.log.has_content_in_stacktrace("Cannot invoke \"net.minecraft.class_1170.method_3833()\" because the return value of \"net.minecraft.class_1170.method_6428(int)\" is null"):
-            builder.error("invalid_biome_id_crash")
+        # first is supposedly biome id out of bounds crash
+        if any(self.log.has_content_in_stacktrace(legacy_crash_fix) for legacy_crash_fix in [
+            "Cannot invoke \"net.minecraft.class_1170.method_3833()\" because the return value of \"net.minecraft.class_1170.method_6428(int)\" is null",
+            "java.lang.RuntimeException: Already decorating",
+            "TickNextTick list out of synch",
+        ]):
+            builder.error("legacy_crash_fix").add("update_mods")
             found_crash_cause = True
         
         if self.log.has_pattern(r"Description: Exception in server tick loop[\s\n]*java\.lang\.IllegalStateException: Lock is no longer valid"):
@@ -1130,7 +1136,7 @@ class IssueChecker:
                 builder.error("old_mod_crash", "beachfilter", "https://github.com/DuncanRuns/BeachFilter-Mod/releases/latest/")
                 found_crash_cause = True
             elif self.log.has_mod("fsg-wrapper-mod"):
-                builder.error("old_mod_crash", "fsg wrapper", "https://github.com/DuncanRuns/FSG-Wrapper-Mod/releases/latest/")
+                builder.error("old_mod_crash", "fsg wrapper", "https://modrinth.com/mod/fsg-mod/versions/")
                 found_crash_cause = True
             elif self.log.has_content_in_stacktrace("java.lang.ClassNotFoundException: me.voidxwalker.autoreset.Atum"):
                 builder.error(

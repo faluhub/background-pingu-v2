@@ -623,7 +623,7 @@ class Log:
         return False
     
     @cached_property
-    def is_not_wall_log(self) -> bool:
+    def is_not_julti_log(self) -> bool:
         if self.is_ranked_log: return True
         
         if self.minecraft_folder is None: return False
@@ -646,8 +646,12 @@ class Log:
             mods.append("sodiummac")
         else:
             mods.append("sodium")
-        mods.append("lithium")
         if not self.is_newer_than("1.20"): mods.append("starlight")
+        mods += [
+            "lithium",
+            "speedrunapi",
+            "seedqueue",
+        ]
 
         if self.launcher != Launcher.OFFICIAL_LAUNCHER and not self.is_newer_than("1.17"):
             mods.append("voyager")
@@ -659,22 +663,22 @@ class Log:
             mods += [
                 "setspawn",
                 "chunkcacher",
-                "SpeedRunIGT",
+                "speedrunigt",
                 "antiresourcereload",
             ]
         elif not self.has_mod("mcsrranked") and not self.has_mod("peepopractice"):
             mods += [
                 "antigone",
                 "worldpreview",
-                "SpeedRunIGT",
+                "speedrunigt",
                 "lazystronghold",
                 "antiresourcereload",
                 "fast-reset",
                 "atum",
+                "sleepbackground",
             ]
-            if not self.is_not_wall_log:
+            if not self.is_not_julti_log:
                 mods += [
-                    "sleepbackground",
                     "state-output",
                 ]
         
@@ -760,6 +764,6 @@ stacktrace={self.stacktrace}
 exitcode={self.exitcode}
 is_ssg_log={self.is_ssg_log}
 is_ranked_log={self.is_ranked_log}
-is_not_wall_log={self.is_not_wall_log}
+is_not_julti_log={self.is_not_julti_log}
 recommended_mods={self.recommended_mods}
 """.strip()
