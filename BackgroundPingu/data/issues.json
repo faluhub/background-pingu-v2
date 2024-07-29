@@ -125,7 +125,7 @@
     "error.use_sodium_not_optifine": "You're using `Optifine`. For newer versions, `{}` is way better, so it's recommended to use it instead.",
     "error.use_sodium_not_optifine_mcsr": "You're using `Optifine`. It's not allowed for speedrunning on 1.15+, and `Sodium` is recommended to use over `Optifine`.",
     "error.using_modpack_as_mod": "You seem to be trying to use a modpack. It is not a mod, and you don't put it in the `mods` folder. Instead, drag it into `{}`'s main screen or do `Add Instance > Import`.",
-    "error.using_other_loader_mcsr": "You seem to be using MCSR mods, but you have `{}` installed, which is not allowed for speedrunning.",
+    "error.using_other_loader_mcsr": "You seem to be using MCSR mods, but you have `{}` installed, which is not allowed for speedrunning and is likely to cause issues.",
     "error.using_ssrng": "You're using `ServerSideRNG`, which is now illegal and can cause issues. The server for it is down, so the mod is useless regardless and you should delete it.",
     "error.wp_3_plus_crash": "This seems to be a rare crash caused by `WorldPreview 3.0.0 - 4.0.1`. It should be fixed in `WorldPreview 4.0.2+`.",
     "error.wrong_java_arg": "You have `{}` in your Java arguments, while it's not a valid argument. Either fix it or remove it.",
