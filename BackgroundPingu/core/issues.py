@@ -150,7 +150,7 @@ class IssueChecker:
             "lazydfu",
             "dynamicfps",
             "voyager",
-            "platifonia",
+            "planifolia",
             "retino",
         ]
     
@@ -1068,34 +1068,6 @@ class IssueChecker:
                 builder.error("exitcode_805306369")
                 found_crash_cause = True
 
-        if (not found_crash_cause and self.log.stacktrace is None and self.log.exitcode == -1073741819
-            or self.log.has_content("The instruction at 0x%p referenced memory at 0x%p. The memory could not be %s.")
-        ):
-            builder.error("exitcode", "-1073741819", experimental=True)
-            builder.add("eav_crash_1").add("eav_crash_1.1").add("eav_crash_1.2").add("eav_crash_1.3")
-            builder.add("exitcode_1073741819_2")
-            if self.log.lines < 500:
-                if (self.log.has_mod("sodium")
-                    and not self.log.has_mod("sodiummac")
-                    and self.log.minecraft_version in ["1.16.1", None]
-                ): builder.add(f"exitcode_1073741819_3")
-                builder.add(f"exitcode_1073741819_4")
-            builder.add("exitcode_1073741819_5").add("exitcode_1073741819_1")
-
-        if not found_crash_cause and self.log.stacktrace is None and self.log.exitcode == -1073740791:
-            builder.error("exitcode", "-1073740791", experimental=True)
-            builder.add("eav_crash_1").add("eav_crash_1.1").add("eav_crash_1.2").add("eav_crash_1.3")
-            builder.add("exitcode_1073741819_2")
-            if self.log.lines < 500: builder.add("exitcode_1073741819_4")
-            builder.add("exitcode_1073741819_5")
-
-        if not found_crash_cause and self.log.stacktrace is None and self.log.exitcode == -1073740771:
-            builder.error("exitcode", "-1073740771", experimental=True)
-            builder.add("eav_crash_1").add("eav_crash_1.1").add("eav_crash_1.2").add("eav_crash_1.3")
-            builder.add("exitcode_1073741819_2")
-            if self.log.lines < 500: builder.add("exitcode_1073741819_4")
-            builder.add("exitcode_1073741819_5")
-        
         if not self.log.minecraft_folder is None:
             if not found_crash_cause and "OneDrive" in self.log.minecraft_folder:
                 builder.note("onedrive")
@@ -1148,6 +1120,35 @@ class IssueChecker:
         if self.log.has_content_in_stacktrace("java.lang.NoSuchFieldError: freezePreview"):
             builder.error("old_mod_crash", "SleepBackground", "https://mods.tildejustin.dev/")
             found_crash_cause = True
+
+        if (not found_crash_cause and
+            (self.log.stacktrace is None and self.log.exitcode == -1073741819
+            or self.log.has_content("The instruction at 0x%p referenced memory at 0x%p. The memory could not be %s.")
+        )):
+            builder.error("exitcode", "-1073741819", experimental=True)
+            builder.add("eav_crash_1").add("eav_crash_1.1").add("eav_crash_1.2").add("eav_crash_1.3")
+            builder.add("exitcode_1073741819_2")
+            if self.log.lines < 500:
+                if (self.log.has_mod("sodium")
+                    and not self.log.has_mod("sodiummac")
+                    and self.log.minecraft_version in ["1.16.1", None]
+                ): builder.add(f"exitcode_1073741819_3")
+                builder.add(f"exitcode_1073741819_4")
+            builder.add("exitcode_1073741819_5").add("exitcode_1073741819_1")
+
+        if not found_crash_cause and self.log.stacktrace is None and self.log.exitcode == -1073740791:
+            builder.error("exitcode", "-1073740791", experimental=True)
+            builder.add("eav_crash_1").add("eav_crash_1.1").add("eav_crash_1.2").add("eav_crash_1.3")
+            builder.add("exitcode_1073741819_2")
+            if self.log.lines < 500: builder.add("exitcode_1073741819_4")
+            builder.add("exitcode_1073741819_5")
+
+        if not found_crash_cause and self.log.stacktrace is None and self.log.exitcode == -1073740771:
+            builder.error("exitcode", "-1073740771", experimental=True)
+            builder.add("eav_crash_1").add("eav_crash_1.1").add("eav_crash_1.2").add("eav_crash_1.3")
+            builder.add("exitcode_1073741819_2")
+            if self.log.lines < 500: builder.add("exitcode_1073741819_4")
+            builder.add("exitcode_1073741819_5")
 
         if (not found_crash_cause and self.log.is_multimc_or_fork
             and not self.log.type in [LogType.FULL_LOG, LogType.THREAD_DUMP, LogType.LAUNCHER_LOG]

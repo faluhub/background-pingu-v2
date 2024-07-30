@@ -247,6 +247,19 @@ class Log:
     
     @cached_property
     def launcher(self) -> Launcher:
+        for multimc_name in [
+            "multimc",
+            "ultimmc",
+        ]:
+            if self.has_pattern(rf"^{multimc_name}"):
+                return Launcher.MULTIMC
+            if any(self.has_content(multimc) for multimc in [
+                f"org.{multimc_name}",
+                f"/{multimc_name}",
+                f"\\{multimc_name}",
+            ]):
+                return Launcher.MULTIMC
+        
         for prism_name in [
             "prism",
             "polymc",
@@ -260,19 +273,6 @@ class Log:
                 f"\\{prism_name}",
             ]):
                 return Launcher.PRISM
-        
-        for multimc_name in [
-            "multimc",
-            "ultimmc",
-        ]:
-            if self.has_pattern(rf"^{multimc_name}"):
-                return Launcher.MULTIMC
-            if any(self.has_content(multimc) for multimc in [
-                f"org.{multimc_name}",
-                f"/{multimc_name}",
-                f"\\{multimc_name}",
-            ]):
-                return Launcher.MULTIMC
         
         if any(self.has_content(modrinth) for modrinth in [
             "com.modrinth.theseus",
@@ -712,7 +712,7 @@ class Log:
         return False
     
     def has_java_argument(self, argument: str) -> bool:
-        if self.java_arguments is None: return None
+        if self.java_arguments is None: return False
         return argument.lower() in self.java_arguments.lower()
     
     def has_library(self, content: str) -> bool:

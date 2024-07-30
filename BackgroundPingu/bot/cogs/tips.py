@@ -9,18 +9,28 @@ class Tips(Cog):
         self.bot = bot
     
     @commands.slash_command(name="fabric", description="A guide on how to install Fabric.")
-    async def fabric(self, ctx: discord.ApplicationContext):
-        text = "For your mods to work, you need to install Fabric Loader.\n" \
-            "- For MultiMC and Prism Launcher, see the image how to do that[.](https://media.discordapp.net/attachments/433058639956410383/1099537217409531985/image.png)\n" \
-            "- For official Minecraft Launcher, get the installer here: <https://fabricmc.net/use/installer/>\n" \
-            "Open the installer, select the Minecraft version you are playing and finish the installation.\n" \
-            "Note: You do **NOT** need Fabric API, that is banned and you won't need it!\n" \
-            "When you open your Minecraft launcher now it will show Fabric as an option. With that your mods will work."
+    async def fabric(
+        self,
+        ctx: discord.ApplicationContext,
+        launcher: discord.Option(str, choices=["MultiMC / Prism", "Official Launcher", "All"], required=False, default="All"),
+    ):
+        text = "For your mods to work, you need to install Fabric Loader."
+        if launcher in ["MultiMC", "All"]: text += "\n- For MultiMC and Prism Launcher, see the image how to do that[.](https://media.discordapp.net/attachments/433058639956410383/1099537217409531985/image.png)"
+        if launcher in ["Official Launcher", "All"]: text += """\n- For official Minecraft Launcher, get the installer here: <https://fabricmc.net/use/installer/>
+Open the installer, select the Minecraft version you are playing and finish the installation.
+Note: You do **NOT** need Fabric API, that is banned and you won't need it!
+When you open your Minecraft launcher now it will show Fabric as an option. With that your mods will work."""
         return await ctx.respond(text)
-
-    @commands.slash_command(name="log", description="Shows how to send a log on MultiMC/Prism Launcher.")
-    async def log(self, ctx: discord.ApplicationContext):
-        text = "Please follow this image in order to send a log[:](https://cdn.discordapp.com/attachments/531598137790562305/575381000398569493/unknown.png)"
+    
+    @commands.slash_command(name="log", description="Shows how to send a log.")
+    async def log(
+        self,
+        ctx: discord.ApplicationContext,
+        launcher: discord.Option(str, choices=["MultiMC / Prism", "Other"], required=False, default="MultiMC / Prism"),
+    ):
+        if launcher == "MultiMC / Prism": link = "https://cdn.discordapp.com/attachments/531598137790562305/575381000398569493/unknown.png"
+        else: link = "https://media.discordapp.net/attachments/433058639956410383/1061333462826614844/image.png"
+        text = f"Please follow this image in order to send a log[:]({link})"
         return await ctx.respond(text)
 
     @commands.slash_command(name="mmclog", description="Shows how to send a log on MultiMC/Prism Launcher.")
@@ -40,13 +50,14 @@ If you're referring to the mod that allows people to speedrun 1v1, that's "MCSR 
 *Note that it may contain outdated information.*"""
         return await ctx.respond(text)
 
-    @commands.slash_command(name="ahk", description="Gives a guide to rebind keys using AutoHotkey.", aliases=["rebind"])
+    @commands.slash_command(name="ahk", description="Gives a guide to rebind keys using AutoHotkey.")
     async def ahk(self, ctx: discord.ApplicationContext):
         text = """To rebind keys, you can download AutoHotkey (<https://www.autohotkey.com/>, **make sure to get version 1.1**) and create a file with your desired key bindings. For instance, if you want to swap the keys "F3" and "r", you can create a file and name it *something*.ahk with the following content:
 ```ahk
 #IfWinActive Minecraft
 *F3::r
-*r::F3```Launch the file, and the input of keys "F3" and "r" will be swapped (which means pressing "r" will open the debug menu). You can customize the key bindings as desired. <https://www.autohotkey.com/docs/v1/KeyList.htm> 
+*r::F3```Launch the file, and the input of keys "F3" and "r" will be swapped (which means pressing "r" will open the debug menu).
+You can customize the key bindings as desired, see this for help: <https://www.autohotkey.com/docs/v1/KeyList.htm> 
 
 **Rebind Rules**
 You may remap keys using external programs, but:
@@ -56,7 +67,7 @@ You may remap keys using external programs, but:
 • Rebinding "Attack/Destroy" or "Use Item/Place Block" to a keyboard button in order to abuse as an autoclicker is not allowed"""
         return await ctx.respond(text)
 
-    @commands.slash_command(name="rebind", description="Gives a guide to rebind keys using AutoHotkey.", aliases=["rebind"])
+    @commands.slash_command(name="rebind", description="Gives a guide to rebind keys using AutoHotkey.")
     async def rebind(self, ctx: discord.ApplicationContext):
         text = """To rebind keys, you can download AutoHotkey (<https://www.autohotkey.com/>, **make sure to get version 1.1**) and create a file with your desired key bindings. For instance, if you want to swap the keys "F3" and "r", you can create a file and name it *something*.ahk with the following content:
 ```ahk
@@ -90,12 +101,30 @@ In general, it's a good idea to watch top runs and top runners' streams to get a
         return await ctx.respond(text)
 
     @commands.slash_command(name="java", description="Gives a guide to update Java.")
-    async def java(self, ctx: discord.ApplicationContext):
-        text = """* You can install the latest version of Java [**here**](<https://adoptium.net/temurin/releases/?os=windows>). Download and run the `.msi` file if you're on Windows, or the `.pkg` file if you're on macOS.
-* After installing Java, follow the steps in the image below (assuming you're using MultiMC or Prism launcher)[:](https://cdn.discordapp.com/attachments/433058639956410383/1172533931485175879/image.png)
- * If the Java you installed doesn't show up, click `Refresh` on the bottom left in the `Auto-detect` menu.
- * On Prism, also make sure to disable the Java compatibility check in Settings > Java.
-* We do not recommend using the official Minecraft launcher since it is [tedious](<https://bit.ly/updatejavamc>) to switch Java versions. Watch [**this video**](<https://youtu.be/VL8Syekw4Q0>) to set up MultiMC for speedrunning."""
+    async def java(
+        self,
+        ctx: discord.ApplicationContext,
+        launcher: discord.Option(str, choices=["MultiMC", "Prism", "Official Launcher", "All"], required=False, default="All"),
+        os: discord.Option(str, choices=["Windows", "macOS"], required=False, default="Windows"),
+    ):
+        setup_guide = "https://www.youtube.com/watch?v=VL8Syekw4Q0" if os == "Windows" else "https://www.youtube.com/watch?v=GomIeW5xdBM"
+        
+        if launcher == "Official Launcher":
+            text = f"We do not recommend using the official Minecraft launcher since it is [tedious](<https://bit.ly/updatejavamc>) to switch Java versions. Watch [**this video**](<{setup_guide}>) to set up for speedrunning."
+        else:
+            if os == "macOS": query_string = "?os=mac&package=jdk"
+            else: query_string = "?os=windows&arch=x64&package=jdk"
+            text = f"* You can install the latest version of Java [**here**](<https://adoptium.net/temurin/releases/{query_string}>)."
+            if os == "Windows":
+                text += " Download and run the `.msi` file if you're on Windows."
+            else:
+                text += " Download and run the `.pkg` file if you're on macOS."
+            
+            text += """\n* After installing Java, follow the steps in the image below (assuming you're using MultiMC or Prism Launcher)[:](https://cdn.discordapp.com/attachments/433058639956410383/1172533931485175879/image.png)
+ * If the Java you installed doesn't show up, click `Refresh` on the bottom left in the `Auto-detect` menu."""
+            if launcher in ["Prism", "All"]: text += "\n * On Prism, also make sure to disable the Java compatibility check in Settings > Java."
+            if launcher == "All": text += f"\n* We do not recommend using the official Minecraft launcher since it is [tedious](<https://bit.ly/updatejavamc>) to switch Java versions. Watch [**this video**](<{setup_guide}>) to set up MultiMC for speedrunning."
+        
         return await ctx.respond(text)
 
     @commands.slash_command(name="ninjabrainbot", description="Gives a guide to using Ninjabrain Bot.")
@@ -103,15 +132,19 @@ In general, it's a good idea to watch top runs and top runners' streams to get a
         text = "https://youtu.be/8Z0tk_Z24WA"
         return await ctx.respond(text)
 
-    @commands.slash_command(name="prism", description="Gives a link to download PrismLauncher.")
+    @commands.slash_command(name="prism", description="Gives a link to download Prism Launcher.")
     async def prism(self, ctx: discord.ApplicationContext):
         text = """Prism Launcher is a more updated fork of MultiMC. You can download it here: https://prismlauncher.org/"""
         return await ctx.respond(text)
 
     @commands.slash_command(name="setup", description="Gives a link to a tutorial to setup Minecraft Speedrunning.")
-    async def setup(self, ctx: discord.ApplicationContext):
-        text = """:warning: Using Java 21 instead of 19.0.1 is completely fine.
-https://youtu.be/VL8Syekw4Q0"""
+    async def setup(
+        self,
+        ctx: discord.ApplicationContext,
+        os: discord.Option(str, choices=["Windows", "macOS"], required=False, default="Windows"),
+    ):
+        setup_guide = "https://www.youtube.com/watch?v=VL8Syekw4Q0" if os == "Windows" else "https://www.youtube.com/watch?v=GomIeW5xdBM"
+        text = f":warning: Using Java 21 instead of 19.0.1 is completely fine.\n{setup_guide}"
         return await ctx.respond(text)
 
     @commands.slash_command(name="mac", description="Gives links to tutorials for Minecraft Speedrunning on a Mac.")
@@ -160,7 +193,7 @@ Watch the 1st video for a rough overview, the 2nd and 3rd for more information a
 
     @commands.slash_command(name="modcheck", description="Gives a link to ModCheck.")
     async def modcheck(self, ctx: discord.ApplicationContext):
-        text = "Application that helps install the allowed mods <https://github.com/tildejustin/modcheck/releases/latest>"
+        text = "Application that helps install the allowed mods: <https://github.com/tildejustin/modcheck/releases/latest>"
         return await ctx.respond(text)
 
     @commands.slash_command(name="1_16mods", description="Gives an explanation of 1.16 mods.")
@@ -192,9 +225,18 @@ All other mods, including Fabric API, are banned[.](https://cdn.discordapp.com/a
         return await ctx.respond(text)
 
     @commands.slash_command(name="piedirectory", description="Gives the useful pie directories.")
-    async def piedirectory(self, ctx: discord.ApplicationContext):
-        text = """Common piechart directories:
-1) Mapless / Preemptive: ```root.gameRenderer.level.entities```2) Village / Fortress: ```root.tick.level.entities.blockEntities```"""
+    async def piedirectory(
+        self,
+        ctx: discord.ApplicationContext,
+        directory: discord.Option(str, choices=["Mapless / Preemptive", "Village / Fortress", "All"], required="False", default="All"),
+    ):
+        text = "Common piechart directories:"
+        if directory in ["Mapless / Preemptive", "All"]:
+            text += "\nMapless / Preemptive: ```root.gameRenderer.level.entities```"
+        if directory in ["Village / Fortress", "All"]:
+            text += "\nVillage / Fortress: ```root.tick.level.entities.blockEntities```"""
+        
+        text = text.replace("```\n", "```")
         return await ctx.respond(text)
 
     @commands.slash_command(name="perch", description="Gives the command to force the dragon to perch.")
@@ -296,8 +338,13 @@ Get AHK **version 1.1** here if you don't have it yet: <https://www.autohotkey.c
         return await ctx.respond(text)
 
     @commands.slash_command(name="ram", description="Gives a guide to change the amount of allocated RAM on MultiMC/Prism.")
-    async def ram(self, ctx: discord.ApplicationContext):
-        text = "https://cdn.discordapp.com/attachments/433058639956410383/995651366280245328/unknown.png"
+    async def ram(
+        self,
+        ctx: discord.ApplicationContext,
+        launcher: discord.Option(str, choices=["MultiMC / Prism", "Official Launcher"], required=False, default="MultiMC / Prism"),
+    ):
+        if launcher == "MultiMC / Prism": text = "https://cdn.discordapp.com/attachments/433058639956410383/995651366280245328/unknown.png"
+        else: text = "https://media.discordapp.net/attachments/433058639956410383/996360988179828746/unknown.png"
         return await ctx.respond(text)
 
     @commands.slash_command(name="bastions", description="Gives links to bastion routes.")
