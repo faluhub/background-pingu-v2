@@ -712,7 +712,7 @@ class Log:
         return False
     
     def has_java_argument(self, argument: str) -> bool:
-        if self.java_arguments is None: return None
+        if self.java_arguments is None: return False
         return argument.lower() in self.java_arguments.lower()
     
     def has_library(self, content: str) -> bool:
