@@ -38,3 +38,5 @@ def get_mods(start: bool=True):
         with open(path, "w") as f:
             json.dump(mods, f, indent=4)
     if start: print("  Finished getting mods.")
+
+    return mods
