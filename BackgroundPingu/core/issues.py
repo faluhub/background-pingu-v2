@@ -150,7 +150,7 @@ class IssueChecker:
             "lazydfu",
             "dynamicfps",
             "voyager",
-            "platifonia",
+            "planifolia",
             "retino",
         ]
     
