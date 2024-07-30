@@ -120,7 +120,7 @@ In general, it's a good idea to watch top runs and top runners' streams to get a
             else:
                 text += " Download and run the `.pkg` file if you're on macOS."
             
-            text += """\n* After installing Java, follow the steps in the image below (assuming you're using MultiMC or Prism launcher)[:](https://cdn.discordapp.com/attachments/433058639956410383/1172533931485175879/image.png)
+            text += """\n* After installing Java, follow the steps in the image below (assuming you're using MultiMC or Prism Launcher)[:](https://cdn.discordapp.com/attachments/433058639956410383/1172533931485175879/image.png)
  * If the Java you installed doesn't show up, click `Refresh` on the bottom left in the `Auto-detect` menu."""
             if launcher in ["Prism", "All"]: text += "\n * On Prism, also make sure to disable the Java compatibility check in Settings > Java."
             if launcher == "All": text += f"\n* We do not recommend using the official Minecraft launcher since it is [tedious](<https://bit.ly/updatejavamc>) to switch Java versions. Watch [**this video**](<{setup_guide}>) to set up MultiMC for speedrunning."
